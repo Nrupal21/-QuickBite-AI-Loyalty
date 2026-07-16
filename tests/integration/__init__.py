@@ -1,0 +1,1 @@
+"""QuickBite — Integration tests package."""

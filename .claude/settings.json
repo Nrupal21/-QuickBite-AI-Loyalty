@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node \"d:/Project/Python/.claude/skills/impeccable/scripts/context.mjs\" --target \"d:/Project/Python/AI Tools/FastAPI/Tool-2\")"
+    ]
+  }
+}

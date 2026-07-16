@@ -1,0 +1,1 @@
+"""QuickBite — Unit tests package."""

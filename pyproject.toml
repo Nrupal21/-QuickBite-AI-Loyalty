@@ -1,0 +1,24 @@
+[project]
+name = "quickbite"
+version = "0.1.0"
+description = "QuickBite AI + Loyalty — Multi-tenant SaaS for restaurant reputation management and QR loyalty rewards"
+requires-python = ">=3.12"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "--strict-markers -v"

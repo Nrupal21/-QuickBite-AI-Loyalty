@@ -1,0 +1,1 @@
+"""QuickBite — Stripe subscriptions + webhooks."""
