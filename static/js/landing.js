@@ -1,8 +1,9 @@
 /*
- * QuickBite landing page — ANIM-05.
+ * QuickBite landing page — ANIM-05, v2 cinematic redesign.
  * Three.js r128 cel-shaded hero (procedural: stamp disc, star, QR cube cluster)
- * + GSAP ScrollTrigger scroll narrative. Both fully disabled under
- * prefers-reduced-motion; the CSS .hero-fallback gradient is the static state.
+ * luminous against the dark-ink stage, + GSAP ScrollTrigger scroll narrative.
+ * Both fully disabled under prefers-reduced-motion; the CSS .hero-ambient
+ * glow is the static state.
  */
 
 (function () {
@@ -91,8 +92,10 @@
         group.add(qr);
 
         scene.add(group);
-        scene.add(new THREE.AmbientLight(0xffffff, 0.75));
-        var sun = new THREE.DirectionalLight(0xffffff, 0.9);
+        // Lower ambient / punchier key light — against dark ink the toon
+        // materials read as luminous, cinematic-stage lighting (DESIGN.md §1).
+        scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+        var sun = new THREE.DirectionalLight(0xffffff, 0.95);
         sun.position.set(3, 5, 6);
         scene.add(sun);
 
@@ -207,18 +210,6 @@
             });
         });
 
-        // Section mood shifts white → tint as the story progresses
-        gsap.to('.how-section', {
-            backgroundColor: '#EFF6FF',
-            ease: 'none',
-            scrollTrigger: {
-                trigger: '.how-section',
-                start: 'top 40%',
-                end: 'bottom 60%',
-                scrub: true,
-            },
-        });
-
         // Dashboard mock stat count-up when the feature scrolls in (Anime.js lane)
         ScrollTrigger.create({
             trigger: '.features-section',
@@ -295,6 +286,33 @@
         }
     }
 
+    /* ── Headline word-assembly on load (DESIGN.md §4) ──────────────────── */
+
+    function initHeadline() {
+        var headline = document.getElementById('hero-headline');
+        if (!headline || reducedMotion) return; // reduced motion: leave text static, visible
+
+        var words = headline.textContent.trim().split(/\s+/);
+        headline.innerHTML = words
+            .map(function (word) {
+                return '<span class="inline-block overflow-hidden align-top">' +
+                    '<span class="inline-block will-change-transform">' + word + '&nbsp;</span></span>';
+            })
+            .join('');
+
+        var inner = headline.querySelectorAll('span > span');
+        if (window.gsap) {
+            gsap.from(inner, {
+                yPercent: 110,
+                opacity: 0,
+                duration: 0.7,
+                delay: 0.15,
+                stagger: 0.06,
+                ease: 'power3.out',
+            });
+        }
+    }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', boot);
     } else {
@@ -302,6 +320,7 @@
     }
     function boot() {
         initHero();
+        initHeadline();
         initScroll();
     }
 })();

@@ -4,12 +4,14 @@
 
 {% block head %}
 <style>
-    /* Hero fallback gradient — shown when WebGL is unavailable or reduced motion */
-    .hero-fallback {
+    /* Hero ambient glow — cinematic dark-ink stage, shown even before/without
+       WebGL (Three.js draws on top via the transparent canvas). Luminous
+       against dark, per DESIGN.md §1/§4. */
+    .hero-ambient {
         background:
-            radial-gradient(60rem 40rem at 80% 10%, rgba(13, 148, 136, 0.12), transparent 60%),
-            radial-gradient(50rem 35rem at 15% 85%, rgba(255, 107, 53, 0.10), transparent 60%),
-            radial-gradient(45rem 30rem at 50% 50%, rgba(26, 86, 219, 0.07), transparent 65%);
+            radial-gradient(50rem 38rem at 78% 30%, rgba(13, 148, 136, 0.22), transparent 62%),
+            radial-gradient(42rem 32rem at 68% 75%, rgba(255, 107, 53, 0.16), transparent 60%),
+            radial-gradient(46rem 34rem at 85% 15%, rgba(26, 86, 219, 0.14), transparent 65%);
     }
     /* Phone mockup frame for the loyalty-card product shot */
     .phone-frame {
@@ -23,21 +25,29 @@
     .stamp-cell-filled { background: var(--qb-teal); }
     .step-active { opacity: 1; }
     .how-step { transition: opacity 0.3s ease-out; }
+
+    /* Perpetual micro-motion on the live redemption code — signals "this is
+       live", reserved for this one moment per DESIGN.md §7. */
+    @keyframes qb-pulse-glow {
+        0%, 100% { box-shadow: 0 0 0 rgba(13, 148, 136, 0); }
+        50%      { box-shadow: 0 0 32px rgba(13, 148, 136, 0.35); }
+    }
+    .reward-pulse { animation: qb-pulse-glow 3s ease-in-out infinite; }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- ── Sticky nav ─────────────────────────────────────────────────────── -->
-<header id="site-nav" class="fixed top-0 inset-x-0 z-40 bg-white/90 backdrop-blur-sm transition-shadow">
+<!-- ── Sticky nav — dark-translucent, cohesive with the dark hero opening ── -->
+<header id="site-nav" class="fixed top-0 inset-x-0 z-40 bg-[#1E2A3A]/85 backdrop-blur-md transition-shadow">
     <nav class="max-w-[1280px] mx-auto flex items-center justify-between px-6 lg:px-12 h-16">
-        <a href="/" class="text-xl font-extrabold tracking-tight text-[#1E2A3A]">
+        <a href="/" class="text-xl font-extrabold tracking-tight text-white">
             Quick<span class="text-[#0D9488]">Bite</span>
         </a>
-        <div class="hidden md:flex items-center gap-8 text-[15px] font-semibold text-[#1E2A3A]">
-            <a href="#how-it-works" class="hover:text-[#1A56DB]">How it works</a>
-            <a href="#features" class="hover:text-[#1A56DB]">Features</a>
-            <a href="#pricing" class="hover:text-[#1A56DB]">Pricing</a>
+        <div class="hidden md:flex items-center gap-8 text-[15px] font-semibold text-white/85">
+            <a href="#how-it-works" class="hover:text-white">How it works</a>
+            <a href="#features" class="hover:text-white">Features</a>
+            <a href="#pricing" class="hover:text-white">Pricing</a>
         </div>
         <a href="#pricing"
            class="bg-[#FF6B35] text-white px-5 py-2.5 rounded-xl text-[15px] font-semibold hover:bg-[#E55A2B] transition-all">
@@ -46,39 +56,41 @@
     </nav>
 </header>
 
-<!-- ── Hero — Three.js canvas + pinned intro (STITCH-12 / ANIM-05) ────── -->
-<section class="hero relative min-h-screen flex items-center overflow-hidden hero-fallback">
-    <canvas id="hero-canvas" class="absolute inset-0 w-full h-full"></canvas>
+<!-- ── Hero — dark-ink stage, asymmetric split, Three.js canvas (STITCH-12 / ANIM-05) ── -->
+<section class="hero relative min-h-[100dvh] flex items-center overflow-hidden bg-[#1E2A3A] hero-ambient">
+    <canvas id="hero-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
 
-    <div class="hero-copy relative z-10 max-w-[1280px] mx-auto px-6 lg:px-12 pt-16 w-full">
-        <div class="max-w-2xl">
-            <h1 class="text-4xl md:text-[48px] font-extrabold leading-[1.1] tracking-[-0.02em] text-[#1E2A3A]">
-                Turn Every Meal Into a 5-Star&nbsp;Story
+    <div class="hero-copy relative z-10 max-w-[1280px] mx-auto px-6 lg:px-12 pt-16 w-full grid md:grid-cols-12 gap-8">
+        <div class="md:col-span-7 max-w-2xl">
+            <h1 id="hero-headline" class="text-4xl md:text-[48px] font-extrabold leading-[1.1] tracking-[-0.02em] text-white">
+                Turn Every Meal Into a 5-Star Story
             </h1>
-            <p class="mt-6 text-lg md:text-xl text-[#475569] max-w-[60ch]">
+            <p class="mt-6 text-lg md:text-xl text-white/70 max-w-[60ch]">
                 One QR code on the receipt. Your diner scans it, AI drafts their
                 glowing review in 30 seconds, and a loyalty stamp brings them back —
                 no app download, no password, no effort from your staff.
             </p>
             <div class="mt-9 flex flex-wrap items-center gap-4">
-                <a href="#pricing"
-                   class="bg-[#FF6B35] text-white px-8 py-4 rounded-xl text-[15px] font-semibold hover:bg-[#E55A2B] transition-all">
+                <a href="/api/v1/auth/register"
+                   class="bg-[#FF6B35] text-white px-8 py-4 rounded-xl text-[15px] font-semibold hover:bg-[#E55A2B] transition-all active:translate-y-[1px]">
                     Start Free — no card needed
                 </a>
                 <a href="#how-it-works"
-                   class="text-[#1A56DB] px-4 py-4 text-[15px] font-semibold hover:underline underline-offset-4">
-                    See how it works ↓
+                   class="text-white px-4 py-4 text-[15px] font-semibold hover:text-[#0D9488] transition-colors underline underline-offset-4">
+                    See how it works
                 </a>
             </div>
-            <p class="mt-8 text-[13px] text-[#64748B]">
+            <p class="mt-8 text-[13px] text-white/50">
                 Built for independent restaurants in India · Reviews sync with Google
             </p>
         </div>
+        <!-- Right column reserved for the 3D composition (full-bleed canvas, offset here by grid) -->
+        <div class="hidden md:block md:col-span-5" aria-hidden="true"></div>
     </div>
 </section>
 
 <!-- ── How it works — scroll story with sticky phone (a real 3-step sequence) ── -->
-<section id="how-it-works" class="how-section relative py-24 lg:py-32">
+<section id="how-it-works" class="how-section relative py-24 lg:py-32 bg-white">
     <div class="max-w-[1280px] mx-auto px-6 lg:px-12">
         <h2 class="text-[28px] md:text-4xl font-bold text-[#1E2A3A] max-w-[24ch]">
             From table to 5-star review to repeat visit — in one scan
@@ -124,7 +136,7 @@
                         <span class="text-[40px] font-extrabold text-[#1A56DB] leading-none">1</span>
                         <h3 class="text-xl font-semibold text-[#1E2A3A]">The diner scans the QR on their receipt</h3>
                     </div>
-                    <p class="mt-3 ml-12 text-base text-[#475569] max-w-[52ch]">
+                    <p class="mt-3 ml-12 text-base text-[#64748B] max-w-[52ch]">
                         No app to install, nothing to type. The camera opens a page in
                         their browser — GPS confirms they're really at your restaurant,
                         so every stamp is a real visit.
@@ -135,7 +147,7 @@
                         <span class="text-[40px] font-extrabold text-[#FF6B35] leading-none">2</span>
                         <h3 class="text-xl font-semibold text-[#1E2A3A]">Stars + tags → AI writes their review</h3>
                     </div>
-                    <p class="mt-3 ml-12 text-base text-[#475569] max-w-[52ch]">
+                    <p class="mt-3 ml-12 text-base text-[#64748B] max-w-[52ch]">
                         They tap a star rating and a few tags — “Great Service”,
                         “Biryani” — and GPT-4o turns it into a warm, personal review.
                         Three taps later it's on your Google profile.
@@ -146,7 +158,7 @@
                         <span class="text-[40px] font-extrabold text-[#0D9488] leading-none">3</span>
                         <h3 class="text-xl font-semibold text-[#1E2A3A]">A stamp lands on their loyalty card</h3>
                     </div>
-                    <p class="mt-3 ml-12 text-base text-[#475569] max-w-[52ch]">
+                    <p class="mt-3 ml-12 text-base text-[#64748B] max-w-[52ch]">
                         A six-digit SMS code signs them in — no password, ever. Ten
                         stamps unlocks the reward you configured, and WhatsApp tells
                         them the moment it happens.
@@ -170,7 +182,7 @@
                 <h3 class="text-xl md:text-2xl font-semibold text-[#1E2A3A]">
                     AI answers every review in your voice
                 </h3>
-                <p class="mt-4 text-base text-[#475569] max-w-[56ch]">
+                <p class="mt-4 text-base text-[#64748B] max-w-[56ch]">
                     New Google reviews sync automatically. GPT-4o drafts a reply for
                     each one, your manager approves with a tap, and QuickBite posts it
                     back — consistent tone across every branch, even at 11pm on a Sunday.
@@ -181,7 +193,7 @@
                 <p class="mt-2 text-[15px] text-[#1E2A3A]">“Waited 40 minutes for a table on a Tuesday…”</p>
                 <div class="mt-4 rounded-xl bg-[#EFF6FF] p-4">
                     <p class="text-[13px] font-semibold text-[#1A56DB]">AI draft — awaiting approval</p>
-                    <p class="mt-1 text-[15px] text-[#1E2A3A]" style="font-family: Georgia, serif;">
+                    <p class="mt-1 text-[15px] text-[#1E2A3A] italic">
                         Rohan, you're right — Tuesday caught us understaffed and that's
                         on us. Your next visit's starter is ours. — Marco
                     </p>
@@ -199,7 +211,7 @@
                 <h3 class="text-xl md:text-2xl font-semibold text-[#1E2A3A]">
                     Loyalty stamps that can't be gamed
                 </h3>
-                <p class="mt-4 text-base text-[#475569] max-w-[56ch]">
+                <p class="mt-4 text-base text-[#64748B] max-w-[56ch]">
                     Every scan is GPS-checked against your branch's geofence and
                     rate-limited per customer. Stamps only land when someone is
                     actually at your table — fraud attempts are logged for you to see.
@@ -221,7 +233,7 @@
                 <h3 class="text-xl md:text-2xl font-semibold text-[#1E2A3A]">
                     See who's coming back — live
                 </h3>
-                <p class="mt-4 text-base text-[#475569] max-w-[56ch]">
+                <p class="mt-4 text-base text-[#64748B] max-w-[56ch]">
                     Scans, sentiment and repeat-visit numbers stream into one
                     dashboard as they happen. Compare branches, spot your regulars,
                     and watch review scores move week over week.
@@ -249,15 +261,18 @@
 
 <!-- ── The teal moment — drenched loyalty band (the page "arrives" here) ── -->
 <section class="teal-band bg-[#0D9488] py-24 lg:py-32 text-center">
-    <div class="max-w-[1280px] mx-auto px-6 lg:px-12">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-12 flex flex-col items-center">
+        <span class="inline-block bg-white/15 text-white text-[13px] font-extrabold uppercase tracking-[0.04em] px-4 py-1.5 rounded-full mb-6">
+            Reward Unlocked
+        </span>
         <p class="text-[30px] md:text-4xl font-bold text-white max-w-[28ch] mx-auto">
-            🎁 Ten stamps later, your best customer walks back in.
+            Ten stamps later, your best customer walks back in.
         </p>
         <p class="mt-5 text-lg font-semibold text-white/95 max-w-[48ch] mx-auto">
             The reward is your choice — free coffee, 20% off, a garlic bread on the
             house. QuickBite handles the counting, the codes, and the WhatsApp nudge.
         </p>
-        <div class="mt-8 inline-block bg-white rounded-2xl px-8 py-5">
+        <div class="reward-pulse mt-8 inline-block bg-white rounded-2xl px-8 py-5">
             <p class="text-[13px] font-semibold text-[#64748B]">Redemption code</p>
             <p class="font-mono-code text-[28px] font-bold text-[#0D9488] tracking-[0.2em]">QB7-K4M</p>
         </div>
@@ -268,35 +283,35 @@
 <section id="pricing" class="py-24 lg:py-32">
     <div class="max-w-[1280px] mx-auto px-6 lg:px-12">
         <h2 class="text-[28px] md:text-4xl font-bold text-[#1E2A3A]">Start free. Grow when it works.</h2>
-        <p class="mt-3 text-base text-[#475569]">Prices in INR per branch location. Cancel any time — access runs to period end.</p>
+        <p class="mt-3 text-base text-[#64748B]">Prices in INR per branch location. Cancel any time — access runs to period end.</p>
 
         <div class="mt-12 grid md:grid-cols-3 gap-6 items-start">
             <!-- Starter -->
-            <div class="rounded-2xl border border-gray-200 p-6">
+            <div class="flex flex-col rounded-2xl border border-gray-200 p-6">
                 <h3 class="text-xl font-semibold text-[#1E2A3A]">Starter</h3>
                 <p class="mt-2 text-4xl font-extrabold text-[#1E2A3A]">₹0</p>
                 <p class="text-[13px] text-[#64748B]">forever</p>
-                <ul class="mt-6 space-y-3 text-[15px] text-[#1E2A3A]">
+                <ul class="mt-6 space-y-3 text-[15px] text-[#1E2A3A] flex-grow">
                     <li>✓ 1 branch · 1 QR code</li>
                     <li>✓ 100 AI review drafts / month</li>
                     <li>✓ Loyalty stamps + OTP login</li>
                     <li>✓ 2 team members</li>
                 </ul>
                 <a href="/api/v1/auth/register"
-                   class="mt-8 block text-center border-2 border-[#1A56DB] text-[#1A56DB] px-6 py-3 rounded-xl text-[15px] font-semibold hover:bg-[#EFF6FF] transition-all">
+                   class="mt-8 block text-center border-2 border-[#1A56DB] text-[#1A56DB] px-6 py-3 rounded-xl text-[15px] font-semibold hover:bg-[#EFF6FF] transition-all active:translate-y-[1px]">
                     Start Free
                 </a>
             </div>
 
             <!-- Pro — highlighted -->
-            <div class="rounded-2xl border-2 border-[#7C3AED] p-6 md:-mt-4 md:pb-10 bg-white shadow-lg relative">
+            <div class="flex flex-col rounded-2xl border-2 border-[#7C3AED] p-6 md:-mt-4 md:pb-10 bg-white shadow-lg relative">
                 <span class="absolute -top-3.5 left-6 bg-[#7C3AED] text-white text-[13px] font-semibold px-3 py-1 rounded-full">
                     14-day free trial
                 </span>
                 <h3 class="text-xl font-semibold text-[#7C3AED]">Pro</h3>
                 <p class="mt-2 text-4xl font-extrabold text-[#1E2A3A]">₹2,999</p>
                 <p class="text-[13px] text-[#64748B]">per month</p>
-                <ul class="mt-6 space-y-3 text-[15px] text-[#1E2A3A]">
+                <ul class="mt-6 space-y-3 text-[15px] text-[#1E2A3A] flex-grow">
                     <li>✓ 3 branches with geofencing</li>
                     <li>✓ 1,000 AI review drafts / month</li>
                     <li>✓ WhatsApp reward alerts</li>
@@ -304,24 +319,24 @@
                     <li>✓ 5 team members + analytics</li>
                 </ul>
                 <a href="/api/v1/auth/register"
-                   class="mt-8 block text-center bg-[#FF6B35] text-white px-6 py-3 rounded-xl text-[15px] font-semibold hover:bg-[#E55A2B] transition-all">
+                   class="mt-8 block text-center bg-[#FF6B35] text-white px-6 py-3 rounded-xl text-[15px] font-semibold hover:bg-[#E55A2B] transition-all active:translate-y-[1px]">
                     Start Pro Trial
                 </a>
             </div>
 
             <!-- Enterprise -->
-            <div class="rounded-2xl border border-gray-200 p-6">
+            <div class="flex flex-col rounded-2xl border border-gray-200 p-6">
                 <h3 class="text-xl font-semibold text-[#1E2A3A]">Enterprise</h3>
                 <p class="mt-2 text-4xl font-extrabold text-[#1E2A3A]">Custom</p>
                 <p class="text-[13px] text-[#64748B]">for chains</p>
-                <ul class="mt-6 space-y-3 text-[15px] text-[#1E2A3A]">
+                <ul class="mt-6 space-y-3 text-[15px] text-[#1E2A3A] flex-grow">
                     <li>✓ Unlimited branches + members</li>
                     <li>✓ Unlimited AI drafts</li>
                     <li>✓ White-label review pages</li>
                     <li>✓ Priority support</li>
                 </ul>
                 <a href="mailto:hello@quickbite.ai"
-                   class="mt-8 block text-center border-2 border-[#1A56DB] text-[#1A56DB] px-6 py-3 rounded-xl text-[15px] font-semibold hover:bg-[#EFF6FF] transition-all">
+                   class="mt-8 block text-center border-2 border-[#1A56DB] text-[#1A56DB] px-6 py-3 rounded-xl text-[15px] font-semibold hover:bg-[#EFF6FF] transition-all active:translate-y-[1px]">
                     Talk to us
                 </a>
             </div>
