@@ -7,10 +7,12 @@ and registers the health endpoint.
 import structlog
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.api.v1 import api_router
+from app.api.v1.routers.pages import router as pages_router
 from app.core.rate_limiter import limiter
 
 # Structlog configuration — JSON output with timestamps and context
@@ -40,6 +42,8 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(api_router)
+app.include_router(pages_router)  # server-rendered pages, no /api/v1 prefix
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.on_event("startup")

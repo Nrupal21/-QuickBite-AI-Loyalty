@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node \"d:/Project/Python/.claude/skills/impeccable/scripts/context.mjs\" --target \"d:/Project/Python/AI Tools/FastAPI/Tool-2\")"
+      "Bash(node \"d:/Project/Python/.claude/skills/impeccable/scripts/context.mjs\" --target \"d:/Project/Python/AI Tools/FastAPI/Tool-2\")",
+      "Bash(git checkout *)",
+      "Read(//d/Project/Python/.claude/skills/impeccable/reference/**)",
+      "Bash(python -m ruff check app/ tests/)",
+      "Bash(PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/ -q -p asyncio -p pytest_mock)",
+      "Bash(git commit -m 'feat\\(landing\\): STITCH-12 + ANIM-05 landing page, frontend foundation \\(ANIM-06\\) *)"
     ]
   }
 }
