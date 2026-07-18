@@ -241,6 +241,135 @@
                 document.getElementById('site-nav').classList.toggle('shadow-sm', self.scroll() > 80);
             },
         });
+
+        initReviewsGallery();
+        initStampImpact();
+    }
+
+    /* ── Reviews — horizontal scroll gallery ─────────────────────────────
+     * Canonical GSAP horizontal-pan pattern: pin the wrapper, scrub the
+     * inner track's x with ease:none (gsap-scrolltrigger skill). Desktop
+     * only — under 768px the CSS scroll-snap track (overflow-x-auto,
+     * .reviews-track) already handles it natively; hijacking both would
+     * double-handle touch scroll. */
+    function initReviewsGallery() {
+        var wrap = document.querySelector('.reviews-wrap');
+        var track = document.querySelector('.reviews-track');
+        if (!wrap || !track || window.innerWidth < 768) return;
+
+        var distance = track.scrollWidth - wrap.clientWidth;
+        if (distance <= 0) return;
+
+        gsap.to(track, {
+            x: -distance,
+            ease: 'none',
+            scrollTrigger: {
+                trigger: wrap,
+                start: 'top top',
+                end: function () { return '+=' + distance; },
+                pin: true,
+                scrub: 1,
+                invalidateOnRefresh: true,
+            },
+        });
+    }
+
+    /* ── Loyalty card stamp impact ────────────────────────────────────────
+     * The one moment on the page allowed a mild overshoot ease (emil-design-
+     * eng: reserve bounce for a single literal-impact metaphor). Starts from
+     * scale(0.85), never scale(0) ("nothing appears from nothing"). */
+    function initStampImpact() {
+        var showcase = document.querySelector('.card-showcase');
+        var stamp = document.querySelector('.stamp-mark[data-index="7"]');
+        var stampRow = document.querySelector('.card-showcase .stamp-row');
+        var caption = stampRow ? stampRow.nextElementSibling : null;
+        if (!showcase || !stamp) return;
+
+        ScrollTrigger.create({
+            trigger: showcase,
+            start: 'top 65%',
+            once: true,
+            onEnter: function () {
+                stamp.classList.remove('border', 'border-white/30');
+                stamp.classList.add('bg-white');
+                gsap.fromTo(
+                    stamp,
+                    { scale: 0.85, opacity: 0 },
+                    { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.4)' }
+                );
+                if (caption) caption.textContent = '8 / 10 stamps, free garlic bread next';
+            },
+        });
+    }
+
+    /* ── Loyalty card 3D tilt ─────────────────────────────────────────────
+     * Spring-flavored mouse tracking (emil-design-eng): rAF + lerp toward
+     * the pointer, never an instant snap ("tying visual changes directly to
+     * mouse position feels artificial... with spring it has momentum").
+     * Gated behind hover+fine-pointer so touch devices never get a broken
+     * mousemove listener; touch gets one fixed tilt on scroll-entry instead. */
+    function initCardTilt() {
+        var card = document.getElementById('loyalty-card-3d');
+        if (!card || reducedMotion) return; // reduced motion: card stays flat
+
+        var hoverCapable = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+        if (!hoverCapable) {
+            if (window.gsap && window.ScrollTrigger) {
+                ScrollTrigger.create({
+                    trigger: card,
+                    start: 'top 75%',
+                    once: true,
+                    onEnter: function () {
+                        gsap.to(card, {
+                            rotateY: -10, rotateX: 6,
+                            duration: 0.8, ease: 'power3.out',
+                            transformPerspective: 1200,
+                        });
+                    },
+                });
+            }
+            return;
+        }
+
+        var rafId = null;
+        var tracking = false;
+        var targetRotX = 0, targetRotY = 0;
+        var currentRotX = 0, currentRotY = 0;
+
+        function loop() {
+            currentRotX += (targetRotX - currentRotX) * 0.12;
+            currentRotY += (targetRotY - currentRotY) * 0.12;
+            card.style.transform =
+                'perspective(1200px) rotateX(' + currentRotX.toFixed(2) + 'deg) rotateY(' + currentRotY.toFixed(2) + 'deg)';
+            var settled = Math.abs(targetRotX - currentRotX) < 0.02 && Math.abs(targetRotY - currentRotY) < 0.02;
+            if (tracking || !settled) {
+                rafId = requestAnimationFrame(loop);
+            } else {
+                rafId = null;
+            }
+        }
+
+        card.addEventListener('mouseenter', function () {
+            tracking = true;
+            card.classList.remove('settling');
+            if (rafId === null) rafId = requestAnimationFrame(loop);
+        });
+        card.addEventListener('mousemove', function (e) {
+            var rect = card.getBoundingClientRect();
+            var px = (e.clientX - rect.left) / rect.width - 0.5;
+            var py = (e.clientY - rect.top) / rect.height - 0.5;
+            targetRotY = px * 18;
+            targetRotX = -py * 14;
+        });
+        card.addEventListener('mouseleave', function () {
+            tracking = false;
+            targetRotX = 0;
+            targetRotY = 0;
+            card.classList.add('settling');
+            if (rafId === null) rafId = requestAnimationFrame(loop);
+            setTimeout(function () { card.classList.remove('settling'); }, 520);
+        });
     }
 
     // The sticky phone mockup reacts to the active story step:
@@ -321,6 +450,7 @@
     function boot() {
         initHero();
         initHeadline();
+        initCardTilt();
         initScroll();
     }
 })();

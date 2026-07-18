@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}QuickBite AI + Loyalty{% endblock %}</title>
-    <meta name="description" content="{% block description %}One QR code on your receipt — AI-drafted 5-star reviews and an app-less loyalty stamp card for your restaurant.{% endblock %}">
+    <meta name="description" content="{% block description %}One QR code on your receipt. AI-drafted 5-star reviews and an app-less loyalty stamp card for your restaurant.{% endblock %}">
 
-    <!-- Animate.css — must load in <head> so classes exist before first render (Doc 4 §7.3) -->
+    <!-- Animate.css, must load in <head> so classes exist before first render (Doc 4 §7.3) -->
     <link rel="preload" as="style"
           href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet"
@@ -18,11 +18,11 @@
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap">
 
-    <!-- Tailwind CDN (dev/v1 — swap for compiled build before scale) -->
+    <!-- Tailwind CDN (dev/v1, swap for compiled build before scale) -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* Doc 4 §2 palette — the 11 exact hexes, single source of truth for custom CSS */
+        /* Doc 4 §2 palette, the 11 exact hexes, single source of truth for custom CSS */
         :root {
             --qb-blue:   #1A56DB;
             --qb-teal:   #0D9488;
@@ -35,6 +35,11 @@
             --qb-amber:  #D97706;
             --qb-purple: #7C3AED;
             --qb-white:  #FFFFFF;
+            /* Palette exceptions (landing page v3), see PRODUCT.md. Narrow,
+               documented roles only; never compete with --qb-teal's locked
+               "all loyalty flows" role from Doc 4 §2. */
+            --qb-gold:     #D4A537;
+            --qb-obsidian: #0B0F14;
         }
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -48,7 +53,7 @@
 <body class="bg-white antialiased">
     {% block content %}{% endblock %}
 
-    <!-- Anime.js — before </body>, before app.js (Doc 4 §7.3) -->
+    <!-- Anime.js, before </body>, before app.js (Doc 4 §7.3) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 
     <!-- Page-specific libraries (Three.js/GSAP landing-only, confetti celebration-only) -->

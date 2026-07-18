@@ -39,5 +39,10 @@ Energetic, trustworthy, appetising. Feels like a modern Indian food-tech brand (
 4. Committed color, exact hexes — the Doc 4 palette (11 colors) is law; teal #0D9488 carries loyalty, orange #FF6B35 converts, blue #1A56DB anchors.
 5. Motion serves narrative — GSAP scroll reveals and the Three.js hero are the story's pacing, with a full prefers-reduced-motion fallback.
 
+## Palette exceptions
+Two narrow, documented additions to the Doc 4 11-color lock, introduced for the landing page's card/QR/stamp showcase section. Neither competes with Loyalty Teal's locked "all loyalty flows: stamps, rewards, OTP" role (Doc 4 §2) — these are finish accents, not replacements.
+- **Foil Gold `#D4A537`** — premium-finish accent only: the loyalty card's foil edge, the QR pattern's corner locator marks, review-section star/quote glints. Never used for stamps, rewards, or OTP (that stays teal everywhere).
+- **Obsidian `#0B0F14`** — a deeper near-black surface, distinct from Dark Ink navy (`#1E2A3A`), used only as the base of the card/QR/stamp showcase section.
+
 ## Accessibility & Inclusion
 prefers-reduced-motion support is mandatory on every animation (Doc 4 §7.8). Body text ≥ 4.5:1 contrast; large white text on teal only at ≥18px bold. Touch targets ≥ 44px. `inputmode` attributes on numeric/tel inputs. Works on 375px viewports — diners are mobile-only.

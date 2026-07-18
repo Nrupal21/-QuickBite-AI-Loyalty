@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}QuickBite — Turn Every Meal Into a 5-Star Story{% endblock %}
+{% block title %}QuickBite | Turn Every Meal Into a 5-Star Story{% endblock %}
 
 {% block head %}
 <style>
-    /* Hero ambient glow — cinematic dark-ink stage, shown even before/without
+    /* Hero ambient glow, cinematic dark-ink stage, shown even before/without
        WebGL (Three.js draws on top via the transparent canvas). Luminous
        against dark, per DESIGN.md §1/§4. */
     .hero-ambient {
@@ -26,19 +26,36 @@
     .step-active { opacity: 1; }
     .how-step { transition: opacity 0.3s ease-out; }
 
-    /* Perpetual micro-motion on the live redemption code — signals "this is
+    /* Perpetual micro-motion on the live redemption code, signals "this is
        live", reserved for this one moment per DESIGN.md §7. */
     @keyframes qb-pulse-glow {
         0%, 100% { box-shadow: 0 0 0 rgba(13, 148, 136, 0); }
         50%      { box-shadow: 0 0 32px rgba(13, 148, 136, 0.35); }
     }
     .reward-pulse { animation: qb-pulse-glow 3s ease-in-out infinite; }
+
+    /* Reviews horizontal track, native scroll-snap fallback (reduced motion,
+       no GSAP/JS). JS takes over the transform when ScrollTrigger is available. */
+    .reviews-track::-webkit-scrollbar { display: none; }
+    .reviews-track { scrollbar-width: none; }
+
+    /* Loyalty card 3D tilt surface. No permanent transition here: during
+       active pointer tracking JS applies the lerped transform every frame
+       (that lerp IS the spring, per emil-design-eng). Only .settling gets a
+       CSS transition, for the one-shot return-to-flat on pointer leave. */
+    .loyalty-card {
+        transform-style: preserve-3d;
+        will-change: transform;
+    }
+    .loyalty-card.settling {
+        transition: transform 500ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- ── Sticky nav — dark-translucent, cohesive with the dark hero opening ── -->
+<!-- ── Sticky nav, dark-translucent, cohesive with the dark hero opening ── -->
 <header id="site-nav" class="fixed top-0 inset-x-0 z-40 bg-[#1E2A3A]/85 backdrop-blur-md transition-shadow">
     <nav class="max-w-[1280px] mx-auto flex items-center justify-between px-6 lg:px-12 h-16">
         <a href="/" class="text-xl font-extrabold tracking-tight text-white">
@@ -56,7 +73,7 @@
     </nav>
 </header>
 
-<!-- ── Hero — dark-ink stage, asymmetric split, Three.js canvas (STITCH-12 / ANIM-05) ── -->
+<!-- ── Hero, dark-ink stage, asymmetric split, Three.js canvas (STITCH-12 / ANIM-05) ── -->
 <section class="hero relative min-h-[100dvh] flex items-center overflow-hidden bg-[#1E2A3A] hero-ambient">
     <canvas id="hero-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
 
@@ -67,13 +84,13 @@
             </h1>
             <p class="mt-6 text-lg md:text-xl text-white/70 max-w-[60ch]">
                 One QR code on the receipt. Your diner scans it, AI drafts their
-                glowing review in 30 seconds, and a loyalty stamp brings them back —
-                no app download, no password, no effort from your staff.
+                glowing review in 30 seconds, and a loyalty stamp brings them back.
+                No app download, no password, no effort from your staff.
             </p>
             <div class="mt-9 flex flex-wrap items-center gap-4">
                 <a href="/api/v1/auth/register"
                    class="bg-[#FF6B35] text-white px-8 py-4 rounded-xl text-[15px] font-semibold hover:bg-[#E55A2B] transition-all active:translate-y-[1px]">
-                    Start Free — no card needed
+                    Start Free, no card needed
                 </a>
                 <a href="#how-it-works"
                    class="text-white px-4 py-4 text-[15px] font-semibold hover:text-[#0D9488] transition-colors underline underline-offset-4">
@@ -89,11 +106,11 @@
     </div>
 </section>
 
-<!-- ── How it works — scroll story with sticky phone (a real 3-step sequence) ── -->
+<!-- ── How it works, scroll story with sticky phone (a real 3-step sequence) ── -->
 <section id="how-it-works" class="how-section relative py-24 lg:py-32 bg-white">
     <div class="max-w-[1280px] mx-auto px-6 lg:px-12">
         <h2 class="text-[28px] md:text-4xl font-bold text-[#1E2A3A] max-w-[24ch]">
-            From table to 5-star review to repeat visit — in one scan
+            From table to 5-star review to repeat visit, in one scan
         </h2>
 
         <div class="mt-16 grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
@@ -121,7 +138,7 @@
                     </div>
                     <div class="px-6 py-5">
                         <p class="text-[13px] text-[#64748B] leading-relaxed">
-                            “Loved the wood-fired margherita — crust was perfect and the
+                            “Loved the wood-fired margherita. Crust was perfect and the
                             staff remembered our order from last time.”
                         </p>
                         <p class="mt-2 text-[12px] font-semibold text-[#D97706]">★★★★★ &nbsp;drafted by AI · ready to post</p>
@@ -129,7 +146,7 @@
                 </div>
             </div>
 
-            <!-- The three steps — numbers earn their place: this IS a sequence -->
+            <!-- The three steps, numbers earn their place: this IS a sequence -->
             <ol class="space-y-16 lg:space-y-24">
                 <li class="how-step" data-step="1">
                     <div class="flex items-baseline gap-4">
@@ -138,7 +155,7 @@
                     </div>
                     <p class="mt-3 ml-12 text-base text-[#64748B] max-w-[52ch]">
                         No app to install, nothing to type. The camera opens a page in
-                        their browser — GPS confirms they're really at your restaurant,
+                        their browser, and GPS confirms they're really at your restaurant,
                         so every stamp is a real visit.
                     </p>
                 </li>
@@ -148,8 +165,8 @@
                         <h3 class="text-xl font-semibold text-[#1E2A3A]">Stars + tags → AI writes their review</h3>
                     </div>
                     <p class="mt-3 ml-12 text-base text-[#64748B] max-w-[52ch]">
-                        They tap a star rating and a few tags — “Great Service”,
-                        “Biryani” — and GPT-4o turns it into a warm, personal review.
+                        They tap a star rating and a few tags, like “Great Service” or
+                        “Biryani”, and GPT-4o turns it into a warm, personal review.
                         Three taps later it's on your Google profile.
                     </p>
                 </li>
@@ -159,7 +176,7 @@
                         <h3 class="text-xl font-semibold text-[#1E2A3A]">A stamp lands on their loyalty card</h3>
                     </div>
                     <p class="mt-3 ml-12 text-base text-[#64748B] max-w-[52ch]">
-                        A six-digit SMS code signs them in — no password, ever. Ten
+                        A six-digit SMS code signs them in, no password, ever. Ten
                         stamps unlocks the reward you configured, and WhatsApp tells
                         them the moment it happens.
                     </p>
@@ -169,7 +186,7 @@
     </div>
 </section>
 
-<!-- ── Features — alternating blocks, product shown not described ─────── -->
+<!-- ── Features, alternating blocks, product shown not described ─────── -->
 <section id="features" class="features-section py-24 lg:py-32 bg-[#EFF6FF]">
     <div class="max-w-[1280px] mx-auto px-6 lg:px-12 space-y-20 lg:space-y-28">
         <h2 class="text-[28px] md:text-4xl font-bold text-[#1E2A3A] max-w-[26ch]">
@@ -185,18 +202,19 @@
                 <p class="mt-4 text-base text-[#64748B] max-w-[56ch]">
                     New Google reviews sync automatically. GPT-4o drafts a reply for
                     each one, your manager approves with a tap, and QuickBite posts it
-                    back — consistent tone across every branch, even at 11pm on a Sunday.
+                    back. Consistent tone across every branch, even at 11pm on a Sunday.
                 </p>
             </div>
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 max-w-md lg:justify-self-end w-full">
                 <p class="text-[13px] font-semibold text-[#64748B]">★★☆☆☆ · Rohan, yesterday</p>
                 <p class="mt-2 text-[15px] text-[#1E2A3A]">“Waited 40 minutes for a table on a Tuesday…”</p>
                 <div class="mt-4 rounded-xl bg-[#EFF6FF] p-4">
-                    <p class="text-[13px] font-semibold text-[#1A56DB]">AI draft — awaiting approval</p>
+                    <p class="text-[13px] font-semibold text-[#1A56DB]">AI draft, awaiting approval</p>
                     <p class="mt-1 text-[15px] text-[#1E2A3A] italic">
-                        Rohan, you're right — Tuesday caught us understaffed and that's
-                        on us. Your next visit's starter is ours. — Marco
+                        Rohan, you're right, Tuesday caught us understaffed and that's
+                        on us. Your next visit's starter is ours.
                     </p>
+                    <p class="mt-1 text-xs text-[#64748B]">- Marco</p>
                     <div class="mt-3 flex gap-2">
                         <span class="bg-[#059669] text-white text-[13px] font-semibold px-4 py-1.5 rounded-lg">Approve</span>
                         <span class="text-[#64748B] text-[13px] font-semibold px-4 py-1.5">Edit</span>
@@ -214,7 +232,7 @@
                 <p class="mt-4 text-base text-[#64748B] max-w-[56ch]">
                     Every scan is GPS-checked against your branch's geofence and
                     rate-limited per customer. Stamps only land when someone is
-                    actually at your table — fraud attempts are logged for you to see.
+                    actually at your table, and fraud attempts are logged for you to see.
                 </p>
             </div>
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 max-w-md w-full">
@@ -227,11 +245,11 @@
             </div>
         </div>
 
-        <!-- Feature 3: owner dashboard -->
-        <div class="feature-card scroll-trigger-section grid lg:grid-cols-2 gap-10 items-center">
-            <div>
+        <!-- Feature 3: owner dashboard, full-width stat band, breaks the zigzag run -->
+        <div class="scroll-trigger-section">
+            <div class="max-w-[640px]">
                 <h3 class="text-xl md:text-2xl font-semibold text-[#1E2A3A]">
-                    See who's coming back — live
+                    See who's coming back, live
                 </h3>
                 <p class="mt-4 text-base text-[#64748B] max-w-[56ch]">
                     Scans, sentiment and repeat-visit numbers stream into one
@@ -239,27 +257,142 @@
                     and watch review scores move week over week.
                 </p>
             </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 max-w-md lg:justify-self-end w-full">
-                <div class="flex gap-6">
-                    <div><p class="stat-value text-3xl font-extrabold text-[#1A56DB]" data-value="128">128</p><p class="text-[13px] text-[#64748B]">scans this week</p></div>
-                    <div><p class="stat-value text-3xl font-extrabold text-[#0D9488]" data-value="41">41</p><p class="text-[13px] text-[#64748B]">repeat diners</p></div>
-                    <div><p class="stat-value text-3xl font-extrabold text-[#FF6B35]" data-value="4.6">4.6</p><p class="text-[13px] text-[#64748B]">avg. rating</p></div>
+            <div class="mt-10 grid sm:grid-cols-3 gap-8 max-w-2xl">
+                <div class="border-t border-gray-200 pt-4">
+                    <p class="stat-value text-4xl font-extrabold text-[#1A56DB]" data-value="128">128</p>
+                    <p class="mt-1 text-[13px] text-[#64748B]">scans this week</p>
                 </div>
-                <div class="mt-4 flex items-end gap-1.5 h-16">
-                    <div class="w-full bg-[#EFF6FF] rounded-t" style="height:35%"></div>
-                    <div class="w-full bg-[#EFF6FF] rounded-t" style="height:55%"></div>
-                    <div class="w-full bg-[#1A56DB]/30 rounded-t" style="height:45%"></div>
-                    <div class="w-full bg-[#1A56DB]/50 rounded-t" style="height:70%"></div>
-                    <div class="w-full bg-[#1A56DB]/70 rounded-t" style="height:60%"></div>
-                    <div class="w-full bg-[#1A56DB] rounded-t" style="height:90%"></div>
-                    <div class="w-full bg-[#0D9488] rounded-t" style="height:100%"></div>
+                <div class="border-t border-gray-200 pt-4">
+                    <p class="stat-value text-4xl font-extrabold text-[#0D9488]" data-value="41">41</p>
+                    <p class="mt-1 text-[13px] text-[#64748B]">repeat diners</p>
+                </div>
+                <div class="border-t border-gray-200 pt-4">
+                    <p class="stat-value text-4xl font-extrabold text-[#FF6B35]" data-value="4.6">4.6</p>
+                    <p class="mt-1 text-[13px] text-[#64748B]">avg. rating</p>
+                </div>
+            </div>
+            <div class="mt-8 flex items-end gap-2 h-20 max-w-2xl">
+                <div class="w-full bg-[#EFF6FF] rounded-t" style="height:35%"></div>
+                <div class="w-full bg-[#EFF6FF] rounded-t" style="height:55%"></div>
+                <div class="w-full bg-[#1A56DB]/30 rounded-t" style="height:45%"></div>
+                <div class="w-full bg-[#1A56DB]/50 rounded-t" style="height:70%"></div>
+                <div class="w-full bg-[#1A56DB]/70 rounded-t" style="height:60%"></div>
+                <div class="w-full bg-[#1A56DB] rounded-t" style="height:90%"></div>
+                <div class="w-full bg-[#0D9488] rounded-t" style="height:100%"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Reviews, example AI-drafted diner reviews, horizontal scroll gallery ── -->
+<section id="reviews" class="reviews-section relative py-24 lg:py-32 bg-white overflow-hidden">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-12">
+        <h2 class="text-[28px] md:text-4xl font-bold text-[#1E2A3A] max-w-[24ch]">
+            What the AI drafts, in the diner's own words
+        </h2>
+        <p class="mt-3 text-base text-[#64748B] max-w-[56ch]">
+            Five example reviews QuickBite has drafted for restaurants like yours.
+        </p>
+    </div>
+    <div class="reviews-wrap relative mt-12">
+        <div class="reviews-track flex gap-6 px-6 lg:px-12 overflow-x-auto snap-x snap-mandatory md:overflow-visible">
+            <article class="review-card snap-start shrink-0 w-[300px] bg-[#EFF6FF] rounded-2xl p-6">
+                <p class="text-[#FF6B35] text-sm">★★★★★</p>
+                <p class="mt-3 text-[15px] text-[#1E2A3A] leading-relaxed">
+                    “The butter chicken was rich and the naan came out hot. Staff
+                    remembered we don't eat spicy.”
+                </p>
+                <p class="mt-4 text-[13px] font-semibold text-[#64748B]">Ananya R., Koramangala</p>
+            </article>
+            <article class="review-card snap-start shrink-0 w-[300px] bg-[#EFF6FF] rounded-2xl p-6">
+                <p class="text-[#FF6B35] text-sm">★★★★★</p>
+                <p class="mt-3 text-[15px] text-[#1E2A3A] leading-relaxed">
+                    “Booked a last-minute table for six and they made it work.
+                    The dal makhani alone is worth the drive.”
+                </p>
+                <p class="mt-4 text-[13px] font-semibold text-[#64748B]">Karthik M., HSR Layout</p>
+            </article>
+            <article class="review-card snap-start shrink-0 w-[300px] bg-[#EFF6FF] rounded-2xl p-6">
+                <p class="text-[#FF6B35] text-sm">★★★★☆</p>
+                <p class="mt-3 text-[15px] text-[#1E2A3A] leading-relaxed">
+                    “Portions are generous and the biryani is properly layered.
+                    Parking was tight on a Friday night.”
+                </p>
+                <p class="mt-4 text-[13px] font-semibold text-[#64748B]">Fatima S., Indiranagar</p>
+            </article>
+            <article class="review-card snap-start shrink-0 w-[300px] bg-[#EFF6FF] rounded-2xl p-6">
+                <p class="text-[#FF6B35] text-sm">★★★★★</p>
+                <p class="mt-3 text-[15px] text-[#1E2A3A] leading-relaxed">
+                    “Third visit this month. The masala dosa is consistent every
+                    single time, which is rarer than it sounds.”
+                </p>
+                <p class="mt-4 text-[13px] font-semibold text-[#64748B]">Devika P., Whitefield</p>
+            </article>
+            <article class="review-card snap-start shrink-0 w-[300px] bg-[#EFF6FF] rounded-2xl p-6">
+                <p class="text-[#FF6B35] text-sm">★★★★★</p>
+                <p class="mt-3 text-[15px] text-[#1E2A3A] leading-relaxed">
+                    “Loved that the QR review took thirty seconds. Food was great
+                    too, the paneer tikka especially.”
+                </p>
+                <p class="mt-4 text-[13px] font-semibold text-[#64748B]">Rohan V., Jayanagar</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<!-- ── Loyalty card, QR, and stamp showcase, Obsidian display case ── -->
+<section class="card-showcase relative py-32 bg-[#0B0F14] overflow-hidden">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-12 text-center">
+        <h2 class="text-[28px] md:text-4xl font-bold text-white max-w-[26ch] mx-auto">
+            One card. A stamp, a QR code, and a reason to come back.
+        </h2>
+        <p class="mt-3 text-base text-white/60 max-w-[52ch] mx-auto">
+            The digital loyalty card your diners keep in their pocket.
+        </p>
+
+        <div class="mt-16 flex justify-center" style="perspective: 1200px;">
+            <div id="loyalty-card-3d" class="loyalty-card relative w-[340px] aspect-[1.586/1] rounded-2xl overflow-hidden"
+                 style="background: linear-gradient(135deg, #0D9488, #0B7A70); border: 1px solid #D4A537; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);">
+                <div class="absolute inset-0 p-6 flex flex-col justify-between text-white">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-[11px] uppercase tracking-[0.08em] text-white/70">QuickBite Loyalty</p>
+                            <p class="mt-1 text-lg font-bold">Marco's Pizzeria</p>
+                        </div>
+                        <svg class="qr-mark" width="46" height="46" viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustrative QR pattern">
+                            <rect x="0" y="0" width="12" height="12" fill="none" stroke="#D4A537" stroke-width="2"/>
+                            <rect x="34" y="0" width="12" height="12" fill="none" stroke="#D4A537" stroke-width="2"/>
+                            <rect x="0" y="34" width="12" height="12" fill="none" stroke="#D4A537" stroke-width="2"/>
+                            <rect x="4" y="4" width="4" height="4" fill="#D4A537"/>
+                            <rect x="38" y="4" width="4" height="4" fill="#D4A537"/>
+                            <rect x="4" y="38" width="4" height="4" fill="#D4A537"/>
+                            <rect x="16" y="0" width="4" height="4" fill="white"/>
+                            <rect x="24" y="4" width="4" height="4" fill="white"/>
+                            <rect x="16" y="12" width="4" height="4" fill="white"/>
+                            <rect x="28" y="16" width="4" height="4" fill="white"/>
+                            <rect x="18" y="20" width="4" height="4" fill="white"/>
+                            <rect x="24" y="24" width="4" height="4" fill="white"/>
+                            <rect x="16" y="28" width="4" height="4" fill="white"/>
+                            <rect x="0" y="18" width="4" height="4" fill="white"/>
+                            <rect x="20" y="34" width="4" height="4" fill="white"/>
+                            <rect x="28" y="38" width="4" height="4" fill="white"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="stamp-row flex gap-2">
+                            {% for i in range(10) %}
+                            <span class="stamp-mark inline-block w-6 h-6 rounded-full {{ 'bg-white' if i < 7 else 'border border-white/30' }}" data-index="{{ i }}"></span>
+                            {% endfor %}
+                        </div>
+                        <p class="mt-3 text-sm font-semibold">7 / 10 stamps, free garlic bread next</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- ── The teal moment — drenched loyalty band (the page "arrives" here) ── -->
+<!-- ── The teal moment, drenched loyalty band (the page "arrives" here) ── -->
 <section class="teal-band bg-[#0D9488] py-24 lg:py-32 text-center">
     <div class="max-w-[1280px] mx-auto px-6 lg:px-12 flex flex-col items-center">
         <span class="inline-block bg-white/15 text-white text-[13px] font-extrabold uppercase tracking-[0.04em] px-4 py-1.5 rounded-full mb-6">
@@ -269,7 +402,7 @@
             Ten stamps later, your best customer walks back in.
         </p>
         <p class="mt-5 text-lg font-semibold text-white/95 max-w-[48ch] mx-auto">
-            The reward is your choice — free coffee, 20% off, a garlic bread on the
+            The reward is your choice: free coffee, 20% off, a garlic bread on the
             house. QuickBite handles the counting, the codes, and the WhatsApp nudge.
         </p>
         <div class="reward-pulse mt-8 inline-block bg-white rounded-2xl px-8 py-5">
@@ -279,11 +412,11 @@
     </div>
 </section>
 
-<!-- ── Pricing — 3 plans, Pro carries the purple accent ───────────────── -->
+<!-- ── Pricing, 3 plans, Pro carries the purple accent ───────────────── -->
 <section id="pricing" class="py-24 lg:py-32">
     <div class="max-w-[1280px] mx-auto px-6 lg:px-12">
         <h2 class="text-[28px] md:text-4xl font-bold text-[#1E2A3A]">Start free. Grow when it works.</h2>
-        <p class="mt-3 text-base text-[#64748B]">Prices in INR per branch location. Cancel any time — access runs to period end.</p>
+        <p class="mt-3 text-base text-[#64748B]">Prices in INR per branch location. Cancel any time, access runs to period end.</p>
 
         <div class="mt-12 grid md:grid-cols-3 gap-6 items-start">
             <!-- Starter -->
@@ -303,7 +436,7 @@
                 </a>
             </div>
 
-            <!-- Pro — highlighted -->
+            <!-- Pro, highlighted -->
             <div class="flex flex-col rounded-2xl border-2 border-[#7C3AED] p-6 md:-mt-4 md:pb-10 bg-white shadow-lg relative">
                 <span class="absolute -top-3.5 left-6 bg-[#7C3AED] text-white text-[13px] font-semibold px-3 py-1 rounded-full">
                     14-day free trial
@@ -354,9 +487,9 @@
            class="mt-8 inline-block bg-[#FF6B35] text-white px-8 py-4 rounded-xl text-[15px] font-semibold hover:bg-[#E55A2B] transition-all">
             Start Free
         </a>
-        <p class="mt-12 text-[13px] text-white/60">
-            © 2026 QuickBite AI + Loyalty · Made for Indian restaurants ·
-            <a href="#" class="underline underline-offset-2">Privacy</a> ·
+        <p class="mt-12 text-[13px] text-white/60">© 2026 QuickBite AI + Loyalty. Made for Indian restaurants.</p>
+        <p class="mt-2 flex justify-center gap-6 text-[13px] text-white/60">
+            <a href="#" class="underline underline-offset-2">Privacy</a>
             <a href="#" class="underline underline-offset-2">Terms</a>
         </p>
     </div>
@@ -364,7 +497,7 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Landing page only — Three.js + GSAP, deferred (Doc 4 §7.3) -->
+<!-- Landing page only, Three.js + GSAP, deferred (Doc 4 §7.3) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
