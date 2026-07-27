@@ -66,7 +66,24 @@ class Settings(BaseSettings):
     TWILIO_FROM_NUMBER: str = ""
     TWILIO_WHATSAPP_FROM: str = ""
 
-    # --- SendGrid (Email) ---
+    # --- Email (SMTP transport) ---
+    # Every field has a default on purpose: `settings = Settings()` runs at
+    # import, so a required field here would fail the whole test suite at
+    # collection. Missing credentials are handled at send time (best-effort
+    # `return False`), never at startup — a degraded email channel must not
+    # stop the app from booting.
+    EMAIL_ENABLED: bool = True
+    EMAIL_PROVIDER: str = "smtp"  # smtp | sendgrid
+    EMAIL_FROM_ADDRESS: str = "no-reply@quickbite.ai"
+    EMAIL_FROM_NAME: str = "QuickBite AI"
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""  # Gmail App Password — NEVER the account password
+    SMTP_SECURITY: str = "starttls"  # starttls (587) | tls (465) | none
+    SMTP_TIMEOUT_SECONDS: int = 10
+
+    # --- SendGrid (Email — legacy, used when EMAIL_PROVIDER=sendgrid) ---
     SENDGRID_API_KEY: str = ""
 
     # --- Stripe (Billing) ---
@@ -91,6 +108,32 @@ class Settings(BaseSettings):
     def allowed_hosts_list(self) -> list[str]:
         """Parse ALLOWED_HOSTS CSV into a list."""
         return [h.strip() for h in self.ALLOWED_HOSTS.split(",") if h.strip()]
+
+    @property
+    def smtp_tls_kwargs(self) -> dict[str, bool]:
+        """TLS flags for aiosmtplib, derived from the single SMTP_SECURITY enum.
+
+        aiosmtplib raises ValueError when `use_tls` and `start_tls` are both
+        True. Deriving both from one enum makes that state unrepresentable —
+        with two independent booleans a mistyped .env would raise inside the
+        transport's best-effort `except Exception`, producing a silent,
+        total email outage with only a generic log line to show for it.
+        """
+        if self.SMTP_SECURITY == "tls":
+            return {"use_tls": True, "start_tls": False}
+        if self.SMTP_SECURITY == "starttls":
+            return {"use_tls": False, "start_tls": True}
+        return {"use_tls": False, "start_tls": False}
+
+    @property
+    def email_from_address(self) -> str:
+        """Sender address, falling back to the authenticated SMTP account.
+
+        Gmail rewrites the From header to the authenticated account anyway
+        unless the alias is verified under Settings > Accounts > "Send mail
+        as", so falling back to it keeps the header honest.
+        """
+        return self.EMAIL_FROM_ADDRESS or self.SMTP_USERNAME
 
     # --- Validators ---
     @field_validator("BCRYPT_ROUNDS")
@@ -117,6 +160,44 @@ class Settings(BaseSettings):
         """CUSTOMER_OTP_TTL_SECONDS must not exceed 600."""
         if v > 600:
             msg = "CUSTOMER_OTP_TTL_SECONDS must be <= 600 (current: %d)" % v
+            raise ValueError(msg)
+        return v
+
+    @field_validator("SMTP_PASSWORD")
+    @classmethod
+    def strip_smtp_password(cls, v: str) -> str:
+        """Strip spaces from a Gmail App Password.
+
+        Google displays App Passwords as 'abcd efgh ijkl mnop' — the spaces are
+        presentation only. Pasting them verbatim is the single most common SMTP
+        misconfiguration, and it surfaces as an opaque
+        '535 5.7.8 Username and Password not accepted'.
+        """
+        return v.replace(" ", "")
+
+    @field_validator("EMAIL_PROVIDER")
+    @classmethod
+    def validate_email_provider(cls, v: str) -> str:
+        allowed = {"smtp", "sendgrid"}
+        if v not in allowed:
+            msg = f"EMAIL_PROVIDER must be one of {sorted(allowed)} (current: {v!r})"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("SMTP_SECURITY")
+    @classmethod
+    def validate_smtp_security(cls, v: str) -> str:
+        allowed = {"starttls", "tls", "none"}
+        if v not in allowed:
+            msg = f"SMTP_SECURITY must be one of {sorted(allowed)} (current: {v!r})"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("SMTP_PORT")
+    @classmethod
+    def validate_smtp_port(cls, v: int) -> int:
+        if not 1 <= v <= 65535:
+            msg = "SMTP_PORT must be between 1 and 65535 (current: %d)" % v
             raise ValueError(msg)
         return v
 

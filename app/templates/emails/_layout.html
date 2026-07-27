@@ -1,0 +1,44 @@
+{# QuickBite email shell.
+
+   Email HTML is not web HTML, and the constraints below are correctness rather
+   than taste:
+   - Table layout, inline style= only. Gmail strips <head>, so a <style> block
+     is discarded; Outlook renders through the Word engine and ignores most CSS.
+   - No Tailwind CDN, no web fonts, no external images — clients block remote
+     fetches by default, so anything not inline simply does not render.
+   - CTAs are styled <a> elements. <button> does nothing in a mail client.
+   Palette is the Doc 4 / AGENTS.md §8 set, hardcoded because CSS variables are
+   not supported in email either.
+#}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+       style="background-color:#EFF6FF;margin:0;padding:24px 12px;">
+  <tr>
+    <td align="center">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600"
+             style="max-width:600px;width:100%;background-color:#FFFFFF;border-radius:12px;
+                    font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+        {% block accent %}{% endblock %}
+        <tr>
+          <td style="padding:32px 40px 8px 40px;">
+            <div style="font-size:20px;font-weight:700;color:#1A56DB;letter-spacing:-0.3px;">
+              QuickBite
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px 40px 32px 40px;font-size:15px;line-height:1.6;color:#1E2A3A;">
+            {% block content %}{% endblock %}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 40px 32px 40px;border-top:1px solid #EFF6FF;">
+            <p style="margin:20px 0 0 0;font-size:12px;line-height:1.5;color:#64748B;">
+              You received this because someone used this address on QuickBite.
+              If it wasn't you, you can ignore this message.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

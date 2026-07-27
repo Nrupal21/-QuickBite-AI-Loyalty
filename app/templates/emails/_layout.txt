@@ -1,0 +1,11 @@
+{# Plaintext shell. Rendered by _text_env with autoescape OFF, so apostrophes
+   and URL query separators stay literal. Every .txt must carry the same
+   actionable content as its .html twin, with URLs spelled out in full — a
+   text-only client must never be left with "click the button above". #}
+QuickBite
+
+{% block content %}{% endblock %}
+
+--
+You received this because someone used this address on QuickBite.
+If it wasn't you, you can ignore this message.

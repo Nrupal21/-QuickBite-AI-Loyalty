@@ -43,6 +43,9 @@ openai==1.30.0
 stripe==9.6.0
 twilio==9.1.0
 sendgrid==6.11.0
+# Async SMTP — the four email senders are `async def`, so a blocking smtplib
+# call would stall the event loop on every signup, lockout, invite and OTP.
+aiosmtplib==3.0.1
 
 # --- Utilities ---
 qrcode[pil]==7.4.2

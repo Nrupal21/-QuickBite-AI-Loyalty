@@ -1,0 +1,11 @@
+{% extends "_layout.txt" %}
+{% block content %}
+Your login code
+
+Enter this code to sign in to your loyalty account:
+
+    {{ otp }}
+
+This code expires in 5 minutes and can only be used once. QuickBite will never
+ask you for it — if someone does, don't share it.
+{% endblock %}
