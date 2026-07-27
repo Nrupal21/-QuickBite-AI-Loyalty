@@ -1,0 +1,28 @@
+{# Shell for operator-authored copy from static.notification_templates.
+
+   `paragraphs` is a list of PLAIN TEXT strings. Each `{{ }}` below is escaped
+   by the html environment's file autoescaping — that escaping is the only
+   thing standing between DB write access and stored XSS in customer mail, so
+   nothing here may ever be marked |safe.
+
+   Links are rendered from cta_url/cta_label, never from anchors typed into the
+   DB body, for the same reason.
+#}
+{% extends "_layout.html" %}
+{% block content %}
+{% for paragraph in paragraphs %}
+<p style="margin:0 0 16px 0;">{{ paragraph }}</p>
+{% endfor %}
+{% if cta_url %}
+<p style="margin:24px 0 16px 0;">
+  <a href="{{ cta_url }}"
+     style="display:inline-block;background-color:#1A56DB;color:#FFFFFF;font-size:15px;
+            font-weight:600;padding:14px 28px;border-radius:8px;text-decoration:none;">
+    {{ cta_label or "Continue" }}
+  </a>
+</p>
+<p style="margin:0;font-size:13px;word-break:break-all;">
+  <a href="{{ cta_url }}" style="color:#1A56DB;">{{ cta_url }}</a>
+</p>
+{% endif %}
+{% endblock %}

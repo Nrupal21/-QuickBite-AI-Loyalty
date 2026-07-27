@@ -82,6 +82,9 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""  # Gmail App Password — NEVER the account password
     SMTP_SECURITY: str = "starttls"  # starttls (587) | tls (465) | none
     SMTP_TIMEOUT_SECONDS: int = 10
+    # How long an operator's copy edit in static.notification_templates takes to
+    # reach every worker. Staleness here is cheap; a Redis hop per send is not.
+    EMAIL_TEMPLATE_CACHE_TTL_SECONDS: int = 300
 
     # --- SendGrid (Email — legacy, used when EMAIL_PROVIDER=sendgrid) ---
     SENDGRID_API_KEY: str = ""
