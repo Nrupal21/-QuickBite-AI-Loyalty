@@ -5,6 +5,8 @@ Missing required vars = startup failure with clear ValidationError.
 See Doc 2 §4 for full variable documentation.
 """
 
+import json
+
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -58,6 +60,13 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o"
     GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-1.5-pro"
+    # REVIEW-01 requires an uncached draft in under 3s end to end. The per-
+    # provider budget is deliberately below that: on an OpenAI timeout there
+    # still has to be room to fail over to Gemini and answer inside the same 3s.
+    AI_REQUEST_TIMEOUT_SECONDS: float = 1.2
+    AI_MAX_OUTPUT_TOKENS: int = 220
+    AI_DRAFT_CACHE_TTL_SECONDS: int = 3600  # 1h, per REVIEW-01
     AI_PROVIDER: str = "auto"
 
     # --- Twilio (SMS + WhatsApp) ---
@@ -89,9 +98,40 @@ class Settings(BaseSettings):
     # --- SendGrid (Email — legacy, used when EMAIL_PROVIDER=sendgrid) ---
     SENDGRID_API_KEY: str = ""
 
-    # --- Stripe (Billing) ---
-    STRIPE_SECRET_KEY: str = ""
-    STRIPE_WEBHOOK_SECRET: str = ""
+    # --- Razorpay (Billing) ---
+    # India-first gateway: prices are already INR paise and tenants carry
+    # GSTIN/PAN, so Razorpay is the native fit. RAZORPAY_WEBHOOK_SECRET is the
+    # HMAC key for X-Razorpay-Signature — it is NOT RAZORPAY_KEY_SECRET, and
+    # confusing the two is the usual cause of every webhook 401'ing.
+    RAZORPAY_KEY_ID: str = ""
+    RAZORPAY_KEY_SECRET: str = ""
+    RAZORPAY_WEBHOOK_SECRET: str = ""
+
+    # --- Supabase Auth (external identity provider) ---
+    # Only SUPABASE_PROJECT_REF gates verification (see `supabase_enabled`), so
+    # an unconfigured environment simply never routes a token to this verifier
+    # rather than failing at startup.
+    SUPABASE_PROJECT_REF: str = ""  # the <ref> in https://<ref>.supabase.co
+    SUPABASE_URL: str = ""
+    SUPABASE_ANON_KEY: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""  # server-only — never ships to a client
+    # Supabase caches its JWKS for 10 minutes at the edge; caching longer than
+    # that would delay key revocation past the window they guarantee.
+    SUPABASE_JWKS_TTL_SECONDS: int = 600
+
+    # --- Firebase Auth + Firestore ---
+    # The service account is the raw JSON blob, not a file path: containers get
+    # secrets as env vars, and a path implies a mounted file we would then have
+    # to keep out of the image.
+    FIREBASE_PROJECT_ID: str = ""
+    FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
+    FIRESTORE_DATABASE: str = "(default)"
+    FIRESTORE_PROJECTION_ENABLED: bool = True
+
+    # --- External identity linking ---
+    # Off by default. When off, an external token with no identity_links row is
+    # rejected with IDENTITY_LINK_REQUIRED instead of provisioning anything.
+    EXTERNAL_AUTH_JIT_ENABLED: bool = False
 
     # --- Stitch.ai (Frontend Generation) ---
     STITCH_AI_API_KEY: str = ""
@@ -137,6 +177,41 @@ class Settings(BaseSettings):
         as", so falling back to it keeps the header honest.
         """
         return self.EMAIL_FROM_ADDRESS or self.SMTP_USERNAME
+
+    @property
+    def supabase_enabled(self) -> bool:
+        """True once a project ref is configured — gates the Supabase verifier.
+
+        A disabled provider can never be selected by token dispatch, so a dev
+        box with no Supabase project cannot be tricked into that branch.
+        """
+        return bool(self.SUPABASE_PROJECT_REF)
+
+    @property
+    def supabase_issuer(self) -> str:
+        """Exact `iss` claim Supabase mints. Compared with `==`, never a prefix.
+
+        Substring/startswith matching is defeated by a hostile issuer such as
+        `https://evil.com/#https://ref.supabase.co/auth/v1`.
+        """
+        return f"https://{self.SUPABASE_PROJECT_REF}.supabase.co/auth/v1"
+
+    @property
+    def supabase_jwks_url(self) -> str:
+        """Public JWKS discovery endpoint for asymmetric (ES256/RS256) keys."""
+        return f"{self.supabase_issuer}/.well-known/jwks.json"
+
+    @property
+    def firebase_enabled(self) -> bool:
+        """Both the project id and credentials are needed — verification alone
+        reads the project id, but Firestore projection needs the key too, and a
+        half-configured Firebase is worse than none."""
+        return bool(self.FIREBASE_PROJECT_ID and self.FIREBASE_SERVICE_ACCOUNT_JSON)
+
+    @property
+    def firebase_issuer(self) -> str:
+        """Exact `iss` on a Firebase ID token. `aud` is the bare project id."""
+        return f"https://securetoken.google.com/{self.FIREBASE_PROJECT_ID}"
 
     # --- Validators ---
     @field_validator("BCRYPT_ROUNDS")
@@ -201,6 +276,41 @@ class Settings(BaseSettings):
     def validate_smtp_port(cls, v: int) -> int:
         if not 1 <= v <= 65535:
             msg = "SMTP_PORT must be between 1 and 65535 (current: %d)" % v
+            raise ValueError(msg)
+        return v
+
+    @field_validator("SUPABASE_PROJECT_REF")
+    @classmethod
+    def validate_supabase_project_ref(cls, v: str) -> str:
+        """Bare project ref only — no scheme, no dots.
+
+        `supabase_issuer` interpolates this into a URL, so pasting the full
+        `https://abc.supabase.co` would build a nonsense issuer that silently
+        matches nothing. Every Supabase token would then 401 with no clue why.
+        """
+        if v and ("/" in v or "." in v or ":" in v):
+            msg = f"SUPABASE_PROJECT_REF must be the bare ref, not a URL (current: {v!r})"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("FIREBASE_SERVICE_ACCOUNT_JSON")
+    @classmethod
+    def validate_firebase_credentials(cls, v: str) -> str:
+        """Parse the service account at startup, not at first token.
+
+        A malformed blob otherwise surfaces as a 503 on the first Firebase
+        request in production, long after the deploy looked healthy.
+        """
+        if not v:
+            return v
+        try:
+            parsed = json.loads(v)
+        except json.JSONDecodeError as exc:
+            msg = f"FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON: {exc}"
+            raise ValueError(msg) from exc
+        missing = {"type", "project_id", "private_key", "client_email"} - parsed.keys()
+        if missing:
+            msg = f"FIREBASE_SERVICE_ACCOUNT_JSON is missing keys: {sorted(missing)}"
             raise ValueError(msg)
         return v
 

@@ -38,9 +38,17 @@ jinja2==3.1.4
 
 # --- AI Providers ---
 openai==1.30.0
+# Gemini is the REVIEW-01 fallback when OpenAI fails or is flagged off.
+google-generativeai==0.8.5
 
 # --- External Services ---
-stripe==9.6.0
+# Razorpay replaces Stripe: pricing is already INR paise and tenants carry
+# GSTIN/PAN. The SDK is used for the orders/subscriptions API only — webhook
+# signature verification is a local hmac.compare_digest, no SDK, no I/O.
+razorpay==1.4.2
+# Firebase Auth ID-token verification + Firestore projection writes. Pulls
+# google-auth and google-cloud-firestore.
+firebase-admin==6.5.0
 twilio==9.1.0
 sendgrid==6.11.0
 # Async SMTP — the four email senders are `async def`, so a blocking smtplib
