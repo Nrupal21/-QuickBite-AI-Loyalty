@@ -34,6 +34,11 @@ class Settings(BaseSettings):
 
     # --- Database & Cache ---
     DATABASE_URL: str
+    # Alembic-only DSN. The application connects as an unprivileged role so
+    # row-level security actually applies to it (see migration 0006), which
+    # means it deliberately cannot run DDL. Migrations need the owner instead.
+    # Empty falls back to DATABASE_URL, so single-role setups are unaffected.
+    MIGRATION_DATABASE_URL: str = ""
     REDIS_URL: str = "redis://localhost:6379/0"
     POSTGIS_ENABLED: bool = True
 
@@ -151,6 +156,11 @@ class Settings(BaseSettings):
     def allowed_hosts_list(self) -> list[str]:
         """Parse ALLOWED_HOSTS CSV into a list."""
         return [h.strip() for h in self.ALLOWED_HOSTS.split(",") if h.strip()]
+
+    @property
+    def alembic_database_url(self) -> str:
+        """DSN for migrations — the owner, falling back to the app's own."""
+        return self.MIGRATION_DATABASE_URL or self.DATABASE_URL
 
     @property
     def smtp_tls_kwargs(self) -> dict[str, bool]:
