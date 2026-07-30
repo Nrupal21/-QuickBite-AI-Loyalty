@@ -27,7 +27,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import prompt_guard
-from app.db import rls
+from app.db import bootstrap, rls
 from app.db.models.branch import Branch
 from app.db.models.tenant import Tenant
 from app.schemas.reputation import ReviewDraftResponse, ReviewGenerateRequest
@@ -41,8 +41,6 @@ async def generate_review_draft(
     request: ReviewGenerateRequest, session: AsyncSession
 ) -> ReviewDraftResponse:
     branch = await _get_active_branch(session, request.branch_qr_token)
-    await rls.set_tenant_context(session, branch.tenant_id)
-
     tags = _sanitise_tags(request.tags, branch.tenant_id)
     restaurant_name = await _get_restaurant_name(session, branch.tenant_id)
 
@@ -117,6 +115,18 @@ def _sanitise_tags(tags: list[str], tenant_id: uuid.UUID) -> list[str]:
 
 
 async def _get_active_branch(session: AsyncSession, qr_token: str) -> Branch:
+    """Resolve the QR token to a tenant, bind it, then read the branch scoped.
+
+    `restaurant.branches` is RLS-protected, so this is the endpoint's
+    chicken-and-egg: the request is unauthenticated and the token is the only
+    thing that knows which tenant it belongs to. Binding happens here rather
+    than in the caller so both unauthenticated entry points — this and the
+    loyalty scan — get it for free instead of each remembering to.
+    """
+    tenant_id = await bootstrap.tenant_for_branch_qr_token(session, qr_token)
+    if tenant_id is not None:
+        await rls.set_tenant_context(session, tenant_id)
+
     result = await session.execute(
         select(Branch).where(Branch.qr_code_token == qr_token, Branch.is_active.is_(True))
     )

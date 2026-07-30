@@ -47,11 +47,18 @@ def ai_configured(mocker):
 
 @pytest.fixture(autouse=True)
 def bound_tenant(mocker):
-    """set_tenant_context issues its own session.execute (SELECT set_config).
+    """Stub the QR->tenant resolver and the RLS bind.
 
-    Stubbed by default so make_session's result list describes only the queries
-    a test cares about; the test that asserts on tenant binding re-patches it.
+    Both issue their own session.execute — the resolver calls a SECURITY
+    DEFINER function (migration 0007) and set_tenant_context runs set_config —
+    so stubbing them keeps make_session's result list describing only the ORM
+    queries a test reasons about. The test that asserts on tenant binding
+    re-patches set_tenant_context locally.
     """
+    mocker.patch(
+        "app.services.review_service.bootstrap.tenant_for_branch_qr_token",
+        AsyncMock(return_value=TENANT_ID),
+    )
     return mocker.patch("app.services.review_service.rls.set_tenant_context", AsyncMock())
 
 

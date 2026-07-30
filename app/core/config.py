@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     # means it deliberately cannot run DDL. Migrations need the owner instead.
     # Empty falls back to DATABASE_URL, so single-role setups are unaffected.
     MIGRATION_DATABASE_URL: str = ""
+    # True when DATABASE_URL points at a transaction pooler (Supabase port
+    # 6543, or any PgBouncer in transaction mode). Disables asyncpg's prepared
+    # statement cache, which the pooler invalidates between transactions.
+    # Migrations must always use the direct connection, never the pooler.
+    DB_USE_TRANSACTION_POOLER: bool = False
     REDIS_URL: str = "redis://localhost:6379/0"
     POSTGIS_ENABLED: bool = True
 

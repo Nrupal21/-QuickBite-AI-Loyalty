@@ -14,6 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import cache_service
+from app.db import bootstrap, rls
 from app.db.models.branch import Branch
 from app.db.models.customer import Customer
 from app.db.models.loyalty import StampLog
@@ -123,6 +124,16 @@ class LoyaltyService:
         )
 
     async def _get_active_branch(self, qr_token: str) -> Branch:
+        """Resolve the QR token to a tenant, bind it, then read the branch scoped.
+
+        The scan is anonymous by design (LOYALTY-03), so the token is the only
+        credential and `restaurant.branches` is RLS-protected — without the
+        bind this returns zero rows and a valid QR code reads as deactivated.
+        """
+        tenant_id = await bootstrap.tenant_for_branch_qr_token(self.session, qr_token)
+        if tenant_id is not None:
+            await rls.set_tenant_context(self.session, tenant_id)
+
         result = await self.session.execute(
             select(Branch).where(Branch.qr_code_token == qr_token, Branch.is_active.is_(True))
         )
