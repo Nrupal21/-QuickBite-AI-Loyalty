@@ -21,9 +21,25 @@ identity providers, verified in `supabase_auth.py` / `firebase_auth.py`.
 1. supabase.com → **New project**. Choose a region near your users
    (`ap-south-1` Mumbai for an Indian restaurant product).
 2. Save the database password it generates — it is shown once.
-3. **Settings → Database → Connection string → URI.** You need *both*:
-   - **Direct** (port `5432`) — migrations, and any DDL.
-   - **Transaction pooler** (port `6543`) — the running application.
+3. **Settings → Database → Connection string.** Copy both; they differ by more
+   than the port number, which is the usual trap:
+
+   ```
+   # Direct — migrations and DDL. Host is db.<ref>, user is plain `postgres`.
+   postgresql+asyncpg://postgres:<pw>@db.<ref>.supabase.co:5432/postgres
+
+   # Transaction pooler — the running app. DIFFERENT host, and the username
+   # carries the project ref: `postgres.<ref>`, not `postgres`.
+   postgresql+asyncpg://postgres.<ref>:<pw>@aws-0-<region>.pooler.supabase.com:6543/postgres
+   ```
+
+   Take the pooler string from the dashboard rather than assembling it — the
+   `<region>` segment is the pooler's region, which is not always spelled the
+   same as the one shown on the project overview.
+
+   Note also that direct connections resolve to IPv6 on newer projects. If your
+   host or CI has no IPv6 route, the direct DSN fails to connect while the
+   pooler works, which looks like a credentials problem and is not.
 
 ## 2. Enable PostGIS
 
@@ -72,10 +88,13 @@ That creates `quickbite_app` as `NOSUPERUSER NOBYPASSRLS`, DML-only on the three
 tenant schemas and read-only on `static`. It also verifies the attributes and
 refuses to finish if either flag is set.
 
-Then point the app at it, through the pooler:
+Then point the app at it, through the pooler. Note the username form: the
+pooler needs `<role>.<project_ref>`, so the custom role becomes
+`quickbite_app.<ref>` — a bare `quickbite_app` is rejected by the pooler before
+it ever reaches Postgres.
 
 ```bash
-DATABASE_URL=postgresql+asyncpg://quickbite_app:<pw>@db.<ref>.supabase.co:6543/postgres
+DATABASE_URL=postgresql+asyncpg://quickbite_app.<ref>:<pw>@aws-0-<region>.pooler.supabase.com:6543/postgres
 DB_USE_TRANSACTION_POOLER=true
 ```
 
