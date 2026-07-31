@@ -21,7 +21,11 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-addopts = "--strict-markers -v"
+# The plugin registers as `langsmith_plugin`, not `langsmith` — a globally
+# installed langsmith is incompatible with this pydantic/3.12 combination and
+# crashes collection, and `-p no:langsmith` silently matches nothing.
+addopts = "-p no:langsmith_plugin --strict-markers -v"
 markers = [
+    "asyncio: mark test as async",
     "allow_smtp: opt out of the autouse SMTP block so the test can patch aiosmtplib itself",
 ]

@@ -6,6 +6,7 @@ See Doc 2 §4 for full variable documentation.
 """
 
 import json
+from pathlib import Path
 
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -311,15 +312,37 @@ class Settings(BaseSettings):
     @field_validator("FIREBASE_SERVICE_ACCOUNT_JSON")
     @classmethod
     def validate_firebase_credentials(cls, v: str) -> str:
-        """Parse the service account at startup, not at first token.
+        """Accept either the inline JSON or a path to the key file, and
+        normalise to inline JSON so every consumer sees one shape.
 
-        A malformed blob otherwise surfaces as a 503 on the first Firebase
-        request in production, long after the deploy looked healthy.
+        A path is supported because that is how Google's own tooling works
+        (`GOOGLE_APPLICATION_CREDENTIALS` is a filename), so it is the form
+        people reach for by habit — and hand-converting a downloaded key to a
+        single line is exactly where the `private_key` newlines get mangled.
+
+        Either way it is parsed at startup rather than at the first Firebase
+        call, so a bad credential fails the deploy instead of surfacing as a
+        503 hours later.
         """
         if not v:
             return v
+
+        candidate = v.strip().strip('"').strip("'")
+        # A path never starts with '{'; anything else is treated as a filename
+        # rather than guessed at, so a truncated blob reports a JSON error
+        # instead of a confusing "file not found".
+        if not candidate.startswith("{"):
+            path = Path(candidate).expanduser()
+            if not path.is_file():
+                msg = (
+                    "FIREBASE_SERVICE_ACCOUNT_JSON looks like a path but no such "
+                    f"file exists: {path}"
+                )
+                raise ValueError(msg)
+            candidate = path.read_text(encoding="utf-8")
+
         try:
-            parsed = json.loads(v)
+            parsed = json.loads(candidate)
         except json.JSONDecodeError as exc:
             msg = f"FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON: {exc}"
             raise ValueError(msg) from exc
@@ -327,7 +350,9 @@ class Settings(BaseSettings):
         if missing:
             msg = f"FIREBASE_SERVICE_ACCOUNT_JSON is missing keys: {sorted(missing)}"
             raise ValueError(msg)
-        return v
+        # Returned inline so firestore_client and firebase_auth stay unaware of
+        # which form the operator supplied.
+        return candidate
 
     @model_validator(mode="after")
     def validate_separate_jwt_keys(self) -> "Settings":
