@@ -71,6 +71,38 @@ async def test_unknown_credential_returns_none(helper, _sql):
 
 
 @pytest.mark.asyncio
+async def test_identity_link_resolver_calls_its_sql_function():
+    """The fifth bootstrap case: an external provider names a subject in *its*
+    namespace, so mapping it onto a tenant necessarily precedes any scoping."""
+    session = make_session(TENANT_ID)
+
+    got = await bootstrap.tenant_for_identity_link(session, "firebase", "abc123")
+
+    assert got == TENANT_ID
+    statement, params = session.execute.await_args.args
+    assert "bootstrap.tenant_for_identity_link" in str(statement)
+    assert params == {"provider": "firebase", "subject_hash": "abc123"}
+
+
+@pytest.mark.asyncio
+async def test_identity_link_resolver_binds_both_arguments():
+    """Provider is part of the lookup, not decoration: the same subject string
+    from Supabase and Firebase must never resolve to each other's tenant."""
+    session = make_session(TENANT_ID)
+
+    await bootstrap.tenant_for_identity_link(session, "supabase", "abc123")
+
+    statement, params = session.execute.await_args.args
+    assert params["provider"] == "supabase"
+    assert "abc123" not in str(statement)
+
+
+@pytest.mark.asyncio
+async def test_identity_link_unknown_subject_returns_none():
+    assert await bootstrap.tenant_for_identity_link(make_session(None), "firebase", "x") is None
+
+
+@pytest.mark.asyncio
 async def test_each_resolver_targets_a_distinct_function():
     """Four credentials, four functions — a copy-paste that pointed two helpers
     at the same one would silently resolve usernames against emails."""

@@ -31,6 +31,7 @@ _EMAIL_SQL = text("SELECT bootstrap.tenant_for_user_email_hash(:value)")
 _USERNAME_SQL = text("SELECT bootstrap.tenant_for_user_username_hash(:value)")
 _QR_TOKEN_SQL = text("SELECT bootstrap.tenant_for_branch_qr_token(:value)")
 _SESSION_SQL = text("SELECT bootstrap.tenant_for_session_token_hash(:value)")
+_IDENTITY_LINK_SQL = text("SELECT bootstrap.tenant_for_identity_link(:provider, :subject_hash)")
 
 
 async def _resolve(session: AsyncSession, statement, value: str) -> uuid.UUID | None:
@@ -68,3 +69,22 @@ async def tenant_for_session_token_hash(
     there is nothing to read a tenant from without touching the table.
     """
     return await _resolve(session, _SESSION_SQL, token_hash)
+
+
+async def tenant_for_identity_link(
+    session: AsyncSession, provider: str, subject_hash: str
+) -> uuid.UUID | None:
+    """Tenant owning the identity link for this external subject, or None.
+
+    A Supabase or Firebase token names a subject in *their* namespace, not
+    ours, so mapping it onto a tenant is exactly what identity_links is for —
+    which means the lookup necessarily precedes any tenant context.
+
+    Only active links resolve: an unlink is recorded as `is_active = false`
+    rather than a delete, so that the audit trail survives, and a revoked
+    external identity must not authenticate.
+    """
+    result = await session.execute(
+        _IDENTITY_LINK_SQL, {"provider": provider, "subject_hash": subject_hash}
+    )
+    return result.scalar_one_or_none()
