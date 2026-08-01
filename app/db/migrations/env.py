@@ -16,7 +16,12 @@ config = context.config
 # Not DATABASE_URL: the app connects as an unprivileged role so RLS applies to
 # it (migration 0006), and that role has no DDL rights by design. Falls back to
 # DATABASE_URL when MIGRATION_DATABASE_URL is unset.
-config.set_main_option("sqlalchemy.url", settings.alembic_database_url)
+#
+# '%' is doubled because set_main_option writes into a configparser, where '%'
+# opens an interpolation. A password containing a percent-encoded character —
+# '%40' for an '@', which the URL itself requires — otherwise dies with
+# "invalid interpolation syntax" before a connection is ever attempted.
+config.set_main_option("sqlalchemy.url", settings.alembic_database_url.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

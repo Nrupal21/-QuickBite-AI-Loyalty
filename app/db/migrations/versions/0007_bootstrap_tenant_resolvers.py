@@ -94,8 +94,20 @@ def upgrade() -> None:
         f"END IF; END $$;"
     )
 
+    # ALTER FUNCTION ... OWNER TO requires *membership* in the target role, not
+    # merely the CREATEROLE privilege that made it. On a self-hosted superuser
+    # this never surfaces; on Supabase the migration dies with
+    # `must be able to SET ROLE "quickbite_bootstrap"` at the first ALTER OWNER.
+    # Granting membership to the migrating role is what makes the ownership
+    # transfer legal, and it is safe: the role is NOLOGIN, so membership confers
+    # no way to authenticate as it.
+    op.execute(f"GRANT {BOOTSTRAP_ROLE} TO CURRENT_USER")
+
     op.execute("CREATE SCHEMA IF NOT EXISTS bootstrap")
-    op.execute(f"GRANT USAGE ON SCHEMA bootstrap TO {BOOTSTRAP_ROLE}")
+    # CREATE as well as USAGE: Postgres requires a function's owner to hold
+    # CREATE on the containing schema, so without it the ALTER ... OWNER TO
+    # below fails with `permission denied for schema bootstrap`.
+    op.execute(f"GRANT USAGE, CREATE ON SCHEMA bootstrap TO {BOOTSTRAP_ROLE}")
 
     # BYPASSRLS exempts the role from row *security*, not from ordinary GRANTs,
     # so the definer still needs read access to the tables it resolves against.

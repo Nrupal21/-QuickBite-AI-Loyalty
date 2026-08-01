@@ -60,8 +60,14 @@ async def provision(password: str) -> None:
         # the password is escaped by doubling single quotes.
         escaped = password.replace("'", "''")
         if exists:
+            # NOSUPERUSER is deliberately absent here. Setting *or clearing*
+            # the SUPERUSER attribute requires being a superuser, and managed
+            # Postgres (Supabase, RDS) never gives you one — so naming it, even
+            # as a no-op on a role that already lacks it, fails the whole
+            # statement with "permission denied to alter role". The verification
+            # below is what actually guarantees the attribute is off.
             await connection.execute(
-                f"ALTER ROLE {APP_ROLE} WITH LOGIN NOSUPERUSER NOBYPASSRLS "
+                f"ALTER ROLE {APP_ROLE} WITH LOGIN NOBYPASSRLS "
                 f"NOCREATEDB NOCREATEROLE PASSWORD '{escaped}'"  # noqa: S608
             )
             print(f"role {APP_ROLE} already exists — attributes and password reset")
@@ -74,6 +80,29 @@ async def provision(password: str) -> None:
 
         database = await connection.fetchval("SELECT current_database()")
         await connection.execute(f'GRANT CONNECT ON DATABASE "{database}" TO {APP_ROLE}')
+
+        # Managed Postgres installs extensions into their own schema — Supabase
+        # uses `extensions` — and a freshly created role does not inherit the
+        # search_path that makes those types resolvable. Without this, PostGIS
+        # is invisible to the app: `type "geography" does not exist` on every
+        # geofence query, even though the extension is installed and the owner
+        # role can see it perfectly well.
+        extension_schemas = [
+            row["nspname"]
+            for row in await connection.fetch(
+                "SELECT DISTINCT n.nspname FROM pg_extension e "
+                "JOIN pg_namespace n ON n.oid = e.extnamespace "
+                "WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')"
+            )
+        ]
+        search_path = ", ".join(['"$user"', "public", *sorted(extension_schemas)])
+        await connection.execute(f"ALTER ROLE {APP_ROLE} SET search_path = {search_path}")
+        # search_path alone is not enough: name resolution still skips a schema
+        # the role cannot access, so without USAGE the type stays invisible and
+        # `to_regtype('geography')` quietly returns NULL rather than erroring.
+        for schema in extension_schemas:
+            await connection.execute(f"GRANT USAGE ON SCHEMA {schema} TO {APP_ROLE}")
+        print(f"search_path set to: {search_path} (USAGE granted on each)")
 
         for schema in (*TENANT_SCHEMAS, "static"):
             await connection.execute(f"GRANT USAGE ON SCHEMA {schema} TO {APP_ROLE}")
@@ -104,6 +133,26 @@ async def provision(password: str) -> None:
             f"ALTER DEFAULT PRIVILEGES IN SCHEMA static GRANT SELECT ON TABLES TO {APP_ROLE}"
         )
         print("granted SELECT on static.*")
+
+        # The credential->tenant resolvers (migration 0007). The migration
+        # grants these too, but only if this role already existed when it ran —
+        # and the usual order is migrate first, create the role second, which
+        # leaves the grant unmade. Login and QR scanning then fail with
+        # `permission denied for schema bootstrap`, so it is repeated here.
+        # EXECUTE only: the role can call the resolvers, never read the tables
+        # behind them.
+        schema_exists = await connection.fetchval(
+            "SELECT 1 FROM information_schema.schemata WHERE schema_name = 'bootstrap'"
+        )
+        if schema_exists:
+            await connection.execute(f"GRANT USAGE ON SCHEMA bootstrap TO {APP_ROLE}")
+            await connection.execute(
+                f"GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA bootstrap TO {APP_ROLE}"
+            )
+            print("granted EXECUTE on bootstrap.* resolvers")
+        else:
+            print("WARNING: schema `bootstrap` missing — run `alembic upgrade head` first, "
+                  "then re-run this script, or login and QR scanning will fail")
 
         is_super = await connection.fetchval(
             "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = $1", APP_ROLE
