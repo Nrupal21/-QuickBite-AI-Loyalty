@@ -13,6 +13,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@dataconnect/generated": "file:src/dataconnect-generated",
     "gsap": "3.12"
+  },
+  "devDependencies": {
+    "supabase": "^2.111.0"
   }
 }

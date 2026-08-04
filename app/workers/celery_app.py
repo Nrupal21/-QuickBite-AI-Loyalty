@@ -17,6 +17,14 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     broker_connection_retry_on_startup=True,
+    # REVIEW-02: "AI draft generated for all new GMB reviews within 1 hour of
+    # sync" — hourly is the criterion's own unit, not a tuned interval.
+    beat_schedule={
+        "review-02-batch-generate-ai-responses": {
+            "task": "app.workers.tasks.batch_generate_ai_responses",
+            "schedule": 3600.0,
+        },
+    },
 )
 
 celery_app.autodiscover_tasks(["app.workers"])

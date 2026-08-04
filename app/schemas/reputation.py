@@ -4,7 +4,14 @@ REVIEW-01's request schema is the first line of defence for SEC-11: the tag
 list is customer-supplied text that ends up inside an LLM prompt, so its
 bounds (count, per-tag length) are enforced here, before any service or
 provider sees it. prompt_guard then sanitises whatever survives.
+
+REVIEW-02 adds the approve/reject schemas for the response-approval
+workflow. `final_text` on approve is optional — a Manager approving the
+AI draft as-is sends nothing; one who edited it first sends the edited text.
 """
+
+import uuid
+from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -49,3 +56,45 @@ class ReviewDraftResponse(BaseModel):
     model: str  # gpt-4o | gemini-1.5-pro
     cached: bool
     tags: list[str]  # post-sanitisation, so the caller sees what was actually used
+
+
+class ReviewApproveRequest(BaseModel):
+    """PATCH /reviews/{id}/approve. Manager+ only (REVIEW-02)."""
+
+    final_text: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("final_text")
+    @classmethod
+    def strip_final_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        if not stripped:
+            msg = "final_text cannot be blank"
+            raise ValueError(msg)
+        return stripped
+
+
+class ReviewRejectRequest(BaseModel):
+    """PATCH /reviews/{id}/reject. Manager+ only (REVIEW-02).
+
+    `reason` is optional context for the regeneration prompt — not required,
+    since "this doesn't sound like us" is a valid reject with nothing more to say.
+    """
+
+    reason: str | None = Field(default=None, max_length=500)
+
+
+class ReviewResponseOut(BaseModel):
+    """A `review_responses` row, shaped for the dashboard/approval UI."""
+
+    id: uuid.UUID
+    review_id: uuid.UUID
+    ai_draft: str
+    final_text: str | None
+    approval_state: str  # pending | approved | rejected | posted
+    ai_model_used: str
+    approved_by_user_id: uuid.UUID | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

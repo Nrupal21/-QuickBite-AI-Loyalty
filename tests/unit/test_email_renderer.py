@@ -25,22 +25,42 @@ def clear_template_cache():
     email_renderer.invalidate_template_cache()
 
 
+def _patch_session_factory(mocker, rows: list[NotificationTemplate]):
+    """Point email_renderer's session factory at a fixed row set."""
+    result = MagicMock()
+    result.scalars.return_value.all.return_value = rows
+    session = MagicMock()
+    session.execute = AsyncMock(return_value=result)
+    ctx = MagicMock()
+    ctx.__aenter__ = AsyncMock(return_value=session)
+    ctx.__aexit__ = AsyncMock(return_value=False)
+    factory = mocker.patch("app.services.email_renderer.async_session_factory", return_value=ctx)
+    return factory, session
+
+
+@pytest.fixture(autouse=True)
+def no_db_rows(mocker):
+    """Default every test to an empty notification_templates table.
+
+    Without this, `render()` opens a real session through async_session_factory
+    and any developer machine with a seeded database silently exercises the DB
+    copy path instead of the disk templates the test is asserting about — so
+    the suite passes or fails depending on what is in someone's local Postgres.
+    Tests that want DB copy call `db_rows(...)`, whose patch is applied later
+    and therefore wins.
+    """
+    _patch_session_factory(mocker, [])
+
+
 @pytest.fixture
 def db_rows(mocker):
-    """Patch the session factory so the renderer sees a controlled row set."""
+    """Patch the session factory so the renderer sees a controlled row set.
+
+    Re-patches over `no_db_rows`; the later patch is the one that takes effect.
+    """
 
     def _apply(rows: list[NotificationTemplate]):
-        result = MagicMock()
-        result.scalars.return_value.all.return_value = rows
-        session = MagicMock()
-        session.execute = AsyncMock(return_value=result)
-        ctx = MagicMock()
-        ctx.__aenter__ = AsyncMock(return_value=session)
-        ctx.__aexit__ = AsyncMock(return_value=False)
-        factory = mocker.patch(
-            "app.services.email_renderer.async_session_factory", return_value=ctx
-        )
-        return factory, session
+        return _patch_session_factory(mocker, rows)
 
     return _apply
 

@@ -7,7 +7,9 @@ restaurant, customer, payment, static.
 from app.db.models.audit import AuditLog
 from app.db.models.branch import Branch
 from app.db.models.customer import Customer
+from app.db.models.identity_link import IdentityLink
 from app.db.models.loyalty import RewardProgram, StampLog
+from app.db.models.outbox import ProjectionOutbox
 from app.db.models.payment import BillingAuditLog, BillingEvent, Invoice, PaymentMethod
 from app.db.models.reputation import CustomerReview, GMBProfile, ReviewResponse
 from app.db.models.static_data import FeatureFlag, NotificationTemplate
@@ -24,9 +26,11 @@ __all__ = [
     "CustomerReview",
     "FeatureFlag",
     "GMBProfile",
+    "IdentityLink",
     "Invoice",
     "NotificationTemplate",
     "PaymentMethod",
+    "ProjectionOutbox",
     "ReviewResponse",
     "RewardProgram",
     "Role",

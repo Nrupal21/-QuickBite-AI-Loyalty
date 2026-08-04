@@ -1,0 +1,258 @@
+:root {
+  --color-ink-black-50: #e5f8ff;
+--color-ink-black-100: #ccf1ff;
+--color-ink-black-200: #99e2ff;
+--color-ink-black-300: #66d4ff;
+--color-ink-black-400: #33c5ff;
+--color-ink-black-500: #00b7ff;
+--color-ink-black-600: #0092cc;
+--color-ink-black-700: #006e99;
+--color-ink-black-800: #004966;
+--color-ink-black-900: #002533;
+--color-ink-black-950: #001a24;
+
+--color-oxidized-iron-50: #fdeae8;
+--color-oxidized-iron-100: #fad4d1;
+--color-oxidized-iron-200: #f5aaa3;
+--color-oxidized-iron-300: #f07f75;
+--color-oxidized-iron-400: #ec5446;
+--color-oxidized-iron-500: #e72918;
+--color-oxidized-iron-600: #b92113;
+--color-oxidized-iron-700: #8a190f;
+--color-oxidized-iron-800: #5c110a;
+--color-oxidized-iron-900: #2e0805;
+--color-oxidized-iron-950: #200603;
+
+--color-dark-cyan-50: #e7fdfd;
+--color-dark-cyan-100: #cffbfc;
+--color-dark-cyan-200: #9ff7f9;
+--color-dark-cyan-300: #6ff4f6;
+--color-dark-cyan-400: #3ff0f3;
+--color-dark-cyan-500: #0fecf0;
+--color-dark-cyan-600: #0cbdc0;
+--color-dark-cyan-700: #098e90;
+--color-dark-cyan-800: #065e60;
+--color-dark-cyan-900: #032f30;
+--color-dark-cyan-950: #022122;
+
+--color-rusty-spice-50: #ffeee6;
+--color-rusty-spice-100: #fedccd;
+--color-rusty-spice-200: #fdba9b;
+--color-rusty-spice-300: #fd9768;
+--color-rusty-spice-400: #fc7536;
+--color-rusty-spice-500: #fb5204;
+--color-rusty-spice-600: #c94203;
+--color-rusty-spice-700: #973102;
+--color-rusty-spice-800: #642102;
+--color-rusty-spice-900: #321001;
+--color-rusty-spice-950: #230c01;
+
+--color-golden-orange-50: #fff6e5;
+--color-golden-orange-100: #ffedcc;
+--color-golden-orange-200: #ffdb99;
+--color-golden-orange-300: #ffc966;
+--color-golden-orange-400: #ffb833;
+--color-golden-orange-500: #ffa600;
+--color-golden-orange-600: #cc8500;
+--color-golden-orange-700: #996300;
+--color-golden-orange-800: #664200;
+--color-golden-orange-900: #332100;
+--color-golden-orange-950: #241700;
+
+--color-brown-red-50: #faeaeb;
+--color-brown-red-100: #f6d5d6;
+--color-brown-red-200: #edabae;
+--color-brown-red-300: #e38285;
+--color-brown-red-400: #da585c;
+--color-brown-red-500: #d12e33;
+--color-brown-red-600: #a72529;
+--color-brown-red-700: #7d1c1f;
+--color-brown-red-800: #541215;
+--color-brown-red-900: #2a090a;
+--color-brown-red-950: #1d0607;
+
+--color-vanilla-custard-50: #faf6eb;
+--color-vanilla-custard-100: #f5edd6;
+--color-vanilla-custard-200: #ebdbad;
+--color-vanilla-custard-300: #e0c985;
+--color-vanilla-custard-400: #d6b85c;
+--color-vanilla-custard-500: #cca633;
+--color-vanilla-custard-600: #a38529;
+--color-vanilla-custard-700: #7a631f;
+--color-vanilla-custard-800: #524214;
+--color-vanilla-custard-900: #29210a;
+--color-vanilla-custard-950: #1d1707;
+
+--color-dark-teal-50: #e5fbff;
+--color-dark-teal-100: #ccf6ff;
+--color-dark-teal-200: #99eeff;
+--color-dark-teal-300: #66e5ff;
+--color-dark-teal-400: #33ddff;
+--color-dark-teal-500: #00d4ff;
+--color-dark-teal-600: #00aacc;
+--color-dark-teal-700: #007f99;
+--color-dark-teal-800: #005566;
+--color-dark-teal-900: #002a33;
+--color-dark-teal-950: #001e24;
+
+--color-pearl-aqua-50: #edf7f4;
+--color-pearl-aqua-100: #dbf0e9;
+--color-pearl-aqua-200: #b7e1d3;
+--color-pearl-aqua-300: #93d2bd;
+--color-pearl-aqua-400: #6fc3a7;
+--color-pearl-aqua-500: #4bb491;
+--color-pearl-aqua-600: #3c9074;
+--color-pearl-aqua-700: #2d6c57;
+--color-pearl-aqua-800: #1e483a;
+--color-pearl-aqua-900: #0f241d;
+--color-pearl-aqua-950: #0b1914;
+
+--color-burnt-caramel-50: #fff2e6;
+--color-burnt-caramel-100: #fee6cd;
+--color-burnt-caramel-200: #fecc9a;
+--color-burnt-caramel-300: #fdb368;
+--color-burnt-caramel-400: #fd9935;
+--color-burnt-caramel-500: #fc8003;
+--color-burnt-caramel-600: #ca6602;
+--color-burnt-caramel-700: #974c02;
+--color-burnt-caramel-800: #653301;
+--color-burnt-caramel-900: #321a01;
+  --color-burnt-caramel-950: #231200;
+
+  /* Custom Cursor & Accent Aliases */
+  --bg-hero-white: var(--color-vanilla-custard-50);
+  --text-ink-primary: var(--color-ink-black-950);
+  --accent-cyan: var(--color-dark-cyan-500);
+  --accent-spice: var(--color-rusty-spice-500);
+  --accent-gold: var(--color-golden-orange-500);
+  --accent-aqua: var(--color-pearl-aqua-500);
+}
+
+/* Custom Color Utilities */
+.bg-custard-white { background-color: var(--color-vanilla-custard-50); }
+.text-ink-950 { color: var(--color-ink-black-950); }
+.bg-dark-cyan-500 { background-color: var(--color-dark-cyan-500); }
+.text-dark-cyan-500 { color: var(--color-dark-cyan-500); }
+.border-dark-cyan-500 { border-color: var(--color-dark-cyan-500); }
+
+.bg-rusty-spice-500 { background-color: var(--color-rusty-spice-500); }
+.text-rusty-spice-500 { color: var(--color-rusty-spice-500); }
+.border-rusty-spice-500 { border-color: var(--color-rusty-spice-500); }
+
+.bg-golden-orange-500 { background-color: var(--color-golden-orange-500); }
+.text-golden-orange-500 { color: var(--color-golden-orange-500); }
+
+.bg-pearl-aqua-500 { background-color: var(--color-pearl-aqua-500); }
+.text-pearl-aqua-500 { color: var(--color-pearl-aqua-500); }
+.border-pearl-aqua-500 { border-color: var(--color-pearl-aqua-500); }
+
+/* Double Bezel Architecture (high-end-visual-design skill) */
+.double-bezel-outer {
+  background: rgba(0, 37, 51, 0.04);
+  border: 1px solid rgba(0, 37, 51, 0.1);
+  padding: 0.5rem;
+  border-radius: 2rem;
+  box-shadow: 0 20px 40px -15px rgba(0, 37, 51, 0.07);
+}
+
+.double-bezel-inner {
+  background: #ffffff;
+  border-radius: calc(2rem - 0.5rem);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.8), 0 4px 12px rgba(0, 37, 51, 0.03);
+}
+
+/* Button-in-button CTA architecture */
+.btn-nested-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  background-color: var(--color-rusty-spice-500);
+  color: #ffffff;
+  font-weight: 600;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.btn-nested-cta:hover {
+  box-shadow: 0 8px 24px -4px rgba(251, 82, 4, 0.35);
+}
+
+.btn-nested-cta:active {
+  transform: scale(0.97);
+}
+
+.btn-nested-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.btn-nested-cta:hover .btn-nested-icon {
+  transform: translateX(3px) scale(1.05);
+}
+
+/* Gradient Text (Awwwards-tier tri-color hero headline) */
+.text-gradient {
+  background: linear-gradient(135deg, #fb5204 0%, #ffa600 50%, #0fecf0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glassmorphic Pills & Panels */
+.glass-pill {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 37, 51, 0.08);
+}
+
+.glass-panel {
+  background: rgba(250, 246, 235, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+/* Active Press States (Emil Kowalski Design Engineering Skill) */
+button, .btn-action, a[class*="btn"] {
+  touch-action: manipulation;
+}
+
+button:active, .btn-nested-cta:active {
+  transform: scale(0.97) !important;
+  transition: transform 100ms ease-out !important;
+}
+
+/* Dish Chip Active States */
+.dish-chip {
+  transition: all 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.dish-chip:hover {
+  transform: translateY(-2px);
+}
+
+.dish-chip:active {
+  transform: scale(0.95);
+}
+
+/* Flat editorial card: a single restrained surface (no nested double-bezel),
+   used where a bolder/less "boxed" rhythm is wanted. */
+.editorial-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 37, 51, 0.08);
+  border-radius: 1.75rem;
+  box-shadow: 0 40px 80px -45px rgba(0, 37, 51, 0.16);
+}
+
+.editorial-review-card {
+  border-top: 2px solid var(--color-golden-orange-500);
+  background: #ffffff;
+}

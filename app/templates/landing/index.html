@@ -1,15 +1,15 @@
-{% extends "base.html" %}
+{% extends "base_marketing.html" %}
 
 {% block title %}QuickBite AI + Loyalty | 5-Star Reviews & Digital Loyalty Stamps{% endblock %}
 
 {% block head %}
-<!-- External Libraries: Three.js r128 & GSAP ScrollTrigger per Doc 4 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<!-- External Libraries: Three.js r128 & GSAP ScrollTrigger, landing-only -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 
 <!-- Phosphor Icons for ultra-light clean vector iconography -->
-<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<script src="https://unpkg.com/@phosphor-icons/web" defer></script>
 
 <style>
     /* Custom Cursor Base */
@@ -68,6 +68,89 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+
+    /* Hero headline character-reveal mask (set up by landing_motion.js) */
+    .hero-heading .text-line {
+        display: block;
+        overflow: hidden;
+    }
+
+    .hero-heading .char {
+        display: inline-block;
+        will-change: transform, opacity;
+    }
+
+    /* Scroll-progress rail (desktop only) */
+    #scroll-rail {
+        position: fixed;
+        top: 50%;
+        right: 1.75rem;
+        transform: translateY(-50%);
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    #scroll-rail .rail-track {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 1px;
+        background: rgba(0, 37, 51, 0.12);
+        transform: translateX(-50%);
+        z-index: -1;
+    }
+
+    #scroll-rail .rail-tick {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(0, 37, 51, 0.25);
+        transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1), background-color 220ms ease;
+        padding: 0;
+        border: none;
+    }
+
+    #scroll-rail .rail-tick:hover {
+        background: var(--color-rusty-spice-500);
+    }
+
+    #scroll-rail .rail-tick.active {
+        background: var(--color-dark-cyan-500);
+        transform: scale(1.8);
+    }
+
+    /* Mobile nav slide-in panel */
+    #mobile-nav-panel {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        background: var(--bg-hero-white);
+        transform: translateX(100%);
+        transition: transform 320ms cubic-bezier(0.23, 1, 0.32, 1);
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+    }
+
+    #mobile-nav-panel.open {
+        transform: translateX(0);
+    }
+
+    #mobile-nav-panel a {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-ink-primary);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #mobile-nav-panel {
+            transition: none;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -97,13 +180,52 @@
 </div>
 
 <!-- ---------------------------------------------------- -->
+<!-- SCROLL-PROGRESS RAIL (desktop, tracks section anchors) -->
 <!-- ---------------------------------------------------- -->
-<!-- SECTION 1: HERO SECTION (White Background & 3D Stand) -->
+<nav id="scroll-rail" class="hidden lg:flex" aria-label="Page section progress">
+    <div class="rail-track"></div>
+    <button class="rail-tick" data-rail-target="#hero-section" aria-label="Jump to hero"></button>
+    <button class="rail-tick" data-rail-target="#ai-review-section" aria-label="Jump to AI reviews"></button>
+    <button class="rail-tick" data-rail-target="#loyalty-section" aria-label="Jump to digital loyalty"></button>
+    <button class="rail-tick" data-rail-target="#reviews" aria-label="Jump to customer wall"></button>
+    <button class="rail-tick" data-rail-target="#pricing" aria-label="Jump to pricing"></button>
+</nav>
+
 <!-- ---------------------------------------------------- -->
-<section id="hero-section" class="scroll-trigger-section relative min-h-[100dvh] bg-custard-white pt-28 pb-20 px-4 sm:px-8 overflow-hidden flex flex-col justify-between">
+<!-- MOBILE NAV SLIDE-IN PANEL                             -->
+<!-- ---------------------------------------------------- -->
+<div id="mobile-nav-panel" role="dialog" aria-modal="true" aria-label="Site navigation">
+    <div class="flex items-center justify-between mb-12">
+        <span class="text-lg font-bold text-ink-950">Menu</span>
+        <button id="mobile-nav-close" class="w-11 h-11 flex items-center justify-center rounded-full bg-ink-950/5" aria-label="Close menu">
+            <i class="ph-bold ph-x text-xl text-ink-950"></i>
+        </button>
+    </div>
+    <div class="flex flex-col gap-6">
+        <a href="#hero-section" class="mobile-nav-link">3D Experience</a>
+        <a href="#ai-review-section" class="mobile-nav-link">AI Reviews</a>
+        <a href="#loyalty-section" class="mobile-nav-link">Digital Loyalty</a>
+        <a href="#reviews" class="mobile-nav-link">Customer Wall</a>
+        <a href="#pricing" class="mobile-nav-link">Pricing</a>
+    </div>
+    <a href="/login" class="btn-nested-cta bg-[#FF6B35] text-base justify-center mt-auto">
+        <span>Get Started</span>
+        <div class="btn-nested-icon">
+            <i class="ph-bold ph-arrow-up-right"></i>
+        </div>
+    </a>
+</div>
+
+<!-- ---------------------------------------------------- -->
+<!-- SECTION 1: HERO (headline capped at 2 lines, subtext  -->
+<!-- capped at ~20 words, no trust strip inside the hero,  -->
+<!-- max 4 text elements: eyebrow / h1 / subtext / CTA)    -->
+<!-- ---------------------------------------------------- -->
+<section id="hero-section" class="scroll-trigger-section relative min-h-[100dvh] bg-custard-white pt-24 pb-16 px-4 sm:px-8 overflow-hidden flex flex-col justify-between">
     <!-- Ambient Background Light Orbs -->
-    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-dark-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-    <div class="absolute bottom-10 right-10 w-[400px] h-[400px] bg-rusty-spice-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="absolute -top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[900px] bg-dark-cyan-500/10 rounded-full blur-[160px] pointer-events-none"></div>
+    <div class="absolute bottom-0 right-0 w-[550px] h-[550px] bg-rusty-spice-500/10 rounded-full blur-[140px] pointer-events-none"></div>
+    <div class="absolute top-1/3 left-0 w-[350px] h-[350px] bg-pearl-aqua-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
     <!-- Navigation Bar -->
     <nav class="max-w-7xl mx-auto w-full flex items-center justify-between py-4 px-6 rounded-full bg-white/80 backdrop-blur-md border border-ink-950/10 shadow-sm relative z-20">
@@ -113,7 +235,7 @@
             </div>
             <span class="text-xl font-bold tracking-tight text-ink-950">QuickBite <span class="text-rusty-spice-500">AI</span></span>
         </div>
-        
+
         <div class="hidden md:flex items-center gap-8 text-sm font-medium text-ink-950/80">
             <a href="#hero-section" class="hover:text-rusty-spice-500 transition-colors">3D Experience</a>
             <a href="#ai-review-section" class="hover:text-rusty-spice-500 transition-colors">AI Reviews</a>
@@ -122,29 +244,32 @@
             <a href="#pricing" class="hover:text-rusty-spice-500 transition-colors">Pricing</a>
         </div>
 
-        <a href="/login" class="btn-nested-cta bg-[#FF6B35] text-sm" data-cursor="JOIN NOW">
+        <a href="/login" class="hidden md:inline-flex btn-nested-cta bg-[#FF6B35] text-sm" data-cursor="JOIN NOW">
             <span>Get Started</span>
             <div class="btn-nested-icon">
                 <i class="ph-bold ph-arrow-up-right"></i>
             </div>
         </a>
+
+        <button id="mobile-nav-open" class="md:hidden w-11 h-11 flex items-center justify-center rounded-full bg-ink-950/5" aria-label="Open menu" aria-controls="mobile-nav-panel" aria-expanded="false">
+            <i class="ph-bold ph-list text-xl text-ink-950"></i>
+        </button>
     </nav>
 
     <!-- Hero Body Layout -->
-    <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center my-auto relative z-10 pt-12">
-        <!-- Left Column: Typography & CTAs -->
+    <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-16 items-center my-auto relative z-10 pt-16">
+        <!-- Left Column: Typography & CTA (4 text elements max: eyebrow, h1, subtext, CTA) -->
         <div class="lg:col-span-7 space-y-8">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-dark-cyan-500/10 border border-dark-cyan-500/30 text-xs font-semibold text-dark-cyan-500 uppercase tracking-widest hero-stagger">
                 <i class="ph-bold ph-sparkle"></i> Next-Gen QR Dining Experience
             </div>
-            
-            <h1 class="text-5xl sm:text-6xl xl:text-7xl font-extrabold text-ink-950 leading-[1.08] tracking-tight hero-stagger">
-                Scan Table QR.<br/>
-                <span class="text-gradient">Instant AI 5-Star Reviews.</span>
+
+            <h1 class="hero-heading text-6xl sm:text-7xl xl:text-8xl font-extrabold text-ink-950 leading-[0.95] tracking-tight">
+                Scan Table QR. Get an <em class="text-rusty-spice-500 italic">Instant</em> 5-Star Review.
             </h1>
-            
+
             <p class="text-lg sm:text-xl text-ink-950/70 max-w-xl font-normal leading-relaxed hero-stagger">
-                Zero app download required. Customers scan your acrylic table stand, approve an AI-crafted review in <span class="font-semibold text-ink-950">30 seconds</span>, and collect digital loyalty stamps automatically.
+                No app download. Customers scan, approve an AI-drafted review in 30 seconds, and collect a loyalty stamp automatically.
             </p>
 
             <div class="flex flex-wrap items-center gap-4 pt-4 hero-stagger">
@@ -154,29 +279,19 @@
                         <i class="ph-bold ph-magic-wand"></i>
                     </div>
                 </a>
-
-                <div class="flex items-center gap-3 px-5 py-3.5 rounded-full bg-white border border-ink-950/10 shadow-sm text-sm text-ink-950 font-semibold">
-                    <div class="flex -space-x-2">
-                        <div class="w-7 h-7 rounded-full bg-rusty-spice-500 text-white text-xs font-bold flex items-center justify-center border-2 border-white">4.9</div>
-                        <div class="w-7 h-7 rounded-full bg-golden-orange-500 text-white text-xs font-bold flex items-center justify-center border-2 border-white">★</div>
-                    </div>
-                    <span>Over 500+ Indian Restaurants</span>
-                </div>
             </div>
         </div>
 
         <!-- Right Column: Interactive 3D Acrylic Table Stand Canvas -->
         <div class="lg:col-span-5 flex justify-center relative">
-            <div class="double-bezel-outer w-full max-w-md">
-                <div class="double-bezel-inner p-6 flex flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-white to-custard-white min-h-[460px]" data-cursor="SCAN STAND">
-                    <div class="absolute top-4 left-4 text-xs font-mono-code uppercase tracking-wider text-ink-950/40">3D Interactive Model</div>
-                    
-                    <!-- Three.js Canvas Container -->
-                    <div id="hero-canvas" class="w-full h-80 cursor-grab active:cursor-grabbing"></div>
-                    
-                    <div class="mt-4 flex items-center gap-2 text-xs font-semibold text-dark-cyan-500 bg-dark-cyan-500/10 px-3 py-1.5 rounded-full">
-                        <i class="ph-bold ph-hand-pointing"></i> Move cursor to tilt table stand
-                    </div>
+            <div class="editorial-card w-full max-w-md p-6 flex flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-white to-custard-white min-h-[460px]" data-cursor="SCAN STAND">
+                <div class="absolute top-4 left-4 text-xs font-mono-code uppercase tracking-wider text-ink-950/40">3D Interactive Model</div>
+
+                <!-- Three.js Canvas Container -->
+                <div id="hero-canvas" class="w-full h-80 cursor-grab active:cursor-grabbing"></div>
+
+                <div class="mt-4 flex items-center gap-2 text-xs font-semibold text-dark-cyan-500 bg-dark-cyan-500/10 px-3 py-1.5 rounded-full">
+                    <i class="ph-bold ph-hand-pointing"></i> Move cursor to tilt table stand
                 </div>
             </div>
         </div>
@@ -192,25 +307,36 @@
 </section>
 
 <!-- ---------------------------------------------------- -->
+<!-- TRUST STRIP (moved out of the hero per hero text-     -->
+<!-- element limit; social proof lives just below instead) -->
+<!-- ---------------------------------------------------- -->
+<section class="scroll-trigger-section py-6 px-4 sm:px-8 bg-white border-y border-ink-950/10">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-3 text-sm text-ink-950 font-semibold">
+        <div class="flex -space-x-2">
+            <div class="w-7 h-7 rounded-full bg-rusty-spice-500 text-white text-xs font-bold flex items-center justify-center border-2 border-white">4.9</div>
+            <div class="w-7 h-7 rounded-full bg-golden-orange-500 text-white text-xs font-bold flex items-center justify-center border-2 border-white">★</div>
+        </div>
+        <span>Trusted by over 500+ Indian restaurants</span>
+    </div>
+</section>
+
+<!-- ---------------------------------------------------- -->
 <!-- SECTION 2: SMART AI REVIEW SUGGESTION SECTION        -->
 <!-- ---------------------------------------------------- -->
-<section id="ai-review-section" class="py-28 px-4 sm:px-8 bg-white relative">
+<section id="ai-review-section" class="py-32 md:py-40 px-4 sm:px-8 bg-white relative">
     <div class="max-w-7xl mx-auto">
-        <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rusty-spice-500/10 border border-rusty-spice-500/30 text-xs font-semibold text-rusty-spice-500 uppercase tracking-widest">
-                <i class="ph-bold ph-lightning"></i> Direct QR Scan to AI Suggestion
-            </div>
-            <h2 class="text-4xl sm:text-5xl font-extrabold text-ink-950 tracking-tight">
-                No App Download. No Typing Hassle.
+        <div class="text-center max-w-4xl mx-auto space-y-6 mb-20">
+            <h2 class="text-5xl sm:text-6xl md:text-7xl font-extrabold text-ink-950 tracking-tight leading-[0.95]">
+                No App Download.<br class="hidden sm:block"/> No Typing Hassle.
             </h2>
-            <p class="text-lg text-ink-950/70">
+            <p class="text-xl text-ink-950/70 max-w-2xl mx-auto">
                 Customers scan the table stand QR code and instantly get a tailored 5-star Google review draft matching their ordered dishes.
             </p>
         </div>
 
         <!-- Interactive AI Review Generator Demo -->
-        <div class="double-bezel-outer max-w-4xl mx-auto">
-            <div class="double-bezel-inner p-8 sm:p-12">
+        <div class="editorial-card max-w-4xl mx-auto">
+            <div class="p-8 sm:p-14">
                 <div class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-ink-950/10">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-rusty-spice-500/10 flex items-center justify-center text-rusty-spice-500">
@@ -223,23 +349,23 @@
                     </div>
 
                     <div id="ai-draft-badge" class="px-3 py-1 rounded-full bg-pearl-aqua-500/15 text-pearl-aqua-500 border border-pearl-aqua-500/30 text-xs font-semibold">
-                        Draft Ready ✨
+                        Draft Ready
                     </div>
                 </div>
 
                 <!-- Dish Selector Chips -->
                 <div class="flex flex-wrap gap-3 py-6">
                     <button class="dish-chip px-4 py-2 rounded-full border border-ink-950/15 text-sm font-semibold text-ink-950 bg-rusty-spice-500 text-white transition-all hover:scale-105 active:scale-95" data-dish="Butter Chicken" data-cursor="SELECT">
-                        🍛 Crispy Butter Chicken
+                        Crispy Butter Chicken
                     </button>
                     <button class="dish-chip px-4 py-2 rounded-full border border-ink-950/15 text-sm font-semibold text-ink-950 bg-white hover:border-rusty-spice-500 transition-all hover:scale-105 active:scale-95" data-dish="Dal Makhani" data-cursor="SELECT">
-                        🍲 Slow-cooked Dal Makhani
+                        Slow-cooked Dal Makhani
                     </button>
                     <button class="dish-chip px-4 py-2 rounded-full border border-ink-950/15 text-sm font-semibold text-ink-950 bg-white hover:border-rusty-spice-500 transition-all hover:scale-105 active:scale-95" data-dish="Paneer Tikka" data-cursor="SELECT">
-                        🍢 Smoky Paneer Tikka
+                        Smoky Paneer Tikka
                     </button>
                     <button class="dish-chip px-4 py-2 rounded-full border border-ink-950/15 text-sm font-semibold text-ink-950 bg-white hover:border-rusty-spice-500 transition-all hover:scale-105 active:scale-95" data-dish="Ambience" data-cursor="SELECT">
-                        ✨ Great Ambience & Service
+                        Great Ambience & Service
                     </button>
                 </div>
 
@@ -257,7 +383,7 @@
                     </p>
 
                     <div class="mt-6 flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-ink-950/10">
-                        <div class="flex items-center gap-2 text-xs font-semibold text-pearl-aqua-500">
+                        <div class="flex items-center gap-2 text-xs font-semibold text-[var(--brand-info)]">
                             <i class="ph-bold ph-check-circle text-base"></i> Direct 1-Click Post to Google My Business
                         </div>
 
@@ -277,20 +403,16 @@
 <!-- ---------------------------------------------------- -->
 <!-- SECTION 3: DIGITAL LOYALTY CARD & SCROLL STAMPING    -->
 <!-- ---------------------------------------------------- -->
-<section id="loyalty-section" class="scroll-trigger-section card-showcase py-28 px-4 sm:px-8 bg-custard-white relative">
-    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<section id="loyalty-section" class="scroll-trigger-section card-showcase py-32 md:py-40 px-4 sm:px-8 bg-custard-white relative">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-20 items-center">
         <!-- Left: Loyalty Story -->
-        <div class="lg:col-span-6 space-y-6">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-dark-cyan-500/10 border border-dark-cyan-500/30 text-xs font-semibold text-dark-cyan-500 uppercase tracking-widest">
-                <i class="ph-bold ph-stamp"></i> App-less Loyalty Program
-            </div>
-
-            <h2 class="text-4xl sm:text-5xl font-extrabold text-ink-950 tracking-tight leading-tight">
+        <div class="lg:col-span-6 space-y-8">
+            <h2 class="text-5xl sm:text-6xl md:text-7xl font-extrabold text-ink-950 tracking-tight leading-[0.95]">
                 Every Scan Unlocks A Loyalty Stamp.
             </h2>
 
-            <p class="text-lg text-ink-950/70">
-                Customers don't want to install another app. QuickBite tracks stamps on an interactive mobile web pass. 4 stamps = Free Meal or Dessert reward!
+            <p class="text-xl text-ink-950/70">
+                Customers don't want to install another app. QuickBite tracks stamps on an interactive mobile web pass. 4 stamps unlock a free meal or dessert reward.
             </p>
 
             <div class="space-y-4 pt-2">
@@ -322,8 +444,8 @@
 
         <!-- Right: Digital Loyalty Card Visual -->
         <div class="lg:col-span-6 flex justify-center">
-            <div class="double-bezel-outer w-full max-w-md">
-                <div id="loyalty-card-3d" class="double-bezel-inner p-8 bg-gradient-to-b from-ink-950 to-dark-cyan-950 text-white relative overflow-hidden" data-cursor="STAMP">
+            <div class="w-full max-w-md">
+                <div id="loyalty-card-3d" class="rounded-[1.75rem] border border-white/10 shadow-[0_40px_80px_-45px_rgba(0,26,36,0.5)] p-8 bg-gradient-to-b from-ink-950 to-dark-cyan-950 text-white relative overflow-hidden" data-cursor="STAMP">
                     <div class="flex items-center justify-between mb-8">
                         <div>
                             <span class="text-xs uppercase tracking-widest text-dark-cyan-500 font-mono-code">QuickBite Loyalty</span>
@@ -370,18 +492,18 @@
 <!-- ---------------------------------------------------- -->
 <!-- SECTION 4: PINNED CUSTOMER REVIEWS WALL               -->
 <!-- ---------------------------------------------------- -->
-<section id="reviews" class="scroll-trigger-section py-28 bg-white overflow-hidden relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-8 mb-12">
-        <div class="flex items-center justify-between">
+<section id="reviews" class="scroll-trigger-section py-32 md:py-40 bg-white overflow-hidden relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 mb-16">
+        <div class="flex items-end justify-between">
             <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-golden-orange-500/10 border border-golden-orange-500/30 text-xs font-semibold text-golden-orange-500 uppercase tracking-widest mb-3">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-golden-orange-500/10 border border-golden-orange-500/30 text-xs font-semibold text-golden-orange-500 uppercase tracking-widest mb-4">
                     <i class="ph-bold ph-chat-teardrop-text"></i> Real Diner Stories
                 </div>
-                <h2 class="text-4xl font-extrabold text-ink-950 tracking-tight">
+                <h2 class="text-5xl sm:text-6xl md:text-7xl font-extrabold text-ink-950 tracking-tight leading-[0.95]">
                     Loved by Restaurant Guests Across India
                 </h2>
             </div>
-            
+
             <div class="hidden sm:flex items-center gap-2 text-xs font-mono-code text-ink-950/50">
                 <span>SCROLL HORIZONTALLY</span>
                 <i class="ph-bold ph-arrow-right"></i>
@@ -393,14 +515,14 @@
     <div class="w-full overflow-x-hidden">
         <div id="reviews-track" class="flex gap-6 px-8 w-max">
             <!-- Review Card 1 -->
-            <div class="w-96 double-bezel-outer shrink-0" data-cursor="DRAG">
-                <div class="double-bezel-inner p-6 space-y-4">
+            <div class="w-[420px] editorial-review-card shrink-0 rounded-2xl" data-cursor="DRAG">
+                <div class="p-8 space-y-5">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-1 text-golden-orange-500 text-sm">★★★★★</div>
                         <span class="text-xs text-pearl-aqua-500 font-semibold">Verified Scan</span>
                     </div>
-                    <p class="text-sm text-ink-950 font-medium leading-relaxed">
-                        "Scanning the QR code on the table stand took 5 seconds. The AI generated a review that mentioned the exact dishes we ordered. Brilliant loyalty rewards!"
+                    <p class="text-base text-ink-950 font-medium leading-relaxed">
+                        "Scanning the QR code on the table stand took 5 seconds. The AI generated a review that mentioned the exact dishes we ordered. Brilliant loyalty rewards."
                     </p>
                     <div class="pt-2 border-t border-ink-950/10 flex items-center justify-between">
                         <span class="text-xs font-bold text-ink-950">Rajesh Sharma</span>
@@ -410,14 +532,14 @@
             </div>
 
             <!-- Review Card 2 -->
-            <div class="w-96 double-bezel-outer shrink-0" data-cursor="DRAG">
-                <div class="double-bezel-inner p-6 space-y-4">
+            <div class="w-[420px] editorial-review-card shrink-0 rounded-2xl" data-cursor="DRAG">
+                <div class="p-8 space-y-5">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-1 text-golden-orange-500 text-sm">★★★★★</div>
                         <span class="text-xs text-pearl-aqua-500 font-semibold">Verified Scan</span>
                     </div>
-                    <p class="text-sm text-ink-950 font-medium leading-relaxed">
-                        "Our Google review count jumped from 45 to over 320 in just three weeks after placing the acrylic table stand QR codes!"
+                    <p class="text-base text-ink-950 font-medium leading-relaxed">
+                        "Our Google review count jumped from 45 to over 320 in just three weeks after placing the acrylic table stand QR codes."
                     </p>
                     <div class="pt-2 border-t border-ink-950/10 flex items-center justify-between">
                         <span class="text-xs font-bold text-ink-950">Priya Nair</span>
@@ -427,13 +549,13 @@
             </div>
 
             <!-- Review Card 3 -->
-            <div class="w-96 double-bezel-outer shrink-0" data-cursor="DRAG">
-                <div class="double-bezel-inner p-6 space-y-4">
+            <div class="w-[420px] editorial-review-card shrink-0 rounded-2xl" data-cursor="DRAG">
+                <div class="p-8 space-y-5">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-1 text-golden-orange-500 text-sm">★★★★★</div>
                         <span class="text-xs text-pearl-aqua-500 font-semibold">Verified Scan</span>
                     </div>
-                    <p class="text-sm text-ink-950 font-medium leading-relaxed">
+                    <p class="text-base text-ink-950 font-medium leading-relaxed">
                         "No app download is the killer feature. Customers love getting stamps directly on their browser without signing up."
                     </p>
                     <div class="pt-2 border-t border-ink-950/10 flex items-center justify-between">
@@ -444,13 +566,13 @@
             </div>
 
             <!-- Review Card 4 -->
-            <div class="w-96 double-bezel-outer shrink-0" data-cursor="DRAG">
-                <div class="double-bezel-inner p-6 space-y-4">
+            <div class="w-[420px] editorial-review-card shrink-0 rounded-2xl" data-cursor="DRAG">
+                <div class="p-8 space-y-5">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-1 text-golden-orange-500 text-sm">★★★★★</div>
                         <span class="text-xs text-pearl-aqua-500 font-semibold">Verified Scan</span>
                     </div>
-                    <p class="text-sm text-ink-950 font-medium leading-relaxed">
+                    <p class="text-base text-ink-950 font-medium leading-relaxed">
                         "The 3D table stand is super sleek. Customers notice it instantly when they sit down to order."
                     </p>
                     <div class="pt-2 border-t border-ink-950/10 flex items-center justify-between">
@@ -466,16 +588,16 @@
 <!-- ---------------------------------------------------- -->
 <!-- SECTION 5: PRICING SECTION                           -->
 <!-- ---------------------------------------------------- -->
-<section id="pricing" class="scroll-trigger-section py-28 bg-custard-white relative border-t border-ink-950/10">
+<section id="pricing" class="scroll-trigger-section py-32 md:py-40 bg-custard-white relative border-t border-ink-950/10">
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
-        <div class="text-center max-w-2xl mx-auto mb-16">
-            <h2 class="text-4xl font-extrabold text-ink-950 tracking-tight mb-4">Transparent Pricing for Restaurants</h2>
-            <p class="text-ink-950/70 text-base">Simple monthly subscription with unlimited QR scans and AI review generation.</p>
+        <div class="text-center max-w-2xl mx-auto mb-20">
+            <h2 class="text-5xl sm:text-6xl font-extrabold text-ink-950 tracking-tight leading-[0.95] mb-6">Transparent Pricing for Restaurants</h2>
+            <p class="text-ink-950/70 text-xl">Simple monthly subscription with unlimited QR scans and AI review generation.</p>
         </div>
-        <div class="max-w-md mx-auto double-bezel-outer">
-            <div class="double-bezel-inner p-8 text-center space-y-6">
+        <div class="max-w-md mx-auto editorial-card">
+            <div class="p-10 text-center space-y-6">
                 <span class="text-xs uppercase font-bold text-rusty-spice-500 tracking-widest">Pro Plan</span>
-                <div class="text-5xl font-extrabold text-ink-950">₹1,999<span class="text-base font-normal text-ink-950/60">/mo</span></div>
+                <div class="text-7xl font-extrabold text-ink-950">₹1,999<span class="text-base font-normal text-ink-950/60">/mo</span></div>
                 <ul class="text-sm text-ink-950/80 space-y-3 text-left max-w-xs mx-auto">
                     <li class="flex items-center gap-2"><i class="ph-bold ph-check text-pearl-aqua-500"></i> Unlimited Acrylic Stand QR Scans</li>
                     <li class="flex items-center gap-2"><i class="ph-bold ph-check text-pearl-aqua-500"></i> GPT-4o AI Review Generator</li>
@@ -494,13 +616,13 @@
 </section>
 
 <!-- Footer -->
-<footer class="py-12 px-4 sm:px-8 bg-custard-white border-t border-ink-950/10 text-center text-xs text-ink-950/60">
+<footer class="py-16 px-4 sm:px-8 bg-custard-white border-t border-ink-950/10 text-center text-xs text-ink-950/60">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>© 2026 QuickBite AI + Loyalty. All rights reserved.</div>
         <div class="flex gap-6">
-            <a href="#" class="hover:text-rusty-spice-500">Privacy Policy</a>
-            <a href="#" class="hover:text-rusty-spice-500">Terms of Service</a>
-            <a href="#" class="hover:text-rusty-spice-500">Contact Support</a>
+            <a href="#" class="hover:text-[var(--brand-info)]">Privacy Policy</a>
+            <a href="#" class="hover:text-[var(--brand-info)]">Terms of Service</a>
+            <a href="#" class="hover:text-[var(--brand-info)]">Contact Support</a>
         </div>
     </div>
 </footer>

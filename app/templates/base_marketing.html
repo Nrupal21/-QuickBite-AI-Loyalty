@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#001a24">
+    <title>{% block title %}QuickBite AI + Loyalty{% endblock %}</title>
+    <meta name="description" content="{% block description %}One QR code on your receipt. AI-drafted 5-star reviews and an app-less loyalty stamp card for your restaurant.{% endblock %}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap">
+
+    <!-- Tailwind CDN (dev/v1, swap for compiled build before scale) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Color Tokens & Brand System (color.css + brand-tokens.css), single source of truth -->
+    <link rel="stylesheet" href="/static/css/color.css">
+    <link rel="stylesheet" href="/static/css/brand-tokens.css">
+
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--brand-ink);
+        }
+        h1, h2, h3 { text-wrap: balance; }
+        .font-mono-code { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+        /* Accessible focus ring, consistent everywhere */
+        a:focus-visible,
+        button:focus-visible,
+        [tabindex]:focus-visible {
+            outline: 2px solid var(--brand-primary);
+            outline-offset: 3px;
+            border-radius: 4px;
+        }
+
+        a, button, [data-cursor] {
+            cursor: pointer;
+        }
+    </style>
+
+    {% block head %}{% endblock %}
+
+    <script>
+        // Reduced-motion guard: strips JS-driven motion systems before any
+        // page script runs, so GSAP/Anime.js code can simply check this flag
+        // instead of each re-implementing the OS preference check.
+        window.__prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    </script>
+</head>
+<body class="bg-white antialiased">
+    {% block content %}{% endblock %}
+
+    <!-- Anime.js, before page scripts, before </body> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+    {% block scripts %}{% endblock %}
+    {% block page_scripts %}{% endblock %}
+</body>
+</html>

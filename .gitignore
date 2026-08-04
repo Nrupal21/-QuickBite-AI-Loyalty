@@ -37,6 +37,9 @@ desktop.ini
 # Docker
 docker-compose.override.yml
 
+# Node
+node_modules/
+
 # Testing
 .coverage
 htmlcov/
@@ -60,7 +63,7 @@ app/db/migrations/versions/*.pyc
 ~$*
  
 #firebase
- quickai-f73f0-firebase-adminsdk-fbsvc-332d7c4ffc.json
+quickai-f73f0-firebase-adminsdk-fbsvc-332d7c4ffc.json
 # Firebase service-account keys — private keys granting full project admin.
 # The app reads the JSON inline from FIREBASE_SERVICE_ACCOUNT_JSON in .env,
 # so a key file should never need to sit in the repo at all.
