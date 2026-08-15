@@ -1,0 +1,104 @@
+- generic [active] [ref=f6e1]:
+  - link "Skip to content" [ref=f6e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f6e3]:
+    - generic [ref=f6e5]:
+      - link "QuickBite" [ref=f6e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f6e11]:
+        - link "Product" [ref=f6e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f6e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f6e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f6e15]:
+        - link "Log in" [ref=f6e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f6e17] [cursor=pointer]:
+          - /url: /#pricing
+  - main [ref=f6e18]:
+    - generic [ref=f6e19]:
+      - generic [ref=f6e20]:
+        - link "Close and return home" [ref=f6e21] [cursor=pointer]:
+          - /url: /
+        - generic [ref=f6e25]:
+          - generic [ref=f6e26]: Get started
+          - heading "Create your restaurant account" [level=1] [ref=f6e27]
+          - paragraph [ref=f6e28]: Set up QuickBite in a few minutes — no credit card required.
+        - alert [ref=f6e96]: Please choose a stronger password. Add another word or two. Uncommon words are better.
+        - generic [ref=f6e30]:
+          - generic [ref=f6e31]:
+            - generic [ref=f6e32]: Restaurant name
+            - textbox "Restaurant name" [ref=f6e33]:
+              - /placeholder: Brew House Cafe
+              - text: Weak Pass Test Three
+          - generic [ref=f6e34]:
+            - generic [ref=f6e35]: Your name
+            - textbox "Your name" [ref=f6e36]:
+              - /placeholder: Nina Rao
+              - text: Test User
+          - generic [ref=f6e37]:
+            - generic [ref=f6e38]: Email
+            - textbox "Email" [ref=f6e39]:
+              - /placeholder: you@example.com
+              - text: weak3@weakpasstest.com
+          - generic [ref=f6e40]:
+            - generic [ref=f6e41]: Password
+            - textbox "Password" [ref=f6e42]:
+              - /placeholder: At least 8 characters
+              - text: password
+          - button "Create account" [ref=f6e43] [cursor=pointer]
+      - paragraph [ref=f6e45]:
+        - text: Already have an account?
+        - link "Log in" [ref=f6e46] [cursor=pointer]:
+          - /url: /login
+  - contentinfo [ref=f6e47]:
+    - generic [ref=f6e48]:
+      - generic [ref=f6e49]:
+        - generic [ref=f6e50]:
+          - link "QuickBite" [ref=f6e51] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f6e56]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f6e57]:
+          - heading "Product" [level=4] [ref=f6e58]
+          - list [ref=f6e59]:
+            - listitem [ref=f6e60]:
+              - link "Features" [ref=f6e61] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f6e62]:
+              - link "How it works" [ref=f6e63] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f6e64]:
+              - link "Pricing" [ref=f6e65] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f6e66]:
+          - heading "Company" [level=4] [ref=f6e67]
+          - list [ref=f6e68]:
+            - listitem [ref=f6e69]:
+              - link "About" [ref=f6e70] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f6e71]:
+              - link "Careers" [ref=f6e72] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f6e73]:
+              - link "Contact" [ref=f6e74] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f6e75]:
+          - heading "Legal" [level=4] [ref=f6e76]
+          - list [ref=f6e77]:
+            - listitem [ref=f6e78]:
+              - link "Privacy" [ref=f6e79] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f6e80]:
+              - link "Terms" [ref=f6e81] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f6e82]:
+        - generic [ref=f6e83]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f6e84]:
+          - link "Email" [ref=f6e85] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f6e89] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f6e93] [cursor=pointer]:
+            - /url: "#"

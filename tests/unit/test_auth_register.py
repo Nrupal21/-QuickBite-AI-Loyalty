@@ -23,6 +23,7 @@ BASE_URL = "http://test/api/v1/auth/verify-email"
 def make_session(execute_results: list) -> MagicMock:
     session = MagicMock()
     session.commit = AsyncMock()
+    session.flush = AsyncMock()
     results = []
     for value in execute_results:
         result = MagicMock()
@@ -30,6 +31,17 @@ def make_session(execute_results: list) -> MagicMock:
         results.append(result)
     session.execute = AsyncMock(side_effect=results)
     return session
+
+
+@pytest.fixture(autouse=True)
+def _mock_rls(mocker):
+    """verify_email() binds RLS tenant context via a plain session.execute
+    call (see app/db/rls.py) — mocking it out here, same as
+    test_identity_link_service.py's _mock_rls, keeps that call from
+    consuming a slot in the execute_results lists every test below sets up
+    to describe verify_email's *other* queries (email/username re-check,
+    owner role lookup, subdomain uniqueness)."""
+    mocker.patch("app.services.auth_service.rls.set_tenant_context", AsyncMock())
 
 
 def make_request(**overrides) -> UserRegister:
@@ -101,6 +113,34 @@ async def test_register_duplicate_email_returns_409(mocker):
 
 
 @pytest.mark.asyncio
+async def test_register_with_username_stores_it_pending(mocker):
+    session = make_session([None, None])  # email free, username free
+    cache_set = mocker.patch("app.services.auth_service.cache_service.set", AsyncMock())
+    mocker.patch(
+        "app.services.auth_service.messaging_service.send_verification_email",
+        AsyncMock(return_value=True),
+    )
+
+    await AuthService(session=session).register(make_request(username="MarcoOwner"), BASE_URL)
+
+    _, payload = cache_set.await_args.args
+    stored = json.loads(payload)
+    assert stored["username"] == "marcoowner"  # lowercased, matching email's convention
+
+
+@pytest.mark.asyncio
+async def test_register_duplicate_username_returns_409(mocker):
+    session = make_session([None, uuid.uuid4()])  # email free, username_hash already present
+    mocker.patch("app.services.auth_service.cache_service.set", AsyncMock())
+
+    with pytest.raises(HTTPException) as exc_info:
+        await AuthService(session=session).register(make_request(username="taken"), BASE_URL)
+
+    assert exc_info.value.status_code == 409
+    assert exc_info.value.detail["error"]["code"] == "USERNAME_ALREADY_TAKEN"
+
+
+@pytest.mark.asyncio
 async def test_register_weak_password_returns_422_with_hint():
     session = make_session([])
 
@@ -168,6 +208,54 @@ async def test_verify_email_creates_tenant_and_owner_in_one_transaction(mocker):
     assert audit_rows[0].action == "email_verified"
     session.commit.assert_awaited_once()  # tenant + user + audit in ONE transaction
     cache_delete.assert_awaited_once_with("pending_reg:some-token")
+
+
+@pytest.mark.asyncio
+async def test_verify_email_creates_user_with_username(mocker):
+    owner_role = Role(name="OWNER", level=2, permissions={}, mfa_required=True)
+    owner_role.id = uuid.uuid4()
+    # execute calls: email re-check -> None, username re-check -> None, owner role, subdomain free -> None
+    session = make_session([None, None, owner_role, None])
+    pending = json.dumps(
+        {
+            "email": "owner@marcos.in",
+            "password_hash": "$2b$12$fakehashfakehashfakehash",
+            "name": "Marco",
+            "restaurant_name": "Marcos Pizzeria",
+            "username": "marcoowner",
+        }
+    )
+    mocker.patch("app.services.auth_service.cache_service.get", AsyncMock(return_value=pending))
+    mocker.patch("app.services.auth_service.cache_service.delete", AsyncMock())
+
+    await AuthService(session=session).verify_email("some-token")
+
+    users = added_instances(session, User)
+    assert users[0].username_hash is not None
+    assert users[0].encrypted_username.startswith("v1:")
+
+
+@pytest.mark.asyncio
+async def test_verify_email_duplicate_username_returns_409(mocker):
+    # execute calls: email re-check -> None, username re-check -> already taken
+    session = make_session([None, uuid.uuid4()])
+    pending = json.dumps(
+        {
+            "email": "owner@marcos.in",
+            "password_hash": "$2b$12$fakehashfakehashfakehash",
+            "name": "Marco",
+            "restaurant_name": "Marcos Pizzeria",
+            "username": "marcoowner",
+        }
+    )
+    mocker.patch("app.services.auth_service.cache_service.get", AsyncMock(return_value=pending))
+    mocker.patch("app.services.auth_service.cache_service.delete", AsyncMock())
+
+    with pytest.raises(HTTPException) as exc_info:
+        await AuthService(session=session).verify_email("some-token")
+
+    assert exc_info.value.status_code == 409
+    assert exc_info.value.detail["error"]["code"] == "USERNAME_ALREADY_TAKEN"
 
 
 @pytest.mark.asyncio

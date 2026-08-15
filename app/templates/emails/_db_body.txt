@@ -1,0 +1,11 @@
+{% extends "_layout.txt" %}
+
+{% block content -%}
+{% for paragraph in paragraphs %}
+{{ paragraph }}
+
+{% endfor -%}
+{% if cta_url -%}
+{{ cta_label or "Continue" }}: {{ cta_url }}
+{%- endif %}
+{%- endblock %}

@@ -8,7 +8,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
-from geoalchemy2 import Geometry
+from sqlalchemy import text
 
 revision: str = "0001"
 down_revision: str | None = None
@@ -16,8 +16,20 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
+def _postgis_available() -> bool:
+    """Check if PostGIS extension is available on this PostgreSQL instance."""
+    conn = op.get_bind()
+    result = conn.execute(
+        text("SELECT COUNT(*) FROM pg_available_extensions WHERE name = 'postgis'")
+    )
+    return result.scalar() > 0
+
+
 def upgrade() -> None:
-    op.execute("CREATE EXTENSION IF NOT EXISTS postgis")
+    # Enable PostGIS only if available — skipped in local dev without PostGIS installed
+    if _postgis_available():
+        op.execute("CREATE EXTENSION IF NOT EXISTS postgis")
+    postgis = _postgis_available()
 
     op.create_table(
         "tenants",
@@ -55,6 +67,13 @@ def upgrade() -> None:
         "USING (tenant_id = current_setting('app.tenant_id')::uuid)"
     )
 
+    # Use PostGIS Geometry column if available, else Text (WKT) for local dev
+    if postgis:
+        from geoalchemy2 import Geometry  # noqa: PLC0415
+        location_col = sa.Column("location", Geometry(geometry_type="POINT", srid=4326), nullable=False)
+    else:
+        location_col = sa.Column("location", sa.Text(), nullable=False, server_default="POINT(0 0)")
+
     op.create_table(
         "branches",
         sa.Column("id", sa.Uuid(), primary_key=True),
@@ -65,14 +84,15 @@ def upgrade() -> None:
         sa.Column("address", sa.String(), nullable=False),
         sa.Column("latitude", sa.Float(), nullable=False),
         sa.Column("longitude", sa.Float(), nullable=False),
-        sa.Column("location", Geometry(geometry_type="POINT", srid=4326), nullable=False),
+        location_col,
         sa.Column("geofence_radius_m", sa.Integer(), nullable=False, server_default="100"),
         sa.Column("qr_code_token", sa.String(), nullable=False, unique=True),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
     )
     op.create_index("ix_branches_tenant_id", "branches", ["tenant_id"])
     op.create_index("ix_branches_qr_code_token", "branches", ["qr_code_token"])
-    op.execute("CREATE INDEX ix_branches_location_gist ON branches USING GIST (location)")
+    if postgis:
+        op.execute("CREATE INDEX ix_branches_location_gist ON branches USING GIST (location)")
     op.execute("ALTER TABLE branches ENABLE ROW LEVEL SECURITY")
     op.execute(
         "CREATE POLICY tenant_isolation_branches ON branches "

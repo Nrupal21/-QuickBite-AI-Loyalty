@@ -1,0 +1,97 @@
+- generic [ref=f3e1]:
+  - link "Skip to content" [ref=f3e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f3e3]:
+    - generic [ref=f3e5]:
+      - link "QuickBite" [ref=f3e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f3e11]:
+        - link "Product" [ref=f3e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f3e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f3e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f3e15]:
+        - link "Log in" [ref=f3e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f3e17] [cursor=pointer]:
+          - /url: /#pricing
+  - main [ref=f3e18]:
+    - generic [ref=f3e19]:
+      - generic [ref=f3e20]:
+        - link "Close and return home" [ref=f3e21] [cursor=pointer]:
+          - /url: /
+        - button "Back" [ref=f3e25] [cursor=pointer]
+        - generic [ref=f3e28]:
+          - generic [ref=f3e29]: Two-factor authentication
+          - heading "Set up your authenticator" [level=1] [ref=f3e125]
+          - paragraph
+        - generic [ref=f3e126]:
+          - paragraph [ref=f3e127]: Your OWNER role requires two-factor authentication.
+          - paragraph [ref=f3e128]: "Add this key in your authenticator app (Google Authenticator, Authy, 1Password):"
+          - generic [ref=f3e129]: XQLZKNNCZ2YKBFBPGMQXDJR6SM4HD52O
+          - button "Copy code" [ref=f3e130] [cursor=pointer]
+          - paragraph [ref=f3e131]: "Then enter the 6-digit code it shows:"
+          - generic [ref=f3e132]:
+            - textbox "Digit 1" [active] [ref=f3e133]
+            - textbox "Digit 2" [ref=f3e134]
+            - textbox "Digit 3" [ref=f3e135]
+            - textbox "Digit 4" [ref=f3e136]
+            - textbox "Digit 5" [ref=f3e137]
+            - textbox "Digit 6" [ref=f3e138]
+          - button "Confirm & continue" [ref=f3e139] [cursor=pointer]
+      - paragraph [ref=f3e64]: Owners and staff sign in with a password. Customers sign in with a one-time code — no password to remember.
+      - paragraph [ref=f3e65]:
+        - text: New restaurant?
+        - link "Create an account" [ref=f3e66] [cursor=pointer]:
+          - /url: /register
+  - contentinfo [ref=f3e67]:
+    - generic [ref=f3e68]:
+      - generic [ref=f3e69]:
+        - generic [ref=f3e70]:
+          - link "QuickBite" [ref=f3e71] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f3e76]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f3e77]:
+          - heading "Product" [level=4] [ref=f3e78]
+          - list [ref=f3e79]:
+            - listitem [ref=f3e80]:
+              - link "Features" [ref=f3e81] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f3e82]:
+              - link "How it works" [ref=f3e83] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f3e84]:
+              - link "Pricing" [ref=f3e85] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f3e86]:
+          - heading "Company" [level=4] [ref=f3e87]
+          - list [ref=f3e88]:
+            - listitem [ref=f3e89]:
+              - link "About" [ref=f3e90] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f3e91]:
+              - link "Careers" [ref=f3e92] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f3e93]:
+              - link "Contact" [ref=f3e94] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f3e95]:
+          - heading "Legal" [level=4] [ref=f3e96]
+          - list [ref=f3e97]:
+            - listitem [ref=f3e98]:
+              - link "Privacy" [ref=f3e99] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f3e100]:
+              - link "Terms" [ref=f3e101] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f3e102]:
+        - generic [ref=f3e103]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f3e104]:
+          - link "Email" [ref=f3e105] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f3e109] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f3e113] [cursor=pointer]:
+            - /url: "#"

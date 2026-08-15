@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Loyalty Analytics — QuickBite AI + Loyalty</title>
+<!-- NOTE: Stitch.ai generation for this screen (STITCH-09) failed after 3
+     attempts (timed out with no screen produced, unlike STITCH-07's
+     sidebar/header shell which succeeded from the same design system). This
+     file is hand-authored as a one-time deviation from AGENTS.md's "Stitch.ai
+     for ALL screen generation" rule, reusing the real Stitch-generated
+     sidebar/header markup and Tailwind config from dashboard/index.html
+     verbatim so the two screens stay visually identical outside the content
+     area. Revisit via Stitch.ai when the tool is available again. -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                "colors": {
+                    "primary-container": "#1a56db",
+                    "on-primary-container": "#d4dcff",
+                    "surface": "#faf8ff",
+                    "surface-container-low": "#f3f3fe",
+                    "surface-container": "#ededf8",
+                    "surface-container-high": "#e7e7f3",
+                    "surface-variant": "#e2e1ed",
+                    "surface-bright": "#faf8ff",
+                    "on-surface": "#191b23",
+                    "on-surface-variant": "#434654",
+                    "outline-variant": "#c3c5d7",
+                    "brand-primary": "#1A56DB",
+                    "brand-loyalty-teal": "#0D9488",
+                    "brand-accent-orange": "#FF6B35",
+                    "brand-success": "#059669",
+                    "brand-danger": "#DC2626",
+                    "brand-warning": "#D97706",
+                    "brand-ink": "#1E2A3A",
+                    "brand-muted": "#64748B",
+                    "brand-bg": "#F8FAFC"
+                },
+                "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                "fontFamily": {
+                    "headline": ["Inter", "sans-serif"],
+                    "body": ["Inter", "sans-serif"]
+                }
+            }
+        }
+    }
+</script>
+<style>
+    body { background-color: theme('colors.brand-bg'); color: theme('colors.brand-ink'); font-family: 'Inter', sans-serif; }
+    .heat-cell { aspect-ratio: 1; border-radius: 3px; }
+</style>
+</head>
+<body class="bg-brand-bg font-body min-h-screen text-brand-ink overflow-x-hidden flex">
+
+<nav class="fixed left-0 top-0 h-screen w-[240px] bg-surface shadow-sm z-50 flex flex-col justify-between py-6">
+  <div>
+    <div class="px-6 mb-8">
+      <h1 class="text-xl font-headline font-black text-primary-container flex items-center gap-2">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+        QuickBite
+      </h1>
+      <p class="text-xs text-brand-muted mt-1 font-medium">AI + Loyalty</p>
+    </div>
+    <div class="flex flex-col gap-1 font-body text-sm">
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-surface-container-high transition-colors duration-200 rounded-lg group" href="/dashboard">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">dashboard</span>
+        Dashboard
+      </a>
+      <a class="flex items-center gap-3 bg-primary-container text-on-primary-container font-bold rounded-lg px-4 py-3 mx-2" href="/dashboard/loyalty-analytics" aria-current="page">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+        Loyalty Analytics
+      </a>
+    </div>
+  </div>
+  <div class="px-4">
+    <div class="pt-4 border-t border-outline-variant flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-sm" data-user-initials aria-hidden="true">--</div>
+      <div>
+        <p class="text-sm font-bold text-brand-ink" data-user-role-label>Staff</p>
+        <span class="inline-block px-2 py-0.5 mt-0.5 bg-surface-variant text-brand-muted text-xs font-semibold rounded-full" data-user-role-badge>&nbsp;</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="ml-[240px] flex-1 min-h-screen">
+  <header class="sticky top-0 right-0 z-40 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center w-full px-8 h-16">
+    <h2 class="font-body font-bold text-brand-ink tracking-tight text-xl">Loyalty Analytics</h2>
+    <div class="flex items-center gap-3">
+      <label class="text-sm text-brand-muted" for="branch-filter">Branch</label>
+      <select id="branch-filter" class="text-sm border-none bg-surface-container-low rounded-md py-1.5 pl-3 pr-8 text-brand-ink font-medium focus:ring-2 focus:ring-brand-primary cursor-pointer">
+        <option value="">All Branches</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="p-8 max-w-7xl mx-auto space-y-8">
+    <div id="analytics-error" class="hidden bg-brand-danger/10 text-brand-danger text-sm font-medium px-4 py-3 rounded-lg" role="alert"></div>
+
+    <!-- 3 metric cards, matching STITCH-07's stat-card style -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-l-brand-loyalty-teal animate__animated animate__fadeInUp">
+        <p class="text-sm font-medium text-brand-muted mb-1">Stamps This Month</p>
+        <h3 class="text-3xl font-black text-brand-ink tracking-tight" data-metric="total_stamps_month">—</h3>
+      </div>
+      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-l-brand-primary animate__animated animate__fadeInUp">
+        <p class="text-sm font-medium text-brand-muted mb-1">Active Loyalty Customers</p>
+        <h3 class="text-3xl font-black text-brand-ink tracking-tight" data-metric="active_customers">—</h3>
+      </div>
+      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-l-brand-success animate__animated animate__fadeInUp">
+        <p class="text-sm font-medium text-brand-muted mb-1">Reward Redemption Rate</p>
+        <h3 class="text-3xl font-black text-brand-ink tracking-tight" data-metric="redemption_rate">—</h3>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Heatmap placeholder — id required per STITCH-09 AC -->
+      <div class="bg-white rounded-xl shadow-sm border border-outline-variant/30 p-6">
+        <h3 class="text-lg font-bold text-brand-ink mb-4">Daily Scan Heatmap (Last 30 Days)</h3>
+        <!-- grid-cols-24 is not a Tailwind utility (default scale tops out
+             at 12), so the column count is set inline instead of relying on
+             a class the CDN JIT would silently never generate. -->
+        <div id="scan-heatmap" class="grid gap-1" style="grid-template-columns: repeat(24, 1fr);"></div>
+        <div class="flex justify-between text-[10px] text-brand-muted mt-2">
+          <span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>11pm</span>
+        </div>
+      </div>
+
+      <!-- Top customers — phone masked per DASH-02 AC -->
+      <div class="bg-white rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+        <h3 class="text-lg font-bold text-brand-ink p-6 pb-4">Top 10 Customers</h3>
+        <table class="w-full text-sm">
+          <thead class="bg-surface-container-low text-brand-muted text-xs uppercase">
+            <tr>
+              <th class="text-left px-6 py-2 font-semibold">Phone</th>
+              <th class="text-right px-6 py-2 font-semibold">Total Stamps</th>
+            </tr>
+          </thead>
+          <tbody data-top-customers-body class="divide-y divide-outline-variant/20">
+            <tr><td class="px-6 py-4 text-brand-muted" colspan="2">No customers yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Fraud log — columns per STITCH-09 AC: scanned_at, distance, reason -->
+    <div class="bg-white rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+      <h3 class="text-lg font-bold text-brand-ink p-6 pb-4">Fraud Log</h3>
+      <table class="w-full text-sm">
+        <thead class="bg-surface-container-low text-brand-muted text-xs uppercase">
+          <tr>
+            <th class="text-left px-6 py-2 font-semibold">Scanned At</th>
+            <th class="text-right px-6 py-2 font-semibold">Distance from Branch</th>
+            <th class="text-left px-6 py-2 font-semibold">Reason</th>
+          </tr>
+        </thead>
+        <tbody data-fraud-log-body class="divide-y divide-outline-variant/20">
+          <tr><td class="px-6 py-4 text-brand-muted" colspan="3">No fraud alerts.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script src="{{ url_for('static', path='js/loyalty-analytics.js') }}" defer></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{% block content %}{% endblock %}
+
+--
+You're receiving this email because of activity on your QuickBite account. If you didn't expect this, you can safely ignore it.
+
+QuickBite AI + Loyalty

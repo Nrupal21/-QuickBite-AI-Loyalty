@@ -9,11 +9,18 @@ One row per restaurant location. v3.1 changes:
 
 import uuid
 
-from geoalchemy2 import Geometry
-from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.config import settings
 from app.db.base import Base
+
+# Use PostGIS Geometry when available; fall back to Text (WKT) for local dev
+if settings.POSTGIS_ENABLED:
+    from geoalchemy2 import Geometry  # type: ignore[import-untyped]
+    _location_col_type = Geometry(geometry_type="POINT", srid=4326)
+else:
+    _location_col_type = Text()
 
 
 class Branch(Base):
@@ -25,7 +32,7 @@ class Branch(Base):
     # v3.1 TIER 3 — hash of normalised address for lookup + AES-256-GCM for display
     address_hash: Mapped[str] = mapped_column(String, index=True)
     encrypted_address: Mapped[str] = mapped_column(String)
-    location: Mapped[str] = mapped_column(Geometry(geometry_type="POINT", srid=4326))
+    location: Mapped[str] = mapped_column(_location_col_type)
     geofence_radius_m: Mapped[int] = mapped_column(Integer, default=100)
     qr_code_token: Mapped[str] = mapped_column(String, unique=True, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)

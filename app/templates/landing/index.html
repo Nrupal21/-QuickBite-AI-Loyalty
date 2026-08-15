@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block title %}QuickBite AI + Loyalty — One scan, a 5-star review and a stamp{% endblock %}
+{% block body_class %}has-dark-hero{% endblock %}
+
+{% block content %}
+
+{% macro icon_check(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+{%- endmacro %}
+
+{% macro icon_star(size=15) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_arrow_right(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+{%- endmacro %}
+
+{% macro icon_sparkle(size=22) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.4 3.6 1.9 5.1 5.5 5.5-3.6.4-5.1 1.9-5.5 5.5-.4-3.6-1.9-5.1-5.5-5.5C10.1 7.1 11.6 5.6 12 2Z"/><path d="M19.5 14c.2 1.7.9 2.4 2.6 2.6-1.7.2-2.4.9-2.6 2.6-.2-1.7-.9-2.4-2.6-2.6 1.7-.2 2.4-.9 2.6-2.6Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_shield(size=22) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3 7.5 8 9 5-1.5 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+{%- endmacro %}
+
+{% macro icon_gift(size=22) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/><path d="M12 8c-1.4-4-6-4.3-6-1.7C6 8.3 9.3 8 12 8Z"/><path d="M12 8c1.4-4 6-4.3 6-1.7C18 8.3 14.7 8 12 8Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_sync(size=22) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+{%- endmacro %}
+
+{% macro icon_chat(size=22) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_users(size=22) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+{%- endmacro %}
+
+<main id="main-content">
+
+  <section class="hero">
+    <canvas id="hero-canvas" class="hero-canvas" aria-hidden="true"></canvas>
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-copy">
+          <span class="eyebrow" data-hero-eyebrow>
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            AI reviews + loyalty, one QR scan
+          </span>
+          <h1 class="hero-title" data-hero-title>
+            <span class="line">Every receipt becomes a</span>
+            <span class="line accent-text">5-star review</span>
+            <span class="line">and a loyalty stamp.</span>
+          </h1>
+          <p class="hero-sub" data-hero-sub>
+            Customers scan the QR code on their receipt, approve an AI-drafted review in
+            seconds, and collect a stamp toward their next reward. No app to download,
+            no password to remember.
+          </p>
+          <div class="hero-actions" data-hero-actions>
+            <a href="#pricing" class="btn btn-primary">
+              Start free trial
+              {{ icon_arrow_right(16) }}
+            </a>
+            <a href="#how-it-works" class="btn btn-ghost-light">See how it works</a>
+          </div>
+          <ul class="hero-fineprint" data-hero-fineprint>
+            <li>{{ icon_check(14) }} OTP-only login, no passwords</li>
+            <li>{{ icon_check(14) }} Live in under 10 minutes</li>
+            <li>{{ icon_check(14) }} Works on any phone, no app</li>
+          </ul>
+        </div>
+
+        <div class="hero-visual" data-hero-visual>
+          <img
+            class="hero-visual-bg"
+            src="{{ url_for('static', path='img/hero-qr-scan.jpg') }}"
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+          />
+          <div class="mock-stack">
+            <div class="mock-card mock-card-back" aria-hidden="true" data-hero-visual-back>
+              <div class="mock-row">
+                <div class="mock-avatar-row">
+                  <span class="mock-dot" aria-hidden="true"></span>
+                  <div>
+                    <span class="mock-line w-1" aria-hidden="true"></span>
+                    <span class="mock-line w-2" aria-hidden="true"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="mock-review-text" aria-hidden="true">
+                <span class="mock-line"></span>
+                <span class="mock-line"></span>
+              </div>
+            </div>
+
+            <div class="mock-card mock-card-main" data-hero-visual-front>
+              <span class="card-spotlight card-spotlight--dark" data-spotlight aria-hidden="true"></span>
+              <div class="mock-row">
+                <div class="mock-avatar-row">
+                  <span class="mock-dot" aria-hidden="true"></span>
+                  <div>
+                    <span class="mock-line w-1" aria-hidden="true"></span>
+                    <span class="mock-line w-2" aria-hidden="true"></span>
+                  </div>
+                </div>
+                <div class="mock-stars" aria-hidden="true">
+                  {{ icon_star() }}{{ icon_star() }}{{ icon_star() }}{{ icon_star() }}{{ icon_star() }}
+                </div>
+              </div>
+              <div class="mock-review-text" aria-hidden="true">
+                <span class="mock-line"></span>
+                <span class="mock-line"></span>
+                <span class="mock-line"></span>
+              </div>
+              <div class="mock-divider" aria-hidden="true"></div>
+              <div class="mock-row">
+                <span style="font-size: 0.75rem; color: var(--hero-muted)">Reward progress</span>
+                <span style="font-size: 0.75rem; color: var(--hero-fg); font-weight: 600">5 / 8 stamps</span>
+              </div>
+              <div class="mock-stamps" aria-hidden="true">
+                {% for i in range(8) %}
+                <span class="mock-stamp{% if i < 5 %} is-filled{% endif %}">
+                  {% if i < 5 %}{{ icon_check(14) }}{% endif %}
+                </span>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="mock-card-badge">
+              <strong>12s</strong>
+              <span>AI review drafted</span>
+            </div>
+
+            <div class="mock-card-qr" aria-hidden="true">
+              <svg class="qr-svg" viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg">
+                <rect width="70" height="70" fill="#ffffff" />
+                <path d="M6 6h18v18H6zM12 12h6v6h-6zM46 6h18v18H46zM52 12h6v6h-6zM6 46h18v18H6zM12 52h6v6h-6z" fill="#0b0b0d" />
+                <path d="M30 6h4v4h-4zM38 6h4v4h-4zM30 14h8v4h-8zM30 22h4v4h-4zM6 30h4v4h-4zM14 30h4v8h-4zM22 30h4v4h-4zM30 30h8v8h-8zM46 30h4v8h-4zM54 30h8v4h-8zM6 38h8v4h-6zM30 42h4v8h-4zM38 38h4v12h-4zM46 42h8v4h-8zM58 38h4v8h-4zM30 54h4v10h-4zM38 54h8v4h-8zM50 54h4v10h-4zM58 50h6v4h-6zM6 58h8v6h-8z" fill="#0b0b0d" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-tight">
+    <div class="container">
+      <div class="stat-band" data-reveal-scope>
+        <div class="stat" data-reveal data-reveal-group="stats">
+          <span class="stat-accent" data-accent-draw aria-hidden="true"></span>
+          <div class="stat-value">&lt;<span data-count-to="30" data-count-suffix="s">30s</span></div>
+          <p class="stat-label">From scan to AI-drafted review</p>
+        </div>
+        <div class="stat" data-reveal data-reveal-group="stats">
+          <span class="stat-accent" data-accent-draw aria-hidden="true"></span>
+          <div class="stat-value"><span data-count-to="1" data-count-suffix=" QR">1 QR</span></div>
+          <p class="stat-label">Replaces the whole review + rewards flow</p>
+        </div>
+        <div class="stat" data-reveal data-reveal-group="stats">
+          <span class="stat-accent" data-accent-draw aria-hidden="true"></span>
+          <div class="stat-value"><span data-count-to="100" data-count-suffix="%">100%</span></div>
+          <p class="stat-label">OTP-only customer login, zero stored passwords</p>
+        </div>
+        <div class="stat" data-reveal data-reveal-group="stats">
+          <span class="stat-accent" data-accent-draw aria-hidden="true"></span>
+          <div class="stat-value"><span data-count-to="256" data-count-suffix="-bit">256-bit</span></div>
+          <p class="stat-label">AES-GCM encryption on every customer record</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header is-centered">
+        <span class="kicker">Product</span>
+        <h2 class="section-title">Everything your restaurant needs, built in</h2>
+        <p class="section-sub">
+          From the first scan to the tenth stamp, QuickBite handles reviews, rewards
+          and fraud protection so you can stay focused on the kitchen.
+        </p>
+      </div>
+
+      <div class="bento" data-reveal-scope>
+        <div class="bento-card is-dark span-2 row-2" data-reveal data-reveal-group="bento">
+          <span class="card-spotlight card-spotlight--dark" data-spotlight aria-hidden="true"></span>
+          <span class="icon-tile">{{ icon_sparkle() }}</span>
+          <h3>AI Review Composer</h3>
+          <p>
+            GPT-4o drafts a natural, on-brand review from the visit — with a Gemini
+            fallback so it never goes down. The customer reads it, edits if they like,
+            and posts in one tap.
+          </p>
+          <div class="ai-suggestion" aria-hidden="true">
+            <span class="ai-suggestion-tag">{{ icon_sparkle(12) }} AI-drafted from the visit · 9s</span>
+            <p class="ai-suggestion-text">
+              "Cozy spot with amazing butter chicken — service was quick and the staff
+              genuinely friendly. Will definitely be back for the weekend brunch!"
+            </p>
+            <div class="ai-suggestion-actions">
+              <span class="ai-suggestion-btn is-ghost">Edit</span>
+              <span class="ai-suggestion-btn is-primary">Post review {{ icon_arrow_right(12) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-card span-2" data-reveal data-reveal-group="bento">
+          <span class="card-spotlight card-spotlight--light" data-spotlight aria-hidden="true"></span>
+          <span class="icon-tile">{{ icon_shield() }}</span>
+          <h3>Geofenced Scan Security</h3>
+          <p>Every scan is checked against the branch's exact location before a stamp is issued, so rewards can't be farmed from across town.</p>
+          <div class="geofence-viz" aria-hidden="true">
+            <span class="geofence-ring r1"></span>
+            <span class="geofence-ring r2"></span>
+            <span class="geofence-pin"></span>
+          </div>
+        </div>
+
+        <div class="bento-card span-2" data-reveal data-reveal-group="bento">
+          <span class="card-spotlight card-spotlight--light" data-spotlight aria-hidden="true"></span>
+          <span class="icon-tile">{{ icon_gift() }}</span>
+          <h3>Loyalty Stamps &amp; Rewards</h3>
+          <p>Every approved review earns a stamp. Rewards unlock automatically and a redemption code is ready the next time they visit.</p>
+          <div class="mock-stamps" aria-hidden="true" style="margin-top: 1.25rem">
+            {% for i in range(8) %}
+            <span class="mock-stamp" style="border-color: var(--border);{% if i < 6 %} border-style: solid; background: linear-gradient(135deg, var(--accent), #60a5fa); color: #fff;{% endif %}">
+              {% if i < 6 %}{{ icon_check(14) }}{% endif %}
+            </span>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="bento-card" data-reveal data-reveal-group="bento">
+          <span class="card-spotlight card-spotlight--light" data-spotlight aria-hidden="true"></span>
+          <span class="icon-tile">{{ icon_sync() }}</span>
+          <h3>Google Business Sync</h3>
+          <p>Approved reviews post straight to Google My Business — no copy-pasting between apps.</p>
+        </div>
+
+        <div class="bento-card" data-reveal data-reveal-group="bento">
+          <span class="card-spotlight card-spotlight--light" data-spotlight aria-hidden="true"></span>
+          <span class="icon-tile">{{ icon_chat() }}</span>
+          <h3>WhatsApp &amp; SMS Alerts</h3>
+          <p>Customers get notified the moment a reward unlocks, by SMS on every plan and WhatsApp on Pro+.</p>
+        </div>
+
+        <div class="bento-card is-dark span-2" data-reveal data-reveal-group="bento">
+          <span class="card-spotlight card-spotlight--dark" data-spotlight aria-hidden="true"></span>
+          <span class="icon-tile">{{ icon_users() }}</span>
+          <h3>Team Roles &amp; Permissions</h3>
+          <p>Owners, managers and staff each see exactly what they need — role-based access down to the branch level.</p>
+          <div class="progress-viz" aria-hidden="true">
+            <div class="progress-row">
+              <span class="progress-label">Owner</span>
+              <span class="progress-track"><span class="progress-fill" data-progress="100" style="width: 100%"></span></span>
+            </div>
+            <div class="progress-row">
+              <span class="progress-label">Manager</span>
+              <span class="progress-track"><span class="progress-fill" data-progress="65" style="width: 65%"></span></span>
+            </div>
+            <div class="progress-row">
+              <span class="progress-label">Staff</span>
+              <span class="progress-track"><span class="progress-fill" data-progress="35" style="width: 35%"></span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-tight section-alt" id="how-it-works">
+    <div class="container">
+      <div class="section-header is-centered">
+        <span class="kicker">How it works</span>
+        <h2 class="section-title">Three steps. Thirty seconds.</h2>
+      </div>
+
+      <div class="steps" data-reveal-scope>
+        <div class="steps-line" aria-hidden="true"><div class="steps-line-fill"></div></div>
+
+        <div class="step" data-reveal data-reveal-group="steps">
+          <span class="step-index">1</span>
+          <h3>Scan the receipt QR</h3>
+          <p>One code on the receipt opens a mobile page — no app install, no account to create.</p>
+        </div>
+
+        <div class="step" data-reveal data-reveal-group="steps">
+          <span class="step-index">2</span>
+          <h3>Approve the AI draft</h3>
+          <p>An on-brand review is ready in seconds. The customer edits if they want, then posts with one tap.</p>
+        </div>
+
+        <div class="step" data-reveal data-reveal-group="steps">
+          <span class="step-index">3</span>
+          <h3>Stamp collected, reward unlocked</h3>
+          <p>The loyalty card updates instantly. When it's full, a redemption code is waiting for their next visit.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="pricing">
+    <div class="container">
+      <div class="section-header is-centered">
+        <span class="kicker">Pricing</span>
+        <h2 class="section-title">Simple plans that grow with your branches</h2>
+        <p class="section-sub">Start free on a single location. Upgrade when you're ready to add branches and WhatsApp.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <div class="price-card">
+          <span class="price-tier">Starter</span>
+          <p class="price-tier-desc">For single-location restaurants getting started with AI reviews.</p>
+          <div class="price-value">
+            <strong>Free</strong>
+            <span>14-day trial, no card required</span>
+          </div>
+          <ul class="price-features">
+            <li>{{ icon_check(16) }} 1 branch</li>
+            <li>{{ icon_check(16) }} AI review composer (GPT-4o + Gemini fallback)</li>
+            <li>{{ icon_check(16) }} QR loyalty stamps &amp; rewards</li>
+            <li>{{ icon_check(16) }} Email OTP customer login</li>
+            <li>{{ icon_check(16) }} Owner dashboard</li>
+          </ul>
+          <a href="/register" class="btn btn-ghost-dark btn-block">Start free trial</a>
+        </div>
+
+        <div class="price-card is-featured">
+          <span class="price-badge">Most popular</span>
+          <span class="price-tier">Growth</span>
+          <p class="price-tier-desc">For growing restaurants with loyal regulars across a few branches.</p>
+          <div class="price-value">
+            <strong>Let's talk</strong>
+            <span>tailored to your branch count</span>
+          </div>
+          <ul class="price-features">
+            <li>{{ icon_check(16) }} Everything in Starter</li>
+            <li>{{ icon_check(16) }} Up to 5 branches</li>
+            <li>{{ icon_check(16) }} SMS OTP via Twilio</li>
+            <li>{{ icon_check(16) }} Geofenced fraud protection</li>
+            <li>{{ icon_check(16) }} WhatsApp reward alerts</li>
+            <li>{{ icon_check(16) }} Team roles &amp; permissions</li>
+          </ul>
+          <a href="/register" class="btn btn-primary btn-block">Get started</a>
+        </div>
+
+        <div class="price-card">
+          <span class="price-tier">Pro</span>
+          <p class="price-tier-desc">For multi-branch chains and franchise groups.</p>
+          <div class="price-value">
+            <strong>Custom</strong>
+            <span>volume pricing for chains</span>
+          </div>
+          <ul class="price-features">
+            <li>{{ icon_check(16) }} Everything in Growth</li>
+            <li>{{ icon_check(16) }} Unlimited branches</li>
+            <li>{{ icon_check(16) }} Priority AI fallback routing</li>
+            <li>{{ icon_check(16) }} Advanced analytics dashboard</li>
+            <li>{{ icon_check(16) }} Dedicated onboarding</li>
+          </ul>
+          <a href="#" class="btn btn-ghost-dark btn-block">Contact sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-tight">
+    <div class="container">
+      <div class="cta-band">
+        <div class="hero-glow" aria-hidden="true"></div>
+        <h2 class="cta-title">Ready to turn receipts into 5-star reviews?</h2>
+        <p class="cta-sub">Set up your first branch in under 10 minutes. No credit card required to start.</p>
+        <div class="cta-actions">
+          <a href="/register" class="btn btn-primary">
+            Start free trial
+            {{ icon_arrow_right(16) }}
+          </a>
+          <a href="#" class="btn btn-ghost-light">Book a demo</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', path='js/constellation-grid.js') }}" defer></script>
+<script src="{{ url_for('static', path='js/landing-motion.js') }}" defer></script>
+{% endblock %}

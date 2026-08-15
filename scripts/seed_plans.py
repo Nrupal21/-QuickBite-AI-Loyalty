@@ -21,7 +21,7 @@ PLANS = [
         "name": "starter",
         "display_name": "Starter",
         "price_monthly_inr": 0,
-        "stripe_price_id": None,
+        "provider_plan_id": None,
         "trial_days": 0,
         "feature_limits": {
             "branches": 1,
@@ -36,7 +36,7 @@ PLANS = [
         "name": "pro",
         "display_name": "Pro",
         "price_monthly_inr": 299900,
-        "stripe_price_id": None,  # set from the Stripe dashboard in SUB-01
+        "provider_plan_id": None,  # set from the Razorpay dashboard in SUB-01
         "trial_days": 14,
         "feature_limits": {
             "branches": 3,
@@ -51,7 +51,7 @@ PLANS = [
         "name": "enterprise",
         "display_name": "Enterprise",
         "price_monthly_inr": 999900,
-        "stripe_price_id": None,
+        "provider_plan_id": None,
         "trial_days": -1,
         "feature_limits": {
             "branches": -1,

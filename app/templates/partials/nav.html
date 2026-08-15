@@ -1,0 +1,23 @@
+{% macro icon_sparkle(size=16) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.4 3.6 1.9 5.1 5.5 5.5-3.6.4-5.1 1.9-5.5 5.5-.4-3.6-1.9-5.1-5.5-5.5C10.1 7.1 11.6 5.6 12 2Z"/><path d="M19.5 14c.2 1.7.9 2.4 2.6 2.6-1.7.2-2.4.9-2.6 2.6-.2-1.7-.9-2.4-2.6-2.6 1.7-.2 2.4-.9 2.6-2.6Z"/></svg>
+{%- endmacro %}
+
+<nav class="nav" aria-label="Primary">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <span class="nav-brand-mark" aria-hidden="true">{{ icon_sparkle(16) }}</span>
+        QuickBite
+      </a>
+      <div class="nav-links">
+        <a href="/#features">Product</a>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/#pricing">Pricing</a>
+      </div>
+      <div class="nav-cta">
+        <a href="/login" class="btn btn-ghost-light">Log in</a>
+        <a href="/#pricing" class="btn btn-primary">Get started</a>
+      </div>
+    </div>
+  </div>
+</nav>

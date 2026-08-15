@@ -22,6 +22,12 @@ redis==5.0.4
 cryptography==42.0.7
 pyjwt==2.8.0
 passlib[bcrypt]==1.7.4
+# passlib 1.7.4's bcrypt backend probes `bcrypt.__about__.__version__` and
+# self-tests hashpw() at import time — bcrypt>=4.0 dropped __about__ and
+# changed hashpw()'s truncation behavior, which passlib's self-test trips
+# over as `ValueError: password cannot be longer than 72 bytes`. Pinning
+# below 4.0 is the standard fix until passlib is replaced or patched.
+bcrypt<4.0.0
 pyotp==2.9.0
 slowapi==0.1.9
 authlib==1.3.0
@@ -38,11 +44,22 @@ jinja2==3.1.4
 
 # --- AI Providers ---
 openai==1.30.0
+# Gemini is the REVIEW-01 fallback when OpenAI fails or is flagged off.
+google-generativeai==0.8.5
 
 # --- External Services ---
-stripe==9.6.0
+# Razorpay replaces Stripe: pricing is already INR paise and tenants carry
+# GSTIN/PAN. The SDK is used for the orders/subscriptions API only — webhook
+# signature verification is a local hmac.compare_digest, no SDK, no I/O.
+razorpay==1.4.2
+# Firebase Auth ID-token verification + Firestore projection writes. Pulls
+# google-auth and google-cloud-firestore.
+firebase-admin==6.5.0
 twilio==9.1.0
 sendgrid==6.11.0
+# Async SMTP — the four email senders are `async def`, so a blocking smtplib
+# call would stall the event loop on every signup, lockout, invite and OTP.
+aiosmtplib==3.0.1
 
 # --- Utilities ---
 qrcode[pil]==7.4.2

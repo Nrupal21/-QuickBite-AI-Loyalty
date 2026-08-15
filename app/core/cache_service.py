@@ -21,6 +21,17 @@ async def set(key: str, value: str, ttl: int | None = None) -> None:
     await _client.set(key, value, ex=ttl)
 
 
+async def set_if_absent(key: str, value: str, ttl: int) -> bool:
+    """SET NX EX — returns True only for the caller that created the key.
+
+    The cross-process single-flight primitive: when N workers all miss the
+    JWKS cache at once, exactly one wins this and fetches from the origin
+    while the rest wait on the result. `ttl` is mandatory because a lock
+    without expiry becomes permanent the moment its holder crashes.
+    """
+    return bool(await _client.set(key, value, ex=ttl, nx=True))
+
+
 async def delete(key: str) -> None:
     await _client.delete(key)
 

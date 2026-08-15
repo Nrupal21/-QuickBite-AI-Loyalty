@@ -1,0 +1,8 @@
+{% extends "_layout.txt" %}
+
+{% block content -%}
+Welcome to QuickBite AI + Loyalty.
+
+Confirm your email address to finish setting up your restaurant:
+{{ verification_url }}
+{%- endblock %}

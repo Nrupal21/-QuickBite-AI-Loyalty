@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Create your account — QuickBite AI + Loyalty{% endblock %}
+{% block meta_description %}Set up QuickBite for your restaurant — AI-drafted reviews and QR loyalty rewards from a single receipt scan.{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link rel="stylesheet" href="{{ url_for('static', path='css/auth.css') }}" />
+{% endblock %}
+
+{% block content %}
+
+{% macro icon_check(size=28) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+{%- endmacro %}
+
+{% macro icon_x(size=16) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+{%- endmacro %}
+
+{% macro icon_eye(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+{%- endmacro %}
+
+{% macro icon_eye_off(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a18.36 18.36 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+{%- endmacro %}
+
+<main id="main-content" class="auth-main">
+  <div class="auth-shell">
+    <div class="auth-card animate__animated animate__fadeInUp animate__faster" data-auth-card>
+      <a href="/" class="auth-close-btn" aria-label="Close and return home">
+        {{ icon_x(16) }}
+      </a>
+
+      <div class="auth-card-header">
+        <span class="auth-kicker" data-step-kicker>Get started</span>
+        <h1 class="auth-title" data-step-title>Create your restaurant account</h1>
+        <p class="auth-sub" data-step-sub>Set up QuickBite in a few minutes — no credit card required.</p>
+      </div>
+
+      <div class="auth-alert" data-auth-alert role="alert" hidden></div>
+
+      <!-- Step: registration form -->
+      <div class="auth-step" data-step="register-form">
+        <form novalidate data-register-form>
+          <div class="auth-field">
+            <label for="reg-restaurant-name">Restaurant name</label>
+            <input
+              type="text"
+              id="reg-restaurant-name"
+              name="restaurant_name"
+              data-field-restaurant-name
+              placeholder="Brew House Cafe"
+              autocomplete="organization"
+              maxlength="100"
+              required
+            />
+          </div>
+          <div class="auth-field">
+            <label for="reg-name">Your name</label>
+            <input
+              type="text"
+              id="reg-name"
+              name="name"
+              data-field-name
+              placeholder="Nina Rao"
+              autocomplete="name"
+              maxlength="100"
+              required
+            />
+          </div>
+          <div class="auth-field">
+            <label for="reg-email">Email</label>
+            <input
+              type="email"
+              id="reg-email"
+              name="email"
+              data-field-email
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+          <div class="auth-field">
+            <label for="reg-password">Password</label>
+            <div class="auth-field-input-wrap">
+              <input
+                type="password"
+                id="reg-password"
+                name="password"
+                data-field-password
+                placeholder="At least 8 characters"
+                autocomplete="new-password"
+                minlength="8"
+                maxlength="128"
+                required
+              />
+              <button
+                type="button"
+                class="auth-toggle-visibility"
+                data-toggle-password
+                aria-label="Show password"
+                aria-pressed="false"
+              >
+                <span data-icon-show>{{ icon_eye(18) }}</span>
+                <span data-icon-hide hidden>{{ icon_eye_off(18) }}</span>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" data-submit-btn>
+            <span data-btn-label>Create account</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Step: verification email sent -->
+      <div class="auth-step auth-step-success" data-step="sent" hidden>
+        <span class="auth-success-icon animate__animated animate__zoomIn">{{ icon_check(28) }}</span>
+        <p class="auth-sub" data-sent-message>Check your email to verify your account.</p>
+        <a href="/" class="btn btn-primary btn-block">Back to home</a>
+      </div>
+    </div>
+
+    <p class="auth-footnote">
+      Already have an account? <a href="/login">Log in</a>
+    </p>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', path='js/auth-register.js') }}" defer></script>
+{% endblock %}

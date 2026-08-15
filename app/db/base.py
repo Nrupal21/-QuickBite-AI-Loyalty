@@ -13,10 +13,38 @@ from datetime import datetime
 from sqlalchemy import DateTime, func
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
-engine = create_async_engine(settings.DATABASE_URL, pool_pre_ping=True)
+
+def _engine_kwargs() -> dict:
+    """Connection settings, adjusted when pointing at a transaction pooler.
+
+    Supabase (and any PgBouncer in transaction mode) hands a different backend
+    connection to each transaction, so a prepared statement created on one is
+    gone by the next — asyncpg caches them by default and fails with
+    `prepared statement "__asyncpg_stmt_x__" does not exist` under load rather
+    than on the first call, which makes it look intermittent.
+
+    `set_config('app.tenant_id', ..., true)` is transaction-local and therefore
+    safe under transaction pooling: the tenant binding lives and dies inside
+    the same transaction that does the reads. Session-scoped state would not be.
+    """
+    kwargs: dict = {"pool_pre_ping": True}
+    if settings.DB_USE_TRANSACTION_POOLER:
+        kwargs["connect_args"] = {
+            "statement_cache_size": 0,
+            "prepared_statement_cache_size": 0,
+        }
+        # The pooler owns pooling; a second pool underneath it just holds
+        # server-side connections open that the pooler wants to recycle.
+        kwargs["poolclass"] = NullPool
+        kwargs.pop("pool_pre_ping")
+    return kwargs
+
+
+engine = create_async_engine(settings.DATABASE_URL, **_engine_kwargs())
 async_session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
