@@ -14,9 +14,11 @@
   "description": "",
   "dependencies": {
     "@dataconnect/generated": "file:src/dataconnect-generated",
+    "firebase": "^12.17.1",
     "gsap": "3.12"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "supabase": "^2.111.0"
   }
 }

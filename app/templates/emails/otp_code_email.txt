@@ -1,0 +1,7 @@
+{% extends "_layout.txt" %}
+
+{% block content -%}
+Your one-time login code is: {{ otp }}
+
+This code expires in a few minutes. Never share it with anyone, including someone claiming to be QuickBite staff.
+{%- endblock %}

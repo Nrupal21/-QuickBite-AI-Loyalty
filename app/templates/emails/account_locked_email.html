@@ -1,0 +1,9 @@
+{% extends "_layout.html" %}
+
+{% block title %}Suspicious activity on your QuickBite account{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 16px 0;">We've temporarily locked your QuickBite account after several failed sign-in attempts.</p>
+<p style="margin:0 0 16px 0;">It will unlock automatically at <strong>{{ unlock_at }}</strong>.</p>
+<p style="margin:0;font-size:13px;color:#64748b;">If this wasn't you, we recommend changing your password as soon as your account unlocks.</p>
+{% endblock %}

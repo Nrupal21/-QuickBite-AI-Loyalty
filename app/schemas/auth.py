@@ -31,6 +31,17 @@ class RegisterResponse(BaseModel):
     status: str  # always "verification_email_sent"
 
 
+class TenantLookupResponse(BaseModel):
+    """Resolves a restaurant's public subdomain to the tenant_id the
+    identify-first login screen needs. Both `subdomain` and `name` are TIER 1
+    plaintext (see AGENTS.md's field classification) — same visibility as a
+    company name on a storefront, not PII."""
+
+    found: bool
+    tenant_id: str | None = None
+    name: str | None = None
+
+
 class VerifyEmailResponse(BaseModel):
     status: str  # "verified"
     subdomain: str

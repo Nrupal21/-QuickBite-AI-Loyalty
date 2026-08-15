@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      document.documentElement.classList.remove('no-js');
+      document.documentElement.classList.add('js');
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}QuickBite AI + Loyalty{% endblock %}</title>
+    <meta
+      name="description"
+      content="{% block meta_description %}One QR code turns a restaurant receipt into an AI-drafted review and a loyalty stamp — no app download, no username or password.{% endblock %}"
+    />
+    <meta name="theme-color" content="#0b0b0d" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%229%22 fill=%22%232563eb%22/><path d=%22M9 17.5 14 22 23 11%22 stroke=%22white%22 stroke-width=%222.5%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', path='css/landing.css') }}" />
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body class="{% block body_class %}{% endblock %}">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    {% block nav %}{% include "partials/nav.html" %}{% endblock %}
+    {% block content %}{% endblock %}
+    {% block footer %}{% include "partials/footer.html" %}{% endblock %}
+
+    <script>
+      document.querySelectorAll('[data-current-year]').forEach(function (el) {
+        el.textContent = new Date().getFullYear();
+      });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
+      defer
+    ></script>
+    {% block extra_scripts %}{% endblock %}
+  </body>
+</html>

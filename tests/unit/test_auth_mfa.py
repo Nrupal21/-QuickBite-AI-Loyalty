@@ -31,7 +31,18 @@ def verify_session_payload(user: User) -> str:
     handed to /auth/mfa/enroll is rejected, so a stolen one cannot be used to
     overwrite a working TOTP secret.
     """
-    return json.dumps({"user_id": str(user.id), "purpose": "verify"})
+    return json.dumps(
+        {"user_id": str(user.id), "tenant_id": str(user.tenant_id), "purpose": "verify"}
+    )
+
+
+@pytest.fixture(autouse=True)
+def _mock_rls(mocker):
+    """_resolve_mfa_session binds RLS tenant context from the session
+    payload before its User lookup — mocked as a no-op so these tests only
+    account for the ORM queries they reason about, same rationale as
+    test_identity_link_service.py."""
+    mocker.patch("app.services.auth_service.rls.set_tenant_context", AsyncMock())
 
 
 def make_session(execute_results: list) -> MagicMock:

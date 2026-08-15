@@ -1,0 +1,14 @@
+{% extends "_layout.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Verify your QuickBite account{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 16px 0;">Welcome to QuickBite AI + Loyalty.</p>
+<p style="margin:0 0 16px 0;">Confirm your email address to finish setting up your restaurant.</p>
+{{ macros.cta_button(verification_url, "Verify my account") }}
+<p style="margin:16px 0 0 0;font-size:13px;color:#64748b;">
+  If the button doesn't work, copy and paste this link into your browser:<br />
+  <span style="word-break:break-all;">{{ verification_url }}</span>
+</p>
+{% endblock %}

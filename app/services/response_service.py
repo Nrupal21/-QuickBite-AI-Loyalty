@@ -20,12 +20,18 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import broadcast, cache_service
 from app.db import rls
-from app.db.models.reputation import CustomerReview, ReviewResponse
+from app.db.models.reputation import CustomerReview, GMBProfile, ReviewResponse
 from app.db.models.tenant import Tenant
 from app.db.models.user import User
-from app.services import ai_engine
+from app.services import ai_engine, gmb_service
 from app.services.ai_engine import AIProvidersUnavailable
+from app.services.gmb_service import GMBNotConnected, GMBTokenExpired
+
+# TTL for the "already posted" Redis flag in post_approved_response_to_gmb —
+# long enough to outlive Celery's max_retries=3 backoff window many times over.
+_GMB_POST_IDEMPOTENCY_TTL_SECONDS = 86400
 
 logger = structlog.get_logger(__name__)
 
@@ -80,6 +86,12 @@ async def approve_response(
     await session.commit()
 
     post_approved_response.delay(str(response.id))
+
+    # DASH-01: nudges an open dashboard tab to re-poll /dashboard/stats so
+    # pending_approvals drops without the owner having to refresh.
+    await broadcast.publish_event(
+        response.tenant_id, "review_approved", {"review_response_id": str(response.id)}
+    )
 
     logger.info(
         "review_response.approved",
@@ -209,6 +221,67 @@ async def _draft_for_tenant(session: AsyncSession, tenant_id: uuid.UUID, *, limi
 
     await session.commit()
     return drafted
+
+
+async def post_approved_response_to_gmb(session: AsyncSession, review_response_id: uuid.UUID) -> str:
+    """Post one approved response to GMB. Called by the `post_approved_response`
+    Celery task — kept here, not in the task, so it is unit-testable directly.
+
+    Returns an outcome string rather than raising, since every non-"posted"
+    case (already sent, not approved, no GMB profile, token issues) is an
+    expected skip the task should log and move past, not a Celery retry.
+
+    Idempotency (REVIEW-02: "prevents duplicate GMB posts on Celery retry")
+    is two layers: a Redis flag keyed on the row id short-circuits a retry
+    cheaply, and `approval_state` on the row is the authoritative guard once
+    Postgres is touched — the Redis flag is set only after `approval_state`
+    flips to "posted", so a crash between the two just means the next retry
+    finds the row already posted and returns early there instead.
+    """
+    posted_key = f"gmb_reply_posted:{review_response_id}"
+    if await cache_service.exists(posted_key):
+        logger.info("review_response.post_skipped_already_sent", review_response_id=str(review_response_id))
+        return "already_sent"
+
+    response = (
+        await session.execute(select(ReviewResponse).where(ReviewResponse.id == review_response_id))
+    ).scalar_one_or_none()
+    if response is None or response.approval_state != "approved":
+        logger.warning("review_response.post_skipped_not_approved", review_response_id=str(review_response_id))
+        return "not_approved"
+
+    async with rls.tenant_context(session, response.tenant_id):
+        review = (
+            await session.execute(select(CustomerReview).where(CustomerReview.id == response.review_id))
+        ).scalar_one()
+        profile = (
+            await session.execute(select(GMBProfile).where(GMBProfile.branch_id == review.branch_id))
+        ).scalar_one_or_none()
+
+        if profile is None or review.external_review_id is None:
+            logger.warning(
+                "review_response.post_skipped_no_gmb_profile", review_response_id=str(review_response_id)
+            )
+            return "no_gmb_profile"
+
+        try:
+            await gmb_service.post_review_reply(
+                profile, review.external_review_id, response.final_text or response.ai_draft
+            )
+        except (GMBNotConnected, GMBTokenExpired) as exc:
+            logger.warning(
+                "review_response.post_skipped",
+                review_response_id=str(review_response_id),
+                reason=type(exc).__name__,
+            )
+            return "not_connected" if isinstance(exc, GMBNotConnected) else "token_expired"
+
+        response.approval_state = "posted"
+        await session.commit()
+
+    await cache_service.set(posted_key, "1", ttl=_GMB_POST_IDEMPOTENCY_TTL_SECONDS)
+    logger.info("review_response.posted_to_gmb", review_response_id=str(review_response_id))
+    return "posted"
 
 
 async def _get_restaurant_name(session: AsyncSession, tenant_id: uuid.UUID) -> str:

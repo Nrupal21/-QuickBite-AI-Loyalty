@@ -1,10 +1,13 @@
-"""QuickBite — RewardProgram, StampLog models (Doc 2 Tables 12/13).
+"""QuickBite — RewardProgram, StampLog, RewardRedemption models (Doc 2 Tables 12/13).
 
 RewardProgram is owner configuration (restaurant schema). StampLog is
 append-only scan history with GPS at scan time for fraud audit (customer
-schema — it references loyalty members).
+schema — it references loyalty members). RewardRedemption (LOYALTY-04) is
+the 6-char code minted when a customer crosses `stamps_required`, and its
+staff-facing verification — restaurant schema, since redemption is an
+owner/staff flow, not a customer one.
 
-ScratchCard belongs to LOYALTY-04 and is not built yet.
+ScratchCard belongs to a later loyalty ticket and is not built yet.
 """
 
 import uuid
@@ -15,7 +18,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
 
-# TODO(LOYALTY-04): ScratchCard model.
+# TODO(LOYALTY-NICE): ScratchCard model.
 
 
 class RewardProgram(Base):
@@ -51,3 +54,29 @@ class StampLog(Base):
     distance_from_branch_m: Mapped[float] = mapped_column(Float)
     is_fraudulent: Mapped[bool] = mapped_column(Boolean, default=False)
     scanned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class RewardRedemption(Base):
+    """A minted redemption code and its staff-facing verification (LOYALTY-04).
+
+    `code` is unique per tenant (migration 0011's `uq_reward_redemptions_tenant_code`),
+    not globally — two tenants may independently mint the same 6 characters.
+    """
+
+    __tablename__ = "reward_redemptions"
+    __table_args__ = {"schema": "restaurant"}
+
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.tenants.id"), index=True)
+    branch_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.branches.id"))
+    reward_program_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("restaurant.reward_programs.id")
+    )
+    customer_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("customer.customers.id"), index=True
+    )
+    code: Mapped[str] = mapped_column(String(6))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    redeemed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    redeemed_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("restaurant.users.id"), nullable=True
+    )

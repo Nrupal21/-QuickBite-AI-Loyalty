@@ -1,0 +1,20 @@
+{% extends "_layout.html" %}
+{% import "_macros.html" as macros %}
+
+{# Renders operator-authored copy from static.notification_templates. `body`
+   itself is never trusted as HTML — email_renderer.py splits it into plain
+   strings on blank lines before it ever reaches here, so Jinja's normal
+   autoescaping on {{ paragraph }} is what stops it becoming stored XSS. #}
+
+{% block content %}
+{% for paragraph in paragraphs %}
+<p style="margin:0 0 16px 0;">{{ paragraph }}</p>
+{% endfor %}
+{% if cta_url %}
+{{ macros.cta_button(cta_url, cta_label or "Continue") }}
+<p style="margin:16px 0 0 0;font-size:13px;color:#64748b;">
+  If the button doesn't work, copy and paste this link into your browser:<br />
+  <span style="word-break:break-all;">{{ cta_url }}</span>
+</p>
+{% endif %}
+{% endblock %}

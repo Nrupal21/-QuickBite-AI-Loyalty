@@ -1,0 +1,92 @@
+- generic [ref=f12e1]:
+  - link "Skip to content" [ref=f12e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f12e3]:
+    - generic [ref=f12e5]:
+      - link "QuickBite" [ref=f12e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f12e11]:
+        - link "Product" [ref=f12e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f12e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f12e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f12e15]:
+        - link "Log in" [ref=f12e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f12e17] [cursor=pointer]:
+          - /url: /#pricing
+  - main [ref=f12e18]:
+    - generic [ref=f12e19]:
+      - generic [ref=f12e20]:
+        - link "Close and return home" [ref=f12e21] [cursor=pointer]:
+          - /url: /
+        - button "Back" [ref=f12e25] [cursor=pointer]
+        - generic [ref=f12e28]:
+          - generic [ref=f12e29]: Sign in
+          - heading "Log in to QuickBite" [level=1] [ref=f12e30]
+          - paragraph [ref=f12e31]: Enter your email, phone, or username to continue.
+        - generic [ref=f12e32]:
+          - group "Continue with a social account" [ref=f12e33]:
+            - button "Continue with Google" [ref=f12e34] [cursor=pointer]
+            - button "Continue with Apple" [ref=f12e40] [cursor=pointer]
+            - button "Continue with Microsoft" [ref=f12e43] [cursor=pointer]
+            - button "Continue with GitHub" [ref=f12e49] [cursor=pointer]
+            - button "Continue with Twitter / X" [ref=f12e52] [cursor=pointer]
+          - generic [ref=f12e55]: or continue with email, phone, or username
+          - generic [ref=f12e58]:
+            - generic [ref=f12e59]: Email, phone, or username
+            - textbox "Email, phone, or username" [active] [ref=f12e60]:
+              - /placeholder: name@example.com
+            - button "Continue" [ref=f12e61] [cursor=pointer]
+      - paragraph [ref=f12e64]: Owners and staff sign in with a password. Customers sign in with a one-time code — no password to remember.
+  - contentinfo [ref=f12e65]:
+    - generic [ref=f12e66]:
+      - generic [ref=f12e67]:
+        - generic [ref=f12e68]:
+          - link "QuickBite" [ref=f12e69] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f12e74]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f12e75]:
+          - heading "Product" [level=4] [ref=f12e76]
+          - list [ref=f12e77]:
+            - listitem [ref=f12e78]:
+              - link "Features" [ref=f12e79] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f12e80]:
+              - link "How it works" [ref=f12e81] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f12e82]:
+              - link "Pricing" [ref=f12e83] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f12e84]:
+          - heading "Company" [level=4] [ref=f12e85]
+          - list [ref=f12e86]:
+            - listitem [ref=f12e87]:
+              - link "About" [ref=f12e88] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f12e89]:
+              - link "Careers" [ref=f12e90] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f12e91]:
+              - link "Contact" [ref=f12e92] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f12e93]:
+          - heading "Legal" [level=4] [ref=f12e94]
+          - list [ref=f12e95]:
+            - listitem [ref=f12e96]:
+              - link "Privacy" [ref=f12e97] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f12e98]:
+              - link "Terms" [ref=f12e99] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f12e100]:
+        - generic [ref=f12e101]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f12e102]:
+          - link "Email" [ref=f12e103] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f12e107] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f12e111] [cursor=pointer]:
+            - /url: "#"

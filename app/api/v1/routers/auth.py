@@ -36,6 +36,7 @@ from app.schemas.auth import (
     RefreshRequest,
     RegisterResponse,
     StatusResponse,
+    TenantLookupResponse,
     TokenResponse,
     UserLogin,
     UserRegister,
@@ -70,8 +71,26 @@ async def register(
     payload: UserRegister,
     session: AsyncSession = Depends(get_db),
 ) -> RegisterResponse:
-    verification_base_url = str(request.base_url) + "api/v1/auth/verify-email"
+    # Points at the HTML page route (pages.py), not this API's own JSON
+    # endpoint below — a human clicks this link from their inbox and needs a
+    # rendered confirmation, not a raw JSON body. The JSON endpoint stays for
+    # programmatic callers (tests, API clients).
+    verification_base_url = str(request.base_url) + "verify-email"
     return await AuthService(session=session).register(payload, verification_base_url)
+
+
+@router.get("/tenant", response_model=TenantLookupResponse, status_code=status.HTTP_200_OK)
+@limiter.limit("20/minute")
+async def lookup_tenant(
+    request: Request,
+    subdomain: str,
+    session: AsyncSession = Depends(get_db),
+) -> TenantLookupResponse:
+    """Resolves a restaurant's subdomain to its tenant_id — the identify-first
+    login screen's 'find your restaurant' step (see /login's find-tenant
+    step in auth-login.js) uses this until TENANT-01 adds Host-header
+    routing."""
+    return await AuthService(session=session).lookup_tenant(subdomain)
 
 
 @router.get("/verify-email", response_model=VerifyEmailResponse, status_code=status.HTTP_200_OK)

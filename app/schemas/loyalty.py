@@ -1,4 +1,7 @@
-"""QuickBite — Loyalty schemas: ScanRequest, ScanResponse, LoyaltyCard."""
+"""QuickBite — Loyalty schemas: ScanRequest, ScanResponse, reward programs, redemption (LOYALTY-04)."""
+
+import uuid
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -17,3 +20,30 @@ class ScanResponse(BaseModel):
     reward_unlocked: bool
     redemption_code: str | None = None
     next_reward_at: int | None = None
+    validity_days: int | None = None
+
+
+class RewardProgramCreateRequest(BaseModel):
+    branch_id: uuid.UUID
+    name: str = Field(min_length=1, max_length=100)
+    stamps_required: int = Field(ge=1, le=100)
+    reward_type: Literal["free_item", "percentage_off", "fixed_off"]
+    reward_value: str = Field(min_length=1, max_length=100)
+    validity_days: int = Field(ge=1, le=365)
+
+
+class RewardProgramResponse(BaseModel):
+    id: uuid.UUID
+    branch_id: uuid.UUID
+    name: str
+    stamps_required: int
+    reward_type: str
+    reward_value: str
+    validity_days: int
+    is_active: bool
+
+
+class RedeemCodeResponse(BaseModel):
+    status: str  # always "redeemed"
+    code: str
+    customer_id: uuid.UUID

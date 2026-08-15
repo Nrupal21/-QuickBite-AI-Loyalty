@@ -61,6 +61,7 @@ from app.schemas.auth import (
     RefreshRequest,
     RegisterResponse,
     StatusResponse,
+    TenantLookupResponse,
     TokenResponse,
     UserLogin,
     UserRegister,
@@ -176,6 +177,21 @@ class AuthService:
         logger.info("auth.register.requested", email_hash=email_hash, email_sent=email_sent)
         return RegisterResponse(status="verification_email_sent")
 
+    async def lookup_tenant(self, subdomain: str) -> TenantLookupResponse:
+        """Resolves a restaurant's subdomain to its tenant_id for the
+        identify-first login screen (pre-TENANT-01: no Host-header routing
+        yet, so the client has to ask). `restaurant.tenants` carries no RLS
+        policy — it is the tenant registry, not a tenant-scoped table — so
+        this plain lookup is safe with no tenant context set."""
+        slug = subdomain.strip().lower()
+        result = await self.session.execute(
+            select(Tenant).where(Tenant.subdomain == slug, Tenant.is_active.is_(True))
+        )
+        tenant = result.scalar_one_or_none()
+        if tenant is None:
+            return TenantLookupResponse(found=False)
+        return TenantLookupResponse(found=True, tenant_id=str(tenant.id), name=tenant.name)
+
     async def verify_email(self, token: str) -> VerifyEmailResponse:
         raw = await cache_service.get(f"pending_reg:{token}")
         if raw is None:
@@ -229,6 +245,12 @@ class AuthService:
             onboarding_state="email_verified",
             is_active=True,
         )
+        # restaurant.tenants itself carries no RLS policy — it's the tenant
+        # registry, not a tenant-scoped table — but users and audit_logs both
+        # are, and their INSERTs below carry tenant.id in that column. Without
+        # this, the app's RLS-restricted DB role rejects both inserts (a
+        # brand-new tenant's rows satisfy no session's app.tenant_id yet).
+        await rls.set_tenant_context(self.session, tenant.id)
         user = User(
             id=uuid.uuid4(),
             tenant_id=tenant.id,
@@ -241,7 +263,15 @@ class AuthService:
             email_verified=True,
         )
         self.session.add(tenant)
+        # Forces the tenant INSERT to run now rather than trusting flush-order
+        # inference across mapped classes — same pattern as
+        # identity_link_service._provision_customer's customer/IdentityLink
+        # pair. Without it, users.tenant_id / audit_logs.tenant_id can violate
+        # their FK constraint before tenant's own row is actually visible.
+        await self.session.flush()
         self.session.add(user)
+        # Same reasoning again: audit_logs.user_id is a FK onto this row.
+        await self.session.flush()
         self.session.add(
             AuditLog(
                 tenant_id=tenant.id,
@@ -263,14 +293,27 @@ class AuthService:
         check_password_strength(password)
 
     async def _email_exists(self, email_hash: str) -> bool:
-        result = await self.session.execute(select(User.id).where(User.email_hash == email_hash))
-        return result.scalar_one_or_none() is not None
+        """Email must be globally unique across tenants (`users.email_hash` has
+        a DB-level unique constraint), but `users` is RLS-protected and neither
+        caller has a tenant context yet — register() has no principal at all,
+        and verify_email()'s new tenant doesn't exist until after this check.
+        Without the bypass, RLS silently returns zero rows for every caller
+        (see rls.py's module docstring), this check always says "not taken",
+        and the real conflict only surfaces as an unhandled IntegrityError
+        when the INSERT hits the unique constraint."""
+        async with rls.admin_bypass_context(self.session):
+            result = await self.session.execute(
+                select(User.id).where(User.email_hash == email_hash)
+            )
+            return result.scalar_one_or_none() is not None
 
     async def _username_exists(self, username_hash: str) -> bool:
-        result = await self.session.execute(
-            select(User.id).where(User.username_hash == username_hash)
-        )
-        return result.scalar_one_or_none() is not None
+        """Same cross-tenant-uniqueness reasoning as `_email_exists` above."""
+        async with rls.admin_bypass_context(self.session):
+            result = await self.session.execute(
+                select(User.id).where(User.username_hash == username_hash)
+            )
+            return result.scalar_one_or_none() is not None
 
     async def _get_owner_role(self) -> Role:
         result = await self.session.execute(select(Role).where(Role.name == "OWNER"))
@@ -641,7 +684,13 @@ class AuthService:
         token = generate_mfa_session_token()
         await cache_service.set(
             f"mfa_session:{token}",
-            json.dumps({"user_id": str(user.id), "purpose": purpose}),
+            # tenant_id travels with the session so _resolve_mfa_session can
+            # bind RLS before its User lookup — it comes from the DB-loaded
+            # `user` passed in here, never a client-supplied claim, the same
+            # trust boundary set_tenant_context's other callers rely on.
+            json.dumps(
+                {"user_id": str(user.id), "tenant_id": str(user.tenant_id), "purpose": purpose}
+            ),
             ttl=MFA_SESSION_TTL_SECONDS,
         )
         return token
@@ -654,6 +703,7 @@ class AuthService:
         try:
             payload = json.loads(raw)
             user_id = uuid.UUID(payload["user_id"])
+            tenant_id = uuid.UUID(payload["tenant_id"])
             purpose = payload["purpose"]
         except (ValueError, TypeError, KeyError) as exc:
             raise self._mfa_session_expired_error() from exc
@@ -662,6 +712,15 @@ class AuthService:
         # tell an attacker holding a token exactly which flow it unlocks.
         if purpose != expected_purpose:
             raise self._mfa_session_expired_error()
+
+        # Without this, the User lookup below runs with no tenant context
+        # bound and FORCE ROW LEVEL SECURITY silently returns zero rows —
+        # every MFA enroll/verify call would read as "session expired"
+        # regardless of the token being perfectly valid. Reproduced live:
+        # every Owner/Manager/Super Admin login hung at mandatory first-time
+        # enrollment with a 401, since those roles never reach here any other
+        # way (no access token exists yet to bind tenant context from).
+        await rls.set_tenant_context(self.session, tenant_id)
 
         user = await self._get_user_by_id(user_id)
         if user is None or not user.is_active:

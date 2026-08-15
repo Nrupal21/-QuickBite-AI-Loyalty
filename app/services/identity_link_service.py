@@ -84,6 +84,26 @@ _ALREADY_LINKED = HTTPException(
     },
 )
 
+_STAFF_LINKED = HTTPException(
+    status_code=status.HTTP_403_FORBIDDEN,
+    detail={
+        "error": {
+            "code": "STAFF_ACCOUNT_LINKED",
+            "message": "This sign-in method belongs to a staff account. Use the password login instead.",
+        }
+    },
+)
+
+_CUSTOMER_BLOCKED = HTTPException(
+    status_code=status.HTTP_403_FORBIDDEN,
+    detail={
+        "error": {
+            "code": "CUSTOMER_BLOCKED",
+            "message": "This account has been blocked.",
+        }
+    },
+)
+
 
 def subject_hash(provider: AuthProvider, subject: str) -> str:
     """SHA-256 of "<provider>:<sub>".
@@ -390,6 +410,44 @@ async def _find_customer(
         )
         return result.scalar_one_or_none()
     return None
+
+
+# --- Existing-link lookup (no provisioning) -----------------------------
+
+
+async def find_linked_customer(
+    session: AsyncSession, provider: AuthProvider, subject: str
+) -> Customer | None:
+    """The Customer already linked to this verified external subject, or None.
+
+    Deliberately does not provision on a miss — unlike `resolve()`'s JIT path,
+    a fresh Customer here would need a phone number, which no social sign-in
+    ever supplies. A caller that gets None routes the person through the
+    ordinary registration flow (`customer_service.register()`) instead, which
+    is the only place that collects one.
+
+    Raises 403 rather than returning a Customer if the subject is linked to a
+    *staff* User — the caller is a public customer-sign-in surface, and
+    silently treating that as "no customer" would let it fall through to
+    starting a brand-new, unrelated customer registration for someone who
+    already has a staff account.
+    """
+    link = await _get_link(session, provider, subject)
+    if link is None:
+        return None
+    if not link.is_active:
+        raise _UNAUTHORIZED
+    await rls.set_tenant_context(session, link.tenant_id)
+    if link.subject_type != SubjectType.CUSTOMER.value:
+        raise _STAFF_LINKED
+
+    result = await session.execute(select(Customer).where(Customer.id == link.local_id))
+    customer = result.scalar_one_or_none()
+    if customer is None:
+        raise _UNAUTHORIZED
+    if customer.is_blocked:
+        raise _CUSTOMER_BLOCKED
+    return customer
 
 
 # --- Explicit linking ---------------------------------------------------

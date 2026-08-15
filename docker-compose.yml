@@ -37,8 +37,13 @@ services:
     ports:
       - "8000:8000"
     env_file: .env
+    # DATABASE_URL intentionally NOT overridden here — this stack currently
+    # points DATABASE_URL/MIGRATION_DATABASE_URL at the same shared Supabase
+    # instance (via .env), so the local `db` container below carries no
+    # schema. See docker-compose's local `db`/`redis` services above if you
+    # want a fully local, isolated stack instead: point DATABASE_URL back at
+    # db:5432 and MIGRATION_DATABASE_URL at the same, then re-run migrations.
     environment:
-      DATABASE_URL: postgresql+asyncpg://quickbite:quickbite@db:5432/quickbite
       REDIS_URL: redis://redis:6379/0
     depends_on:
       db:
@@ -52,8 +57,13 @@ services:
     volumes:
       - .:/app
     env_file: .env
+    # DATABASE_URL intentionally NOT overridden here — this stack currently
+    # points DATABASE_URL/MIGRATION_DATABASE_URL at the same shared Supabase
+    # instance (via .env), so the local `db` container below carries no
+    # schema. See docker-compose's local `db`/`redis` services above if you
+    # want a fully local, isolated stack instead: point DATABASE_URL back at
+    # db:5432 and MIGRATION_DATABASE_URL at the same, then re-run migrations.
     environment:
-      DATABASE_URL: postgresql+asyncpg://quickbite:quickbite@db:5432/quickbite
       REDIS_URL: redis://redis:6379/0
     depends_on:
       redis:
@@ -65,8 +75,13 @@ services:
     volumes:
       - .:/app
     env_file: .env
+    # DATABASE_URL intentionally NOT overridden here — this stack currently
+    # points DATABASE_URL/MIGRATION_DATABASE_URL at the same shared Supabase
+    # instance (via .env), so the local `db` container below carries no
+    # schema. See docker-compose's local `db`/`redis` services above if you
+    # want a fully local, isolated stack instead: point DATABASE_URL back at
+    # db:5432 and MIGRATION_DATABASE_URL at the same, then re-run migrations.
     environment:
-      DATABASE_URL: postgresql+asyncpg://quickbite:quickbite@db:5432/quickbite
       REDIS_URL: redis://redis:6379/0
     depends_on:
       redis:

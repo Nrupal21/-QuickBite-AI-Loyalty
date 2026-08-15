@@ -25,6 +25,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.encryption import sha256_hex
+from app.db import rls
 from app.db.models.audit import AuditLog
 from app.db.models.customer import Customer
 from app.db.models.user import User
@@ -117,6 +118,14 @@ async def identify(request: IdentifyRequest, session: AsyncSession) -> IdentifyR
     identifier_type = classify_login_identifier(request.identifier)
     lookup_value = request.identifier.lower() if identifier_type in ("email", "username") else request.identifier
     identifier_hash = sha256_hex(lookup_value)
+
+    # Unlike the bootstrap lookups in auth_service (login by email/username
+    # with no tenant yet known), this endpoint always receives tenant_id
+    # explicitly from the login page — so binding RLS context is a direct
+    # set_tenant_context call, no SECURITY DEFINER resolver needed. Without
+    # it, both SELECTs below and the AuditLog INSERT are silently filtered
+    # to zero rows / rejected by RLS: every identifier reports "not found".
+    await rls.set_tenant_context(session, request.tenant_id)
 
     staff_user_id = None
     staff_hash_column = _STAFF_HASH_COLUMN.get(identifier_type)

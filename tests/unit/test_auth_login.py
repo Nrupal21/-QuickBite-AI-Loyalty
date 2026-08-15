@@ -198,7 +198,11 @@ async def test_login_correct_password_mfa_enabled_returns_challenge(mocker):
     assert response.expires_in == 300
     key, payload = cache_set.await_args.args
     assert key == f"mfa_session:{response.mfa_session_token}"
-    assert json.loads(payload) == {"user_id": str(user.id), "purpose": "verify"}
+    assert json.loads(payload) == {
+        "user_id": str(user.id),
+        "tenant_id": str(user.tenant_id),
+        "purpose": "verify",
+    }
 
 
 @pytest.mark.asyncio

@@ -12,6 +12,7 @@ from fastapi import HTTPException
 
 from app.core.encryption import sha256_hex
 from app.db.models.customer import Customer
+from app.db.models.identity_link import IdentityLink
 from app.schemas.customers import CustomerRegister
 from app.services import customer_service
 
@@ -34,6 +35,18 @@ def make_session(execute_results: list) -> MagicMock:
 
 def pending_payload(identifier: str, identifier_type: str) -> str:
     return json.dumps({"tenant_id": str(TENANT_ID), "identifier": identifier, "identifier_type": identifier_type})
+
+
+def oauth_pending_payload(verified_email: str | None, subject: str = "firebase-uid-1") -> str:
+    return json.dumps(
+        {
+            "tenant_id": str(TENANT_ID),
+            "identifier_type": "oauth",
+            "oauth_provider": "firebase",
+            "oauth_subject": subject,
+            "verified_email": verified_email,
+        }
+    )
 
 
 def added_instances(session: MagicMock, model: type) -> list:
@@ -154,6 +167,59 @@ async def test_register_duplicate_phone_returns_409(mocker):
 
     assert exc_info.value.status_code == 409
     assert exc_info.value.detail["error"]["code"] == "CUSTOMER_ALREADY_REGISTERED"
+
+
+@pytest.mark.asyncio
+async def test_register_oauth_identifier_without_phone_returns_422(mocker):
+    """Firebase/Google/Apple never hand back a phone number, so a Google-
+    originated registration needs one from the form exactly like the
+    email-identifier path does."""
+    session = make_session([])
+    mocker.patch(
+        "app.services.customer_service.cache_service.get",
+        AsyncMock(return_value=oauth_pending_payload("diner@example.com")),
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await customer_service.register(
+            CustomerRegister(registration_token=TOKEN, name="Priya"), session
+        )
+
+    assert exc_info.value.status_code == 422
+    assert exc_info.value.detail["error"]["code"] == "PHONE_REQUIRED"
+
+
+@pytest.mark.asyncio
+async def test_register_oauth_identifier_prefills_verified_email_and_links_identity(mocker):
+    session = make_session([None])  # phone_hash free
+    mocker.patch(
+        "app.services.customer_service.cache_service.get",
+        AsyncMock(return_value=oauth_pending_payload("Diner@Example.com", subject="firebase-uid-42")),
+    )
+    mocker.patch("app.services.customer_service.cache_service.delete", AsyncMock())
+    mocker.patch("app.services.customer_service.create_customer_token", return_value="customer-jwt-xyz")
+
+    response, token = await customer_service.register(
+        CustomerRegister(registration_token=TOKEN, name="Priya", phone=PHONE), session
+    )
+
+    assert response.status == "registered"
+    assert token == "customer-jwt-xyz"
+
+    customers = added_instances(session, Customer)
+    assert len(customers) == 1
+    # The verified email from the Firebase claim is trusted directly — the
+    # registration form never asks the user to retype it.
+    assert customers[0].email_hash == sha256_hex("diner@example.com")
+
+    links = added_instances(session, IdentityLink)
+    assert len(links) == 1
+    assert links[0].provider == "firebase"
+    assert links[0].subject_type == "customer"
+    assert links[0].local_id == customers[0].id
+    assert links[0].tenant_id == TENANT_ID
+    # Two commits: the Customer row, then the identity_links row.
+    assert session.commit.await_count == 2
 
 
 @pytest.mark.asyncio

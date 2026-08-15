@@ -24,6 +24,18 @@ celery_app.conf.update(
             "task": "app.workers.tasks.batch_generate_ai_responses",
             "schedule": 3600.0,
         },
+        # drain_projection_outbox's own docstring has always described this as
+        # "scheduled every few seconds via Celery beat" — it never actually
+        # was. Without this entry, billing_service correctly writes
+        # payment.projection_outbox rows in the same transaction as every
+        # ledger change, and projection_service correctly knows how to drain
+        # them, but nothing ever calls drain — the Firestore mirror silently
+        # never updates. 10s matches "a few seconds" without hammering
+        # Firestore on an empty queue between real billing events.
+        "billing-drain-projection-outbox": {
+            "task": "app.workers.tasks.drain_projection_outbox",
+            "schedule": 10.0,
+        },
     },
 )
 

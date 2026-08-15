@@ -1,0 +1,57 @@
+- generic [active] [ref=f4e1]:
+  - navigation [ref=f4e2]:
+    - generic [ref=f4e3]:
+      - generic [ref=f4e4]:
+        - heading "restaurant QuickBite" [level=1] [ref=f4e5]:
+          - generic [ref=f4e6]: restaurant
+          - text: QuickBite
+        - paragraph [ref=f4e7]: AI + Loyalty
+      - generic [ref=f4e8]:
+        - link "dashboard Dashboard" [ref=f4e9] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=f4e10]: dashboard
+          - text: Dashboard
+        - link "analytics Loyalty Analytics" [ref=f4e11] [cursor=pointer]:
+          - /url: /dashboard/loyalty-analytics
+          - generic [ref=f4e12]: analytics
+          - text: Loyalty Analytics
+    - generic [ref=f4e14]:
+      - generic [ref=f4e15]: O
+      - generic [ref=f4e16]:
+        - paragraph [ref=f4e17]: Owner
+        - generic [ref=f4e18]: OWNER
+  - main [ref=f4e19]:
+    - generic [ref=f4e20]:
+      - heading "Dashboard" [level=2] [ref=f4e21]
+      - button "Live updates" [ref=f4e23] [cursor=pointer]:
+        - generic [ref=f4e24]: notifications
+    - generic [ref=f4e25]:
+      - generic [ref=f4e26]:
+        - generic [ref=f4e27]:
+          - paragraph [ref=f4e28]: Avg. Rating
+          - heading "—" [level=3] [ref=f4e29]
+        - generic [ref=f4e30]:
+          - paragraph [ref=f4e31]: Total Reviews
+          - heading "0" [level=3] [ref=f4e32]
+        - generic [ref=f4e33]:
+          - paragraph [ref=f4e34]: Pending Approvals
+          - heading "0" [level=3] [ref=f4e35]
+        - generic [ref=f4e36]:
+          - paragraph [ref=f4e37]: Loyalty Scans Today
+          - heading "0" [level=3] [ref=f4e38]
+      - generic [ref=f4e39]:
+        - generic [ref=f4e40]:
+          - heading "Sentiment Trend (Last 7 Days)" [level=3] [ref=f4e42]
+          - generic [ref=f4e44]:
+            - generic [ref=f4e45]: 08-09
+            - generic [ref=f4e47]: 08-10
+            - generic [ref=f4e49]: 08-11
+            - generic [ref=f4e51]: 08-12
+            - generic [ref=f4e53]: 08-13
+            - generic [ref=f4e55]: 08-14
+            - generic [ref=f4e57]: 08-15
+        - generic [ref=f4e59]:
+          - generic [ref=f4e60]:
+            - heading "Action Required" [level=3] [ref=f4e61]
+            - generic [ref=f4e62]: 0 Pending
+          - generic [ref=f4e63]: No pending reviews to show yet.

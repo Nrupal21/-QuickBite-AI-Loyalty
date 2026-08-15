@@ -1,0 +1,95 @@
+- generic [active] [ref=f4e1]:
+  - navigation [ref=f4e2]:
+    - generic [ref=f4e3]:
+      - generic [ref=f4e4]:
+        - heading "restaurant QuickBite" [level=1] [ref=f4e5]:
+          - generic [ref=f4e6]: restaurant
+          - text: QuickBite
+        - paragraph [ref=f4e7]: AI + Loyalty
+      - generic [ref=f4e8]:
+        - link "dashboard Dashboard" [ref=f4e9] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=f4e10]: dashboard
+          - text: Dashboard
+        - link "analytics Loyalty Analytics" [ref=f4e11] [cursor=pointer]:
+          - /url: /dashboard/loyalty-analytics
+          - generic [ref=f4e12]: analytics
+          - text: Loyalty Analytics
+    - generic [ref=f4e14]:
+      - generic [ref=f4e15]: O
+      - generic [ref=f4e16]:
+        - paragraph [ref=f4e17]: Owner
+        - generic [ref=f4e18]: OWNER
+  - main [ref=f4e19]:
+    - generic [ref=f4e20]:
+      - heading "Loyalty Analytics" [level=2] [ref=f4e21]
+      - generic [ref=f4e22]:
+        - generic [ref=f4e23]: Branch
+        - combobox "Branch" [ref=f4e24] [cursor=pointer]:
+          - option "All Branches" [selected]
+    - generic [ref=f4e25]:
+      - generic [ref=f4e26]:
+        - generic [ref=f4e27]:
+          - paragraph [ref=f4e28]: Stamps This Month
+          - heading "0" [level=3] [ref=f4e29]
+        - generic [ref=f4e30]:
+          - paragraph [ref=f4e31]: Active Loyalty Customers
+          - heading "0" [level=3] [ref=f4e32]
+        - generic [ref=f4e33]:
+          - paragraph [ref=f4e34]: Reward Redemption Rate
+          - heading "0%" [level=3] [ref=f4e35]
+      - generic [ref=f4e36]:
+        - generic [ref=f4e37]:
+          - heading "Daily Scan Heatmap (Last 30 Days)" [level=3] [ref=f4e38]
+          - generic [ref=f4e39]:
+            - generic "0 scans" [ref=f4e40]
+            - generic "0 scans" [ref=f4e41]
+            - generic "0 scans" [ref=f4e42]
+            - generic "0 scans" [ref=f4e43]
+            - generic "0 scans" [ref=f4e44]
+            - generic "0 scans" [ref=f4e45]
+            - generic "0 scans" [ref=f4e46]
+            - generic "0 scans" [ref=f4e47]
+            - generic "0 scans" [ref=f4e48]
+            - generic "0 scans" [ref=f4e49]
+            - generic "0 scans" [ref=f4e50]
+            - generic "0 scans" [ref=f4e51]
+            - generic "0 scans" [ref=f4e52]
+            - generic "0 scans" [ref=f4e53]
+            - generic "0 scans" [ref=f4e54]
+            - generic "0 scans" [ref=f4e55]
+            - generic "0 scans" [ref=f4e56]
+            - generic "0 scans" [ref=f4e57]
+            - generic "0 scans" [ref=f4e58]
+            - generic "0 scans" [ref=f4e59]
+            - generic "0 scans" [ref=f4e60]
+            - generic "0 scans" [ref=f4e61]
+            - generic "0 scans" [ref=f4e62]
+            - generic "0 scans" [ref=f4e63]
+          - generic [ref=f4e64]:
+            - generic [ref=f4e65]: 12am
+            - generic [ref=f4e66]: 6am
+            - generic [ref=f4e67]: 12pm
+            - generic [ref=f4e68]: 6pm
+            - generic [ref=f4e69]: 11pm
+        - generic [ref=f4e70]:
+          - heading "Top 10 Customers" [level=3] [ref=f4e71]
+          - table [ref=f4e72]:
+            - rowgroup [ref=f4e73]:
+              - row [ref=f4e74]:
+                - columnheader "Phone" [ref=f4e75]
+                - columnheader "Total Stamps" [ref=f4e76]
+            - rowgroup [ref=f4e77]:
+              - row [ref=f4e78]:
+                - cell "No customers yet." [ref=f4e79]
+      - generic [ref=f4e80]:
+        - heading "Fraud Log" [level=3] [ref=f4e81]
+        - table [ref=f4e82]:
+          - rowgroup [ref=f4e83]:
+            - row [ref=f4e84]:
+              - columnheader "Scanned At" [ref=f4e85]
+              - columnheader "Distance from Branch" [ref=f4e86]
+              - columnheader "Reason" [ref=f4e87]
+          - rowgroup [ref=f4e88]:
+            - row [ref=f4e89]:
+              - cell "No fraud alerts." [ref=f4e90]

@@ -1,0 +1,215 @@
+- generic [active] [ref=f9e1]:
+  - link "Skip to content" [ref=f9e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f9e3]:
+    - generic [ref=f9e5]:
+      - link "QuickBite" [ref=f9e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f9e11]:
+        - link "Product" [ref=f9e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f9e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f9e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f9e15]:
+        - link "Log in" [ref=f9e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f9e17] [cursor=pointer]:
+          - /url: /#pricing
+  - main [ref=f9e18]:
+    - generic [ref=f9e21]:
+      - generic [ref=f9e22]:
+        - generic [ref=f9e23]: AI reviews + loyalty, one QR scan
+        - heading "Every receipt becomes a 5-star review and a loyalty stamp." [level=1] [ref=f9e25]:
+          - generic [ref=f9e26]: Every receipt becomes a
+          - generic [ref=f9e27]: 5-star review
+          - generic [ref=f9e28]: and a loyalty stamp.
+        - paragraph [ref=f9e29]: Customers scan the QR code on their receipt, approve an AI-drafted review in seconds, and collect a stamp toward their next reward. No app to download, no password to remember.
+        - generic [ref=f9e30]:
+          - link "Start free trial" [ref=f9e31] [cursor=pointer]:
+            - /url: "#pricing"
+          - link "See how it works" [ref=f9e34] [cursor=pointer]:
+            - /url: "#how-it-works"
+        - list [ref=f9e35]:
+          - listitem [ref=f9e36]: OTP-only login, no passwords
+          - listitem [ref=f9e39]: Live in under 10 minutes
+          - listitem [ref=f9e42]: Works on any phone, no app
+      - generic [ref=f9e46]:
+        - generic [ref=f9e63]:
+          - generic [ref=f9e64]: Reward progress
+          - generic [ref=f9e65]: 5 / 8 stamps
+        - generic [ref=f9e67]:
+          - strong [ref=f9e68]: 12s
+          - generic [ref=f9e69]: AI review drafted
+    - generic [ref=f9e77]:
+      - generic [ref=f9e78]:
+        - generic [ref=f9e79]: <30s
+        - paragraph [ref=f9e80]: From scan to AI-drafted review
+      - generic [ref=f9e81]:
+        - generic [ref=f9e82]: 1 QR
+        - paragraph [ref=f9e83]: Replaces the whole review + rewards flow
+      - generic [ref=f9e84]:
+        - generic [ref=f9e85]: 100%
+        - paragraph [ref=f9e86]: OTP-only customer login, zero stored passwords
+      - generic [ref=f9e87]:
+        - generic [ref=f9e88]: 256-bit
+        - paragraph [ref=f9e89]: AES-GCM encryption on every customer record
+    - generic [ref=f9e91]:
+      - generic [ref=f9e92]:
+        - generic [ref=f9e93]: Product
+        - heading "Everything your restaurant needs, built in" [level=2] [ref=f9e94]
+        - paragraph [ref=f9e95]: From the first scan to the tenth stamp, QuickBite handles reviews, rewards and fraud protection so you can stay focused on the kitchen.
+      - generic [ref=f9e96]:
+        - generic [ref=f9e97]:
+          - heading "AI Review Composer" [level=3] [ref=f9e102]
+          - paragraph [ref=f9e103]: GPT-4o drafts a natural, on-brand review from the visit — with a Gemini fallback so it never goes down. The customer reads it, edits if they like, and posts in one tap.
+          - generic [ref=f9e104]:
+            - generic [ref=f9e105]: AI-drafted from the visit · 9s
+            - paragraph [ref=f9e109]: "\"Cozy spot with amazing butter chicken — service was quick and the staff genuinely friendly. Will definitely be back for the weekend brunch!\""
+            - generic [ref=f9e110]:
+              - generic [ref=f9e111]: Edit
+              - generic [ref=f9e112]: Post review
+        - generic [ref=f9e115]:
+          - heading "Geofenced Scan Security" [level=3] [ref=f9e120]
+          - paragraph [ref=f9e121]: Every scan is checked against the branch's exact location before a stamp is issued, so rewards can't be farmed from across town.
+        - generic [ref=f9e126]:
+          - heading "Loyalty Stamps & Rewards" [level=3] [ref=f9e133]
+          - paragraph [ref=f9e134]: Every approved review earns a stamp. Rewards unlock automatically and a redemption code is ready the next time they visit.
+        - generic [ref=f9e156]:
+          - heading "Google Business Sync" [level=3] [ref=f9e163]
+          - paragraph [ref=f9e164]: Approved reviews post straight to Google My Business — no copy-pasting between apps.
+        - generic [ref=f9e165]:
+          - heading "WhatsApp & SMS Alerts" [level=3] [ref=f9e169]
+          - paragraph [ref=f9e170]: Customers get notified the moment a reward unlocks, by SMS on every plan and WhatsApp on Pro+.
+        - generic [ref=f9e171]:
+          - heading "Team Roles & Permissions" [level=3] [ref=f9e177]
+          - paragraph [ref=f9e178]: Owners, managers and staff each see exactly what they need — role-based access down to the branch level.
+          - generic [ref=f9e179]:
+            - generic [ref=f9e180]: Owner
+            - generic [ref=f9e183]: Manager
+            - generic [ref=f9e186]: Staff
+    - generic [ref=f9e190]:
+      - generic [ref=f9e191]:
+        - generic [ref=f9e192]: How it works
+        - heading "Three steps. Thirty seconds." [level=2] [ref=f9e193]
+      - generic [ref=f9e194]:
+        - generic [ref=f9e196]:
+          - generic [ref=f9e197]: "1"
+          - heading "Scan the receipt QR" [level=3] [ref=f9e198]
+          - paragraph [ref=f9e199]: One code on the receipt opens a mobile page — no app install, no account to create.
+        - generic [ref=f9e200]:
+          - generic [ref=f9e201]: "2"
+          - heading "Approve the AI draft" [level=3] [ref=f9e202]
+          - paragraph [ref=f9e203]: An on-brand review is ready in seconds. The customer edits if they want, then posts with one tap.
+        - generic [ref=f9e204]:
+          - generic [ref=f9e205]: "3"
+          - heading "Stamp collected, reward unlocked" [level=3] [ref=f9e206]
+          - paragraph [ref=f9e207]: The loyalty card updates instantly. When it's full, a redemption code is waiting for their next visit.
+    - generic [ref=f9e209]:
+      - generic [ref=f9e210]:
+        - generic [ref=f9e211]: Pricing
+        - heading "Simple plans that grow with your branches" [level=2] [ref=f9e212]
+        - paragraph [ref=f9e213]: Start free on a single location. Upgrade when you're ready to add branches and WhatsApp.
+      - generic [ref=f9e214]:
+        - generic [ref=f9e215]:
+          - generic [ref=f9e216]: Starter
+          - paragraph [ref=f9e217]: For single-location restaurants getting started with AI reviews.
+          - generic [ref=f9e218]:
+            - strong [ref=f9e219]: Free
+            - generic [ref=f9e220]: 14-day trial, no card required
+          - list [ref=f9e221]:
+            - listitem [ref=f9e222]: 1 branch
+            - listitem [ref=f9e225]: AI review composer (GPT-4o + Gemini fallback)
+            - listitem [ref=f9e228]: QR loyalty stamps & rewards
+            - listitem [ref=f9e231]: Email OTP customer login
+            - listitem [ref=f9e234]: Owner dashboard
+          - link "Start free trial" [ref=f9e237] [cursor=pointer]:
+            - /url: /login
+        - generic [ref=f9e238]:
+          - generic [ref=f9e239]: Most popular
+          - generic [ref=f9e240]: Growth
+          - paragraph [ref=f9e241]: For growing restaurants with loyal regulars across a few branches.
+          - generic [ref=f9e242]:
+            - strong [ref=f9e243]: Let's talk
+            - generic [ref=f9e244]: tailored to your branch count
+          - list [ref=f9e245]:
+            - listitem [ref=f9e246]: Everything in Starter
+            - listitem [ref=f9e249]: Up to 5 branches
+            - listitem [ref=f9e252]: SMS OTP via Twilio
+            - listitem [ref=f9e255]: Geofenced fraud protection
+            - listitem [ref=f9e258]: WhatsApp reward alerts
+            - listitem [ref=f9e261]: Team roles & permissions
+          - link "Get started" [ref=f9e264] [cursor=pointer]:
+            - /url: /login
+        - generic [ref=f9e265]:
+          - generic [ref=f9e266]: Pro
+          - paragraph [ref=f9e267]: For multi-branch chains and franchise groups.
+          - generic [ref=f9e268]:
+            - strong [ref=f9e269]: Custom
+            - generic [ref=f9e270]: volume pricing for chains
+          - list [ref=f9e271]:
+            - listitem [ref=f9e272]: Everything in Growth
+            - listitem [ref=f9e275]: Unlimited branches
+            - listitem [ref=f9e278]: Priority AI fallback routing
+            - listitem [ref=f9e281]: Advanced analytics dashboard
+            - listitem [ref=f9e284]: Dedicated onboarding
+          - link "Contact sales" [ref=f9e287] [cursor=pointer]:
+            - /url: "#"
+    - generic [ref=f9e290]:
+      - heading "Ready to turn receipts into 5-star reviews?" [level=2] [ref=f9e291]
+      - paragraph [ref=f9e292]: Set up your first branch in under 10 minutes. No credit card required to start.
+      - generic [ref=f9e293]:
+        - link "Start free trial" [ref=f9e294] [cursor=pointer]:
+          - /url: /login
+        - link "Book a demo" [ref=f9e297] [cursor=pointer]:
+          - /url: "#"
+  - contentinfo [ref=f9e298]:
+    - generic [ref=f9e299]:
+      - generic [ref=f9e300]:
+        - generic [ref=f9e301]:
+          - link "QuickBite" [ref=f9e302] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f9e307]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f9e308]:
+          - heading "Product" [level=4] [ref=f9e309]
+          - list [ref=f9e310]:
+            - listitem [ref=f9e311]:
+              - link "Features" [ref=f9e312] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f9e313]:
+              - link "How it works" [ref=f9e314] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f9e315]:
+              - link "Pricing" [ref=f9e316] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f9e317]:
+          - heading "Company" [level=4] [ref=f9e318]
+          - list [ref=f9e319]:
+            - listitem [ref=f9e320]:
+              - link "About" [ref=f9e321] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f9e322]:
+              - link "Careers" [ref=f9e323] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f9e324]:
+              - link "Contact" [ref=f9e325] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f9e326]:
+          - heading "Legal" [level=4] [ref=f9e327]
+          - list [ref=f9e328]:
+            - listitem [ref=f9e329]:
+              - link "Privacy" [ref=f9e330] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f9e331]:
+              - link "Terms" [ref=f9e332] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f9e333]:
+        - generic [ref=f9e334]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f9e335]:
+          - link "Email" [ref=f9e336] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f9e340] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f9e344] [cursor=pointer]:
+            - /url: "#"

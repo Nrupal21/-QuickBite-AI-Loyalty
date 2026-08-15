@@ -11,6 +11,8 @@ and not implemented here — this only checks the plan's `feature_limits`
 JSONB, not consumption against a monthly quota.
 """
 
+import uuid
+
 from fastapi import Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +22,23 @@ from app.db.base import get_db
 from app.db.models.subscription import SubscriptionPlan
 from app.db.models.tenant import Tenant
 from app.db.models.user import User
+
+
+async def tenant_has_feature(session: AsyncSession, tenant_id: uuid.UUID, feature: str) -> bool:
+    """Same `Tenant.plan_id -> SubscriptionPlan.feature_limits` check as
+    `check_subscription_tier` below, as a plain function for callers with no
+    owner/staff JWT in context — e.g. LOYALTY-04's WhatsApp reward alert,
+    triggered by an anonymous customer QR scan, not an authenticated route."""
+    result = await session.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = result.scalar_one_or_none()
+    if tenant is None or tenant.plan_id is None:
+        return False
+
+    plan_result = await session.execute(
+        select(SubscriptionPlan).where(SubscriptionPlan.id == tenant.plan_id)
+    )
+    plan = plan_result.scalar_one_or_none()
+    return bool(plan.feature_limits.get(feature)) if plan else False
 
 
 def check_subscription_tier(feature: str):

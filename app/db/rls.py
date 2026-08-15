@@ -44,6 +44,16 @@ _CLEAR_TENANT_SQL = text("SELECT set_config('app.tenant_id', '', true)")
 # after_begin listener can restore it after a commit.
 _SESSION_INFO_KEY = "tenant_id"
 
+# ADMIN-01: `quickbite_admin_bypass` (migration 0010) is NOLOGIN + BYPASSRLS;
+# `quickbite_app` only holds membership, so this is what actually activates
+# the bypass for the current transaction. `SET LOCAL` — not plain `SET` —
+# for the same pooled-connection-safety reason `app.tenant_id` uses a
+# transaction-local `set_config`: it cannot survive past this transaction and
+# leak an elevated role onto whichever request borrows the connection next.
+_SET_ADMIN_BYPASS_SQL = text("SET LOCAL ROLE quickbite_admin_bypass")
+_RESET_ROLE_SQL = text("RESET ROLE")
+_ADMIN_BYPASS_SESSION_INFO_KEY = "admin_bypass"
+
 
 async def set_tenant_context(session: AsyncSession, tenant_id: uuid.UUID) -> None:
     """Bind `app.tenant_id` for the current transaction on `session`.
@@ -93,3 +103,33 @@ def _reapply_tenant_context(session: SyncSession, transaction, connection) -> No
     if not tenant_id:
         return
     connection.execute(_SET_TENANT_SQL, {"tenant_id": tenant_id})
+
+
+@asynccontextmanager
+async def admin_bypass_context(session: AsyncSession) -> AsyncIterator[None]:
+    """ADMIN-01: scoped BYPASSRLS for the Super Admin panel's cross-tenant reads.
+
+    `RESET ROLE` on exit is a backstop, not the primary safety mechanism —
+    `SET LOCAL` already reverts automatically at the end of the transaction
+    (commit or rollback), the same guarantee `app.tenant_id` relies on. Keep
+    every query that needs the bypass inside this block; nothing about the
+    elevation persists once it closes.
+    """
+    session.info[_ADMIN_BYPASS_SESSION_INFO_KEY] = True
+    await session.execute(_SET_ADMIN_BYPASS_SQL)
+    try:
+        yield
+    finally:
+        session.info.pop(_ADMIN_BYPASS_SESSION_INFO_KEY, None)
+        await session.execute(_RESET_ROLE_SQL)
+
+
+@event.listens_for(SyncSession, "after_begin")
+def _reapply_admin_bypass(session: SyncSession, transaction, connection) -> None:  # noqa: ANN001, ARG001
+    """Re-bind the BYPASSRLS role whenever a new transaction begins on a
+    session that already had it active — same rationale as
+    `_reapply_tenant_context` above, for a service that commits mid-block.
+    """
+    if not session.info.get(_ADMIN_BYPASS_SESSION_INFO_KEY):
+        return
+    connection.execute(_SET_ADMIN_BYPASS_SQL)

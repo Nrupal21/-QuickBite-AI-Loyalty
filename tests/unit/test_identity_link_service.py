@@ -348,3 +348,66 @@ async def test_link_to_user_conflict_returns_409(mocker):
     assert exc_info.value.status_code == 409
     assert exc_info.value.detail["error"]["code"] == "IDENTITY_ALREADY_LINKED"
     session.rollback.assert_awaited_once()
+
+
+# --- find_linked_customer (customer_oauth_service's lookup, no provisioning) ---
+
+
+@pytest.mark.asyncio
+async def test_find_linked_customer_returns_none_when_no_link():
+    session = make_session([None])
+
+    result = await svc.find_linked_customer(session, AuthProvider.FIREBASE, "sub-new")
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_find_linked_customer_rejects_inactive_link():
+    link = make_link(subject_type=SubjectType.CUSTOMER.value, is_active=False)
+    session = make_session([link])
+
+    with pytest.raises(HTTPException) as exc_info:
+        await svc.find_linked_customer(session, AuthProvider.FIREBASE, "sub-123")
+
+    assert exc_info.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_find_linked_customer_rejects_a_staff_linked_subject():
+    """A public customer-sign-in surface must not fall through to treating a
+    staff-linked Google account as 'no customer' — that would start a brand
+    new, unrelated customer registration for someone who already has staff
+    access."""
+    link = make_link(subject_type=SubjectType.USER.value)
+    session = make_session([link])
+
+    with pytest.raises(HTTPException) as exc_info:
+        await svc.find_linked_customer(session, AuthProvider.FIREBASE, "sub-123")
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail["error"]["code"] == "STAFF_ACCOUNT_LINKED"
+
+
+@pytest.mark.asyncio
+async def test_find_linked_customer_returns_the_customer_for_an_active_link():
+    customer = make_customer()
+    link = make_link(subject_type=SubjectType.CUSTOMER.value, local_id=customer.id)
+    session = make_session([link, customer])
+
+    result = await svc.find_linked_customer(session, AuthProvider.FIREBASE, "sub-123")
+
+    assert result is customer
+
+
+@pytest.mark.asyncio
+async def test_find_linked_customer_rejects_a_blocked_customer():
+    customer = make_customer(is_blocked=True)
+    link = make_link(subject_type=SubjectType.CUSTOMER.value, local_id=customer.id)
+    session = make_session([link, customer])
+
+    with pytest.raises(HTTPException) as exc_info:
+        await svc.find_linked_customer(session, AuthProvider.FIREBASE, "sub-123")
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail["error"]["code"] == "CUSTOMER_BLOCKED"

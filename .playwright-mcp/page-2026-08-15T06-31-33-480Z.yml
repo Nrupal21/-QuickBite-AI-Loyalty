@@ -1,0 +1,89 @@
+- generic [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=e3]:
+    - generic [ref=e5]:
+      - link "QuickBite" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e11]:
+        - link "Product" [ref=e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=e15]:
+        - link "Log in" [ref=e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=e17] [cursor=pointer]:
+          - /url: /#pricing
+  - main [ref=e18]:
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - link "Close and return home" [ref=e21] [cursor=pointer]:
+          - /url: /
+        - button "Back" [ref=e25] [cursor=pointer]
+        - generic [ref=e28]:
+          - generic [ref=e29]: Two-factor authentication
+          - heading "Verify your identity" [level=1] [ref=e133]
+          - paragraph
+        - generic [ref=e134]:
+          - paragraph [ref=e135]: Enter the 6-digit code from your authenticator app.
+          - generic [ref=e136]:
+            - textbox "Digit 1" [active] [ref=e137]
+            - textbox "Digit 2" [ref=e138]
+            - textbox "Digit 3" [ref=e139]
+            - textbox "Digit 4" [ref=e140]
+            - textbox "Digit 5" [ref=e141]
+            - textbox "Digit 6" [ref=e142]
+          - button "Verify" [ref=e143] [cursor=pointer]
+      - paragraph [ref=e41]: Owners and staff sign in with a password. Customers sign in with a one-time code — no password to remember.
+  - contentinfo [ref=e42]:
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - link "QuickBite" [ref=e46] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=e51]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=e52]:
+          - heading "Product" [level=4] [ref=e53]
+          - list [ref=e54]:
+            - listitem [ref=e55]:
+              - link "Features" [ref=e56] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=e57]:
+              - link "How it works" [ref=e58] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=e59]:
+              - link "Pricing" [ref=e60] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=e61]:
+          - heading "Company" [level=4] [ref=e62]
+          - list [ref=e63]:
+            - listitem [ref=e64]:
+              - link "About" [ref=e65] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e66]:
+              - link "Careers" [ref=e67] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e68]:
+              - link "Contact" [ref=e69] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e70]:
+          - heading "Legal" [level=4] [ref=e71]
+          - list [ref=e72]:
+            - listitem [ref=e73]:
+              - link "Privacy" [ref=e74] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e75]:
+              - link "Terms" [ref=e76] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=e77]:
+        - generic [ref=e78]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=e79]:
+          - link "Email" [ref=e80] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=e84] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=e88] [cursor=pointer]:
+            - /url: "#"

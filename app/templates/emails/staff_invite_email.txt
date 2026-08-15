@@ -1,0 +1,8 @@
+{% extends "_layout.txt" %}
+
+{% block content -%}
+You've been invited to join a QuickBite restaurant team as {{ role_label }}.
+
+Set up your account to get started:
+{{ accept_url }}
+{%- endblock %}

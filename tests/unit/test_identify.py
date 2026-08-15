@@ -33,6 +33,16 @@ def added_instances(session: MagicMock, model: type) -> list:
     return [call.args[0] for call in session.add.call_args_list if isinstance(call.args[0], model)]
 
 
+@pytest.fixture(autouse=True)
+def _mock_rls(mocker):
+    """identify() binds RLS tenant context via a plain session.execute call
+    (see app/db/rls.py) before its own SELECTs — mocking it out here keeps
+    that call from consuming a slot in the execute_results lists / inflating
+    await_count in the tests below, which describe identify()'s *other*
+    queries (staff lookup, customer lookup)."""
+    mocker.patch("app.services.identity_service.rls.set_tenant_context", AsyncMock())
+
+
 @pytest.mark.asyncio
 async def test_identify_email_matches_staff_takes_precedence():
     staff_user_id = uuid.uuid4()

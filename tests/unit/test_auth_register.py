@@ -23,6 +23,7 @@ BASE_URL = "http://test/api/v1/auth/verify-email"
 def make_session(execute_results: list) -> MagicMock:
     session = MagicMock()
     session.commit = AsyncMock()
+    session.flush = AsyncMock()
     results = []
     for value in execute_results:
         result = MagicMock()
@@ -30,6 +31,17 @@ def make_session(execute_results: list) -> MagicMock:
         results.append(result)
     session.execute = AsyncMock(side_effect=results)
     return session
+
+
+@pytest.fixture(autouse=True)
+def _mock_rls(mocker):
+    """verify_email() binds RLS tenant context via a plain session.execute
+    call (see app/db/rls.py) — mocking it out here, same as
+    test_identity_link_service.py's _mock_rls, keeps that call from
+    consuming a slot in the execute_results lists every test below sets up
+    to describe verify_email's *other* queries (email/username re-check,
+    owner role lookup, subdomain uniqueness)."""
+    mocker.patch("app.services.auth_service.rls.set_tenant_context", AsyncMock())
 
 
 def make_request(**overrides) -> UserRegister:

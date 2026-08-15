@@ -206,3 +206,20 @@ async def send_otp_email(to_email: str, otp: str) -> bool:
 
 async def send_otp_sms(to_phone: str, otp: str, session: AsyncSession | None = None) -> bool:
     return await notify("customer_otp_sms", to_phone, session, otp=otp)
+
+
+async def send_reward_unlocked_whatsapp(
+    to_phone: str,
+    branch_name: str,
+    redemption_code: str,
+    expires_at: str,
+    session: AsyncSession | None = None,
+) -> bool:
+    return await notify(
+        "loyalty_reward_unlocked_whatsapp",
+        to_phone,
+        session,
+        branch_name=branch_name,
+        redemption_code=redemption_code,
+        expires_at=expires_at,
+    )

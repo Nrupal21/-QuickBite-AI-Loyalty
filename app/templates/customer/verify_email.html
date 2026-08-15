@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}{% if success %}Account verified{% else %}Verification failed{% endif %} — QuickBite AI + Loyalty{% endblock %}
+{% block meta_description %}Confirm your QuickBite account email.{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link rel="stylesheet" href="{{ url_for('static', path='css/auth.css') }}" />
+{% endblock %}
+
+{% block content %}
+
+{% macro icon_check(size=28) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+{%- endmacro %}
+
+{% macro icon_x(size=16) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+{%- endmacro %}
+
+<main id="main-content" class="auth-main">
+  <div class="auth-shell">
+    <div class="auth-card animate__animated animate__fadeInUp animate__faster">
+      <a href="/" class="auth-close-btn" aria-label="Close and return home">
+        {{ icon_x(16) }}
+      </a>
+
+      {% if success %}
+      <div class="auth-step auth-step-success">
+        <span class="auth-success-icon animate__animated animate__zoomIn">{{ icon_check(28) }}</span>
+        <div class="auth-card-header" style="text-align:center;">
+          <span class="auth-kicker">Verified</span>
+          <h1 class="auth-title">Your account is ready</h1>
+          <p class="auth-sub">Your restaurant is set up on QuickBite. Log in to finish setting up two-factor authentication and start collecting reviews.</p>
+        </div>
+        <a href="/login?subdomain={{ subdomain }}" class="btn btn-primary btn-block">Continue to login</a>
+      </div>
+      {% else %}
+      <div class="auth-step">
+        <div class="auth-card-header">
+          <span class="auth-kicker">Sign in</span>
+          <h1 class="auth-title">We couldn't verify that link</h1>
+        </div>
+        <div class="auth-alert" role="alert">{{ message }}</div>
+        <a href="/register" class="btn btn-primary btn-block">Try registering again</a>
+        <a href="/login" class="btn btn-ghost-light btn-block">Back to login</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</main>
+{% endblock %}

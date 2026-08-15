@@ -33,6 +33,15 @@ EMAIL = "owner@marcos.in"
 TOKEN = "enroll-session-token"
 
 
+@pytest.fixture(autouse=True)
+def _mock_rls(mocker):
+    """_resolve_mfa_session binds RLS tenant context from the session
+    payload before its User lookup — mocked as a no-op so these tests only
+    account for the ORM queries they reason about, same rationale as
+    test_identity_link_service.py."""
+    mocker.patch("app.services.auth_service.rls.set_tenant_context", AsyncMock())
+
+
 def make_session(execute_results: list) -> MagicMock:
     session = MagicMock()
     session.commit = AsyncMock()
@@ -70,7 +79,9 @@ def make_role() -> Role:
 
 
 def session_payload(user: User, purpose: str) -> str:
-    return json.dumps({"user_id": str(user.id), "purpose": purpose})
+    return json.dumps(
+        {"user_id": str(user.id), "tenant_id": str(user.tenant_id), "purpose": purpose}
+    )
 
 
 def added(session: MagicMock, model: type) -> list:
@@ -89,7 +100,11 @@ async def test_start_issues_an_enroll_purpose_session(mocker):
 
     key, payload = cache_set.await_args.args
     assert key == f"mfa_session:{response.mfa_session_token}"
-    assert json.loads(payload) == {"user_id": str(user.id), "purpose": "enroll"}
+    assert json.loads(payload) == {
+        "user_id": str(user.id),
+        "tenant_id": str(user.tenant_id),
+        "purpose": "enroll",
+    }
     assert response.expires_in == 300
 
 

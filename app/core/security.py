@@ -10,6 +10,7 @@ Implements:
 """
 
 import secrets
+import string
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -80,6 +81,15 @@ def generate_mfa_session_token() -> str:
 def create_refresh_token() -> str:
     """Opaque single-use refresh token (384-bit). Caller stores its SHA-256 hash."""
     return secrets.token_urlsafe(48)
+
+
+_REDEMPTION_CODE_ALPHABET = string.ascii_uppercase + string.digits
+
+
+def generate_redemption_code(length: int = 6) -> str:
+    """Short, human-readable reward code (LOYALTY-04) — `secrets.choice`, never
+    sequential or derived from the customer/reward id it belongs to."""
+    return "".join(secrets.choice(_REDEMPTION_CODE_ALPHABET) for _ in range(length))
 
 
 def verify_totp_code(secret: str, code: str) -> bool:

@@ -1,0 +1,9 @@
+{% extends "_layout.html" %}
+
+{% block title %}Your QuickBite login code{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 16px 0;">Your one-time login code is:</p>
+<p style="margin:0 0 16px 0;font-size:32px;font-weight:700;letter-spacing:0.3em;color:#0b0b0d;">{{ otp }}</p>
+<p style="margin:0;font-size:13px;color:#64748b;">This code expires in a few minutes. Never share it with anyone, including someone claiming to be QuickBite staff.</p>
+{% endblock %}

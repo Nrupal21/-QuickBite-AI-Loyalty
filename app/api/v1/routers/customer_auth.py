@@ -11,13 +11,15 @@ from app.core.customer_security import set_customer_session_cookie
 from app.core.rate_limiter import limiter
 from app.db.base import get_db
 from app.schemas.customer_auth import (
+    OAuthNewUserResponse,
+    OAuthSignInRequest,
     OTPNewUserResponse,
     OTPRequest,
     OTPSentResponse,
     OTPVerifiedResponse,
     OTPVerify,
 )
-from app.services import customer_otp_service
+from app.services import customer_oauth_service, customer_otp_service
 
 router = APIRouter(prefix="/auth/customer", tags=["customer-auth"])
 
@@ -42,4 +44,24 @@ async def otp_verify(
 ) -> OTPVerifiedResponse:
     result, token = await customer_otp_service.verify_otp(payload, session)
     set_customer_session_cookie(response, token)
+    return result
+
+
+@router.post("/oauth", status_code=status.HTTP_200_OK)
+@limiter.limit("20/minute")
+async def oauth_sign_in(
+    request: Request,
+    payload: OAuthSignInRequest,
+    response: Response,
+    session: AsyncSession = Depends(get_db),
+) -> OTPVerifiedResponse | OAuthNewUserResponse:
+    """Sign in with Google, Apple, Microsoft, GitHub, or Twitter/X.
+
+    Firebase's client SDK abstracts all five into one ID token, so there is
+    exactly one backend endpoint regardless of which button the customer
+    clicked (see customer_oauth_service for the two-branch logic).
+    """
+    result, token = await customer_oauth_service.sign_in(payload, session)
+    if token is not None:
+        set_customer_session_cookie(response, token)
     return result

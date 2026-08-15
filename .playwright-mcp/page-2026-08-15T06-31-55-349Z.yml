@@ -1,0 +1,48 @@
+- generic [active] [ref=f1e1]:
+  - navigation [ref=f1e2]:
+    - generic [ref=f1e3]:
+      - generic [ref=f1e4]:
+        - heading "restaurant QuickBite" [level=1] [ref=f1e5]:
+          - generic [ref=f1e6]: restaurant
+          - text: QuickBite
+        - paragraph [ref=f1e7]: AI + Loyalty
+      - generic [ref=f1e8]:
+        - link "dashboard Dashboard" [ref=f1e9] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=f1e10]: dashboard
+          - text: Dashboard
+        - link "analytics Loyalty Analytics" [ref=f1e11] [cursor=pointer]:
+          - /url: /dashboard/loyalty-analytics
+          - generic [ref=f1e12]: analytics
+          - text: Loyalty Analytics
+    - generic [ref=f1e14]:
+      - generic [ref=f1e15]: O
+      - generic [ref=f1e16]:
+        - paragraph [ref=f1e17]: Owner
+        - generic [ref=f1e18]: OWNER
+  - main [ref=f1e19]:
+    - generic [ref=f1e20]:
+      - heading "Dashboard" [level=2] [ref=f1e21]
+      - button "Live updates" [ref=f1e23] [cursor=pointer]:
+        - generic [ref=f1e24]: notifications
+    - generic [ref=f1e25]:
+      - generic [ref=f1e26]:
+        - generic [ref=f1e27]:
+          - paragraph [ref=f1e28]: Avg. Rating
+          - heading "—" [level=3] [ref=f1e29]
+        - generic [ref=f1e30]:
+          - paragraph [ref=f1e31]: Total Reviews
+          - heading "—" [level=3] [ref=f1e32]
+        - generic [ref=f1e33]:
+          - paragraph [ref=f1e34]: Pending Approvals
+          - heading "—" [level=3] [ref=f1e35]
+        - generic [ref=f1e36]:
+          - paragraph [ref=f1e37]: Loyalty Scans Today
+          - heading "—" [level=3] [ref=f1e38]
+      - generic [ref=f1e39]:
+        - heading "Sentiment Trend (Last 7 Days)" [level=3] [ref=f1e42]
+        - generic [ref=f1e44]:
+          - generic [ref=f1e45]:
+            - heading "Action Required" [level=3] [ref=f1e46]
+            - generic [ref=f1e47]: — Pending
+          - generic [ref=f1e48]: No pending reviews to show yet.

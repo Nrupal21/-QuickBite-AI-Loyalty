@@ -1,0 +1,9 @@
+{% extends "_layout.txt" %}
+
+{% block content -%}
+We've temporarily locked your QuickBite account after several failed sign-in attempts.
+
+It will unlock automatically at {{ unlock_at }}.
+
+If this wasn't you, we recommend changing your password as soon as your account unlocks.
+{%- endblock %}

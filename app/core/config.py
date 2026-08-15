@@ -139,6 +139,17 @@ class Settings(BaseSettings):
     FIRESTORE_DATABASE: str = "(default)"
     FIRESTORE_PROJECTION_ENABLED: bool = True
 
+    # --- Firebase Web SDK (client-side config for the login page's social
+    # sign-in buttons) ---
+    # NOT secrets — Firebase's web config is meant to ship to the browser and
+    # is scoped by Firebase Auth's authorized-domains allowlist, not by
+    # keeping these values hidden. Separate from FIREBASE_SERVICE_ACCOUNT_JSON
+    # above, which the server uses to verify tokens and must never reach a
+    # client.
+    FIREBASE_WEB_API_KEY: str = ""
+    FIREBASE_WEB_AUTH_DOMAIN: str = ""
+    FIREBASE_WEB_APP_ID: str = ""
+
     # --- External identity linking ---
     # Off by default. When off, an external token with no identity_links row is
     # rejected with IDENTITY_LINK_REQUIRED instead of provisioning anything.
@@ -228,6 +239,17 @@ class Settings(BaseSettings):
     def firebase_issuer(self) -> str:
         """Exact `iss` on a Firebase ID token. `aud` is the bare project id."""
         return f"https://securetoken.google.com/{self.FIREBASE_PROJECT_ID}"
+
+    @property
+    def firebase_web_configured(self) -> bool:
+        """True once the browser-side Firebase config is present.
+
+        Gates whether the login page renders the social sign-in buttons at
+        all — showing them with no client config would just fail every click.
+        Independent of `firebase_enabled`: that gates the *server's* ability
+        to verify a token, this gates the *browser's* ability to mint one.
+        """
+        return bool(self.FIREBASE_WEB_API_KEY and self.FIREBASE_WEB_AUTH_DOMAIN and self.FIREBASE_WEB_APP_ID)
 
     # --- Validators ---
     @field_validator("BCRYPT_ROUNDS")

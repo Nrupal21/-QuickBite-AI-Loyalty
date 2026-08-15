@@ -10,7 +10,7 @@ No app download. OTP-only login (phone SMS or email). Never username/password fo
 - Doc 1 — PRD: what the product does, personas, success metrics
 - Doc 2 — Technical Architecture: tech stack, folder structure, all 15 DB tables, env vars
 - Doc 3 — Security & Access: auth flows, RBAC, OTP rules, error handling
-- Doc 4 — Frontend Spec: Stitch.ai workflow, 4-library animation stack, colour palette
+-
 - Doc 5 — Feature Tickets: 70 tickets with acceptance criteria — this is your task list
 - Doc 6 — System Architecture + Team Plan: sprint plan, RACI, collaboration rules
 - Dev Guide — AI agents, IDEs, branch workflow, hour estimates, progress reports
@@ -350,18 +350,7 @@ tests/security/test_{sec_ticket}.py   — Security Dev attack tests
 | Scroll card reveal | GSAP ScrollTrigger |
 
 ### Colour Palette (exact hex — always use these)
-```
-#1A56DB  — Primary Blue (CTAs, active states)
-#0D9488  — Loyalty Teal (OTP, stamps, loyalty flows)
-#FF6B35  — Accent Orange (stars, conversion CTAs)
-#1E2A3A  — Dark Ink (primary text)
-#64748B  — Muted Slate (secondary text)
-#EFF6FF  — Light Blue Tint (backgrounds)
-#059669  — Success Green
-#DC2626  — Danger Red
-#D97706  — Warning Amber
-#7C3AED  — Purple (Pro plan)
-```
+
 
 ---
 
