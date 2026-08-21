@@ -13,6 +13,19 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+class PlanOut(BaseModel):
+    """One row of GET /billing/plans — public pricing-page data (TIER 1,
+    same visibility as a company name on a storefront). Never includes
+    provider_plan_id, which is an internal Razorpay reference."""
+
+    id: str
+    name: str
+    display_name: str
+    price_monthly_inr: int
+    trial_days: int
+    feature_limits: dict
+
+
 class SubscriptionStatusResponse(BaseModel):
     """Current billing state for the caller's tenant."""
 

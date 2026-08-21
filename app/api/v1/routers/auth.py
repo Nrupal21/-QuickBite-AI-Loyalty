@@ -23,6 +23,14 @@ from app.core.rate_limiter import limiter
 from app.db.base import get_db
 from app.db.models.user import User
 from app.schemas.auth import (
+    BecomeRestaurantRequest,
+    BecomeRestaurantResponse,
+    CompleteOAuthRegistrationRequest,
+    CompleteOtpRegistrationRequest,
+    ContactOtpRequestRequest,
+    ContactOtpRequestResponse,
+    ContactOtpVerifyRequest,
+    ContactOtpVerifyResponse,
     IdentifyRequest,
     IdentifyResponse,
     MeResponse,
@@ -33,17 +41,28 @@ from app.schemas.auth import (
     MFAEnrollResponse,
     MFAStartResponse,
     MFAVerify,
+    OAuthRegistrationRequiredResponse,
+    OtpRegistrationRequiredResponse,
     RefreshRequest,
     RegisterResponse,
     StatusResponse,
     TenantLookupResponse,
     TokenResponse,
     UserLogin,
+    UserOAuthSignInRequest,
+    UserOtpRequestRequest,
+    UserOtpSentResponse,
+    UserOtpVerifyRequest,
     UserRegister,
     VerifyEmailResponse,
 )
 from app.schemas.identity import LinkIdentityRequest, LinkIdentityResponse
-from app.services import identity_link_service, identity_service
+from app.services import (
+    identity_link_service,
+    identity_service,
+    user_oauth_service,
+    user_otp_service,
+)
 from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -101,6 +120,150 @@ async def verify_email(
     session: AsyncSession = Depends(get_db),
 ) -> VerifyEmailResponse:
     return await AuthService(session=session).verify_email(token)
+
+
+@router.post(
+    "/register-restaurant/contact-otp/request",
+    response_model=ContactOtpRequestResponse,
+    status_code=status.HTTP_200_OK,
+)
+@limiter.limit("5/minute")
+async def request_restaurant_contact_otp(
+    request: Request,
+    payload: ContactOtpRequestRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> ContactOtpRequestResponse:
+    """"Join Us" step: send an OTP to the second contact method a standard
+    user is registering their business with.
+
+    Which method that is depends on how they signed up — an email-registered
+    user verifies a phone here, a phone-registered user verifies an email —
+    so the endpoint takes a generic `contact` and classifies it itself.
+    """
+    return await AuthService(session=session).request_contact_otp(current_user, payload)
+
+
+@router.post(
+    "/register-restaurant/contact-otp/verify",
+    response_model=ContactOtpVerifyResponse,
+    status_code=status.HTTP_200_OK,
+)
+@limiter.limit("10/minute")
+async def verify_restaurant_contact_otp(
+    request: Request,
+    payload: ContactOtpVerifyRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> ContactOtpVerifyResponse:
+    return await AuthService(session=session).verify_contact_otp(current_user, payload)
+
+
+@router.post("/register-restaurant", status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/hour")
+async def register_restaurant(
+    request: Request,
+    payload: BecomeRestaurantRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> MFAEnrollmentRequiredResponse | BecomeRestaurantResponse:
+    """A standard user's one-time upgrade to Owner: creates their Tenant,
+    promotes their role, and issues a fresh token pair — or, if Owner's
+    mandatory MFA isn't enrolled yet, an enrollment challenge instead (AUTH-04:
+    "MFA REQUIRED for Owner" applies here exactly as it does at login)."""
+    return await AuthService(session=session).become_restaurant(
+        current_user, payload, _ip_hash(request)
+    )
+
+
+@router.post(
+    "/otp/request", response_model=UserOtpSentResponse, status_code=status.HTTP_200_OK
+)
+@limiter.limit("10/minute")
+async def request_login_otp(
+    request: Request,
+    payload: UserOtpRequestRequest,
+    session: AsyncSession = Depends(get_db),
+) -> UserOtpSentResponse:
+    """Send a one-time sign-in code to an email address or phone number.
+
+    Answers identically whether or not an account exists — see
+    user_otp_service's module docstring. The same endpoint serves sign-in and
+    sign-up, because from the caller's side those are the same action until
+    the code is entered.
+    """
+    return await user_otp_service.request_otp(payload, session)
+
+
+@router.post("/otp/verify", status_code=status.HTTP_200_OK)
+@limiter.limit("10/minute")
+async def verify_login_otp(
+    request: Request,
+    payload: UserOtpVerifyRequest,
+    session: AsyncSession = Depends(get_db),
+) -> (
+    MFAChallengeResponse
+    | MFAEnrollmentRequiredResponse
+    | TokenResponse
+    | OtpRegistrationRequiredResponse
+):
+    """Sign in with the code, or receive a token to finish signing up."""
+    return await user_otp_service.verify_otp(payload, session, _ip_hash(request))
+
+
+@router.post("/otp/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
+async def complete_otp_registration(
+    request: Request,
+    payload: CompleteOtpRegistrationRequest,
+    session: AsyncSession = Depends(get_db),
+) -> TokenResponse:
+    """Create the account a verified code pre-authorised, and sign it in.
+
+    `account_url` is built from the request, not from config, for the same
+    reason /auth/register builds its verification link that way: the right
+    host is whichever host the browser actually reached.
+    """
+    account_url = str(request.base_url) + "profile"
+    return await user_otp_service.complete_registration(
+        payload, session, _ip_hash(request), account_url
+    )
+
+
+@router.post("/oauth", status_code=status.HTTP_200_OK)
+@limiter.limit("20/minute")
+async def oauth_sign_in(
+    request: Request,
+    payload: UserOAuthSignInRequest,
+    session: AsyncSession = Depends(get_db),
+) -> (
+    MFAChallengeResponse
+    | MFAEnrollmentRequiredResponse
+    | TokenResponse
+    | OAuthRegistrationRequiredResponse
+):
+    """Sign in with Google, Apple, Microsoft, GitHub, or Twitter/X.
+
+    Distinct from /auth/customer/oauth, which signs in a loyalty diner. Same
+    provider, same token shape, entirely different principal — see
+    user_oauth_service.
+    """
+    return await user_oauth_service.sign_in(payload, session, _ip_hash(request))
+
+
+@router.post(
+    "/oauth/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
+)
+@limiter.limit("5/minute")
+async def complete_oauth_registration(
+    request: Request,
+    payload: CompleteOAuthRegistrationRequest,
+    session: AsyncSession = Depends(get_db),
+) -> TokenResponse:
+    account_url = str(request.base_url) + "profile"
+    return await user_oauth_service.complete_registration(
+        payload, session, _ip_hash(request), account_url
+    )
 
 
 @router.post("/login", status_code=status.HTTP_200_OK)

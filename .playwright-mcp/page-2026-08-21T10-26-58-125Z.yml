@@ -1,0 +1,124 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - link "QuickBite" [ref=f1e5] [cursor=pointer]:
+        - /url: /
+      - navigation "Sections" [ref=f1e10]:
+        - link "Product" [ref=f1e11] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f1e12] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f1e13] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f1e15]:
+        - link "Sign in" [ref=f1e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f1e17] [cursor=pointer]:
+          - /url: /register
+  - navigation [ref=f1e18]:
+    - generic [ref=f1e19]:
+      - generic [ref=f1e20]:
+        - heading "restaurant QuickBite" [level=1] [ref=f1e21]:
+          - generic [ref=f1e22]: restaurant
+          - text: QuickBite
+        - paragraph [ref=f1e23]: AI + Loyalty
+      - generic [ref=f1e24]:
+        - link "dashboard Dashboard" [ref=f1e25] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=f1e26]: dashboard
+          - text: Dashboard
+        - link "analytics Loyalty Analytics" [ref=f1e27] [cursor=pointer]:
+          - /url: /dashboard/loyalty-analytics
+          - generic [ref=f1e28]: analytics
+          - text: Loyalty Analytics
+    - generic [ref=f1e30]:
+      - generic [ref=f1e31]: O
+      - generic [ref=f1e32]:
+        - paragraph [ref=f1e33]: Owner
+        - generic [ref=f1e34]: OWNER
+  - main [ref=f1e35]:
+    - generic [ref=f1e36]:
+      - heading "Loyalty Analytics" [level=2] [ref=f1e37]
+      - generic [ref=f1e38]:
+        - generic [ref=f1e39]: Branch
+        - combobox "Branch" [ref=f1e40] [cursor=pointer]:
+          - option "All Branches" [selected]
+          - option "Bandra West"
+          - option "Koregaon Park"
+          - option "Andheri East"
+    - generic [ref=f1e41]:
+      - generic [ref=f1e42]:
+        - generic [ref=f1e43]:
+          - generic [ref=f1e44]: confirmation_number
+          - generic [ref=f1e46]:
+            - paragraph [ref=f1e47]: Stamps This Month
+            - heading "342" [level=3] [ref=f1e48]
+        - generic [ref=f1e49]:
+          - generic [ref=f1e50]: groups
+          - generic [ref=f1e52]:
+            - paragraph [ref=f1e53]: Active Loyalty Customers
+            - heading "89" [level=3] [ref=f1e54]
+        - generic [ref=f1e55]:
+          - generic [ref=f1e56]: redeem
+          - generic [ref=f1e58]:
+            - paragraph [ref=f1e59]: Reward Redemption Rate
+            - heading "42%" [level=3] [ref=f1e60]
+      - generic [ref=f1e61]:
+        - generic [ref=f1e62]:
+          - heading "Daily Scan Heatmap (Last 30 Days)" [level=3] [ref=f1e63]
+          - generic [ref=f1e64]:
+            - generic "0 scans" [ref=f1e65]
+            - generic "3 scans" [ref=f1e66]
+            - generic "6 scans" [ref=f1e67]
+            - generic "9 scans" [ref=f1e68]
+            - generic "12 scans" [ref=f1e69]
+            - generic "0 scans" [ref=f1e70]
+            - generic "6 scans" [ref=f1e71]
+            - generic "11 scans" [ref=f1e72]
+            - generic "16 scans" [ref=f1e73]
+            - generic "21 scans" [ref=f1e74]
+            - generic "13 scans" [ref=f1e75]
+            - generic "25 scans" [ref=f1e76]
+            - generic "39 scans" [ref=f1e77]
+            - generic "36 scans" [ref=f1e78]
+            - generic "30 scans" [ref=f1e79]
+            - generic "9 scans" [ref=f1e80]
+            - generic "10 scans" [ref=f1e81]
+            - generic "19 scans" [ref=f1e82]
+            - generic "33 scans" [ref=f1e83]
+            - generic "51 scans" [ref=f1e84]
+            - generic "46 scans" [ref=f1e85]
+            - generic "34 scans" [ref=f1e86]
+            - generic "21 scans" [ref=f1e87]
+            - generic "14 scans" [ref=f1e88]
+          - generic [ref=f1e89]:
+            - generic [ref=f1e90]: 12am
+            - generic [ref=f1e91]: 6am
+            - generic [ref=f1e92]: 12pm
+            - generic [ref=f1e93]: 6pm
+            - generic [ref=f1e94]: 11pm
+        - generic [ref=f1e95]:
+          - heading "Top 10 Customers" [level=3] [ref=f1e96]
+          - table [ref=f1e97]:
+            - rowgroup [ref=f1e98]:
+              - row [ref=f1e99]:
+                - columnheader "Phone" [ref=f1e100]
+                - columnheader "Total Stamps" [ref=f1e101]
+            - rowgroup [ref=f1e102]:
+              - row [ref=f1e103]:
+                - cell "*** **** 4821" [ref=f1e104]
+                - cell "24" [ref=f1e105]
+              - row [ref=f1e106]:
+                - cell "*** **** 1190" [ref=f1e107]
+                - cell "19" [ref=f1e108]
+      - generic [ref=f1e109]:
+        - heading "Fraud Log" [level=3] [ref=f1e110]
+        - table [ref=f1e111]:
+          - rowgroup [ref=f1e112]:
+            - row [ref=f1e113]:
+              - columnheader "Scanned At" [ref=f1e114]
+              - columnheader "Distance from Branch" [ref=f1e115]
+              - columnheader "Reason" [ref=f1e116]
+          - rowgroup [ref=f1e117]:
+            - row [ref=f1e118]:
+              - cell "No fraud alerts." [ref=f1e119]

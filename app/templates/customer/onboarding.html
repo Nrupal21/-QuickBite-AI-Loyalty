@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% import "customer/_auth_macros.html" as ui %}
+
+{% block title %}Register your business — QuickBite{% endblock %}
+{% block meta_description %}Register your restaurant, café, or cloud kitchen on QuickBite and choose the plan for your category.{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/auth.css') }}" />
+{% endblock %}
+
+{% block content %}
+<!--
+  SEED auth-stage-01 · surface: /onboarding — "Join Us" (see /login for the
+  full contract). The same step bar continues here with the account step
+  already lit solid, so registering a business reads as the back half of one
+  journey rather than a second signup. Six steps: the account (already done),
+  the business, its second contact, its category, its plan, and the finish.
+  Category comes before plan because the category is what decides which
+  plans are offered.
+-->
+<main id="main-content" class="auth-stage">
+
+  <div class="auth-main">
+    {{ ui.auth_topsteps(
+        [
+          {'key': 'account', 'label': 'Your account'},
+          {'key': 'business', 'label': 'Your business'},
+          {'key': 'contact', 'label': 'Second contact'},
+          {'key': 'category', 'label': 'What you run'},
+          {'key': 'plan', 'label': 'Your plan'},
+          {'key': 'done', 'label': "You're an owner"}
+        ],
+        1,
+        wide=true
+    ) }}
+
+    <div class="auth-plate auth-plate--wide">
+      {{ ui.auth_alert() }}
+
+      {# --------------------------------------------------- checking #}
+      <section class="auth-step" data-step="loading" data-entering>
+        <div class="auth-head">
+          <h1 class="auth-title">Loading your account…</h1>
+          <p class="auth-sub">One moment while we check who you're signed in as.</p>
+        </div>
+        <div class="auth-loading" aria-hidden="true">
+          <div class="auth-skeleton"></div>
+          <div class="auth-skeleton"></div>
+        </div>
+      </section>
+
+      {# --------------------------------------------------- business #}
+      <section class="auth-step" data-step="business" hidden>
+        <div class="auth-head">
+          <h1 class="auth-title">Register your business</h1>
+          <p class="auth-sub">This turns your account into an owner account. You'll get a dashboard, QR codes for your tables, and a loyalty program.</p>
+        </div>
+
+        <form class="auth-form" data-business-form novalidate>
+          <div class="field">
+            <label class="field-label" for="restaurant-name">Business name</label>
+            <input class="field-input" id="restaurant-name" name="restaurant_name" type="text"
+                   autocomplete="organization" placeholder="Marco's Pizzeria"
+                   maxlength="100" data-field-restaurant-name required />
+            <p class="field-hint">The name diners see when they scan a receipt. You can change it later.</p>
+          </div>
+
+          {# Pre-filled from GET /auth/me and locked: this is the contact the
+             account already proved, not something to re-type or edit here. #}
+          <div class="field">
+            <label class="field-label" for="known-contact" data-known-label>Your verified contact</label>
+            <input class="field-input" id="known-contact" type="text" readonly
+                   data-field-known-contact />
+            <p class="field-hint">Already verified when you signed up.</p>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="second-contact" data-second-label>Add a phone number</label>
+            <input class="field-input" id="second-contact" name="contact" type="text"
+                   autocapitalize="none" spellcheck="false" data-field-second-contact required />
+            <p class="field-hint" data-second-hint>We'll text a 6-digit code to confirm it. Owners get reward alerts and security warnings here.</p>
+          </div>
+
+          <button type="submit" class="auth-btn auth-btn--primary" data-submit>
+            <span class="auth-btn-label">Send verification code</span>
+          </button>
+        </form>
+      </section>
+
+      {# ---------------------------------------------------- verify #}
+      <section class="auth-step" data-step="verify" hidden>
+        <button type="button" class="auth-back" data-back="business">
+          {{ ui.icon_back(15) }} Change details
+        </button>
+
+        <div class="auth-head">
+          <h2 class="auth-title">Enter the code</h2>
+          <p class="auth-sub">Sent to <strong data-echo-contact></strong>. It expires in five minutes.</p>
+        </div>
+
+        <form data-verify-form novalidate>
+          {{ ui.otp_entry('business-otp') }}
+
+          <div class="otp-meta">
+            <span data-otp-status aria-live="polite"></span>
+            <button type="button" class="auth-btn auth-btn--quiet" data-resend disabled>
+              Resend code
+            </button>
+          </div>
+
+          <button type="submit" class="auth-btn auth-btn--primary auth-mt-2" data-submit>
+            <span class="auth-btn-label">Verify</span>
+          </button>
+        </form>
+      </section>
+
+      {# -------------------------------------------------- category #}
+      <section class="auth-step" data-step="category" hidden>
+        <div class="auth-head">
+          <h2 class="auth-title">What kind of business is it?</h2>
+          <p class="auth-sub">This sets which plans we show you next — a food truck and a five-outlet chain need very different things.</p>
+        </div>
+
+        <div class="category-grid" data-category-grid role="group" aria-label="Business category">
+          <div class="auth-skeleton" aria-hidden="true"></div>
+          <div class="auth-skeleton" aria-hidden="true"></div>
+        </div>
+
+        <p class="auth-empty" data-category-empty hidden>
+          No categories are set up on this deployment yet. Run
+          <code>python scripts/seed_categories.py</code> to add them.
+        </p>
+
+        <button type="button" class="auth-btn auth-btn--primary" data-category-continue disabled>
+          <span class="auth-btn-label">Continue</span>
+        </button>
+      </section>
+
+      {# ------------------------------------------------------ plan #}
+      <section class="auth-step" data-step="plan" hidden>
+        <button type="button" class="auth-back" data-back="category">
+          {{ ui.icon_back(15) }} Change category
+        </button>
+
+        <div class="auth-head">
+          <h2 class="auth-title">Choose your plan</h2>
+          <p class="auth-sub">Plans for <strong data-echo-category></strong>. Start on the free tier and move up when the loyalty numbers make the case.</p>
+        </div>
+
+        <div class="plan-list" data-plan-list role="group" aria-label="Subscription plan">
+          <div class="auth-skeleton" aria-hidden="true"></div>
+          <div class="auth-skeleton" aria-hidden="true"></div>
+        </div>
+
+        <p class="auth-empty" data-plan-empty hidden>
+          No plans are set up on this deployment yet. Run
+          <code>python scripts/seed_plans.py</code> to add them.
+        </p>
+
+        <button type="button" class="auth-btn auth-btn--primary" data-plan-continue disabled>
+          <span class="auth-btn-label">Review and register</span>
+        </button>
+      </section>
+
+      {# --------------------------------------------------- confirm #}
+      <section class="auth-step" data-step="confirm" hidden>
+        <button type="button" class="auth-back" data-back="plan">
+          {{ ui.icon_back(15) }} Change plan
+        </button>
+
+        <div class="auth-head">
+          <h2 class="auth-title">Register <span data-echo-business></span>?</h2>
+          <p class="auth-sub">This creates your business, makes you its owner, and sends a confirmation to both your contacts.</p>
+        </div>
+
+        <div class="auth-summary">
+          <div class="auth-summary-row">
+            <span class="auth-summary-key">Business</span>
+            <span class="auth-summary-value" data-summary-business></span>
+          </div>
+          <div class="auth-summary-row">
+            <span class="auth-summary-key">Category</span>
+            <span class="auth-summary-value" data-summary-category></span>
+          </div>
+          <div class="auth-summary-row">
+            <span class="auth-summary-key">Plan</span>
+            <span class="auth-summary-value" data-summary-plan></span>
+          </div>
+          <div class="auth-summary-row">
+            <span class="auth-summary-key">Contacts</span>
+            <span class="auth-summary-value" data-summary-contacts></span>
+          </div>
+        </div>
+
+        <button type="button" class="auth-btn auth-btn--primary" data-register-submit>
+          <span class="auth-btn-label">Register my business</span>
+        </button>
+        <p class="auth-note">
+          Paid plans open checkout right after this. Nothing is charged until you complete it.
+        </p>
+      </section>
+
+      {# ------------------------------------------------------ done #}
+      <section class="auth-step" data-step="done" hidden>
+        <div class="auth-done-mark">{{ ui.icon_check(24) }}</div>
+        <div class="auth-head">
+          <h2 class="auth-title" data-done-title>You're an owner</h2>
+          <p class="auth-sub" data-done-message></p>
+        </div>
+        <div class="auth-actions">
+          <a class="auth-btn auth-btn--primary" href="/dashboard" data-done-primary>
+            <span class="auth-btn-label">Go to my dashboard</span>
+          </a>
+        </div>
+      </section>
+
+      {# ---------------------------------------- MFA enrollment gate #}
+      <section class="auth-step" data-step="mfa-enroll" hidden>
+        <div class="auth-done-mark">{{ ui.icon_shield(24) }}</div>
+        <div class="auth-head">
+          <h2 class="auth-title" data-mfa-title>Your business is registered</h2>
+          <p class="auth-sub">Owner accounts require two-factor authentication before they get a session. Scan this in any authenticator app, then enter the code it shows.</p>
+        </div>
+
+        <div class="auth-summary">
+          <div class="auth-summary-row">
+            <span class="auth-summary-key">Setup key</span>
+            <span class="auth-summary-value auth-value-key" data-mfa-secret></span>
+          </div>
+        </div>
+
+        <form data-mfa-confirm-form novalidate>
+          {{ ui.otp_entry('owner-mfa') }}
+          <button type="submit" class="auth-btn auth-btn--primary auth-mt-2" data-submit>
+            <span class="auth-btn-label">Turn on two-factor</span>
+          </button>
+        </form>
+      </section>
+
+      {# ------------------------------------------- signed out / wrong #}
+      <section class="auth-step" data-step="blocked" hidden>
+        <div class="auth-head">
+          <h2 class="auth-title" data-blocked-title>Sign in first</h2>
+          <p class="auth-sub" data-blocked-message>Registering a business needs an account. Sign in or create one, then come back to Join Us.</p>
+        </div>
+        <div class="auth-actions">
+          <a class="auth-btn auth-btn--primary" href="/login">
+            <span class="auth-btn-label">Sign in</span>
+          </a>
+          <a class="auth-btn auth-btn--ghost" href="/register">
+            <span class="auth-btn-label">Create an account</span>
+          </a>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', path='js/auth-core.js') }}"></script>
+<script src="{{ url_for('static', path='js/auth-onboarding.js') }}"></script>
+{% endblock %}

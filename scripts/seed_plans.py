@@ -30,6 +30,7 @@ PLANS = [
             "sms_pm": 50,
             "scratch_cards": False,
             "white_label": False,
+            "ai_review_replies": False,
         },
     },
     {
@@ -45,6 +46,7 @@ PLANS = [
             "sms_pm": 200,
             "scratch_cards": True,
             "white_label": False,
+            "ai_review_replies": True,
         },
     },
     {
@@ -60,6 +62,7 @@ PLANS = [
             "sms_pm": -1,
             "scratch_cards": True,
             "white_label": True,
+            "ai_review_replies": True,
         },
     },
 ]

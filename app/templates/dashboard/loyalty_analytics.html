@@ -11,11 +11,21 @@
      for ALL screen generation" rule, reusing the real Stitch-generated
      sidebar/header markup and Tailwind config from dashboard/index.html
      verbatim so the two screens stay visually identical outside the content
-     area. Revisit via Stitch.ai when the tool is available again. -->
+     area. Revisit via Stitch.ai when the tool is available again.
+
+     Liquid-glass pass: content area brought in line with dashboard/index.html's
+     qb-glass system (see static/css/dashboard.css's file-header direction
+     contract) so the two screens keep one visual vocabulary — every
+     data-metric/data-*-body selector loyalty-analytics.js reads is
+     unchanged.
+
+     Shell pass: no longer includes partials/nav.html — see dashboard/index.html's
+     equivalent comment; own sidebar, mobile tab bar, and account identity
+     below instead. -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script id="tailwind-config">
@@ -47,21 +57,24 @@
                 },
                 "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
                 "fontFamily": {
-                    "headline": ["Inter", "sans-serif"],
-                    "body": ["Inter", "sans-serif"]
+                    "headline": ["Hanken Grotesk", "sans-serif"],
+                    "body": ["Hanken Grotesk", "sans-serif"]
                 }
             }
         }
     }
 </script>
 <style>
-    body { background-color: theme('colors.brand-bg'); color: theme('colors.brand-ink'); font-family: 'Inter', sans-serif; }
+    body { background-color: theme('colors.brand-bg'); color: theme('colors.brand-ink'); font-family: 'Hanken Grotesk', sans-serif; }
     .heat-cell { aspect-ratio: 1; border-radius: 3px; }
 </style>
+<!-- Liquid-glass dashboard system, shared with dashboard/index.html. -->
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard.css') }}" />
 </head>
-<body class="bg-brand-bg font-body min-h-screen text-brand-ink overflow-x-hidden flex">
+<body class="qb-dash bg-brand-bg font-body min-h-screen text-brand-ink overflow-x-hidden flex">
+<div class="qb-dash-mesh" aria-hidden="true"></div>
 
-<nav class="fixed left-0 top-0 h-screen w-[240px] bg-surface shadow-sm z-50 flex flex-col justify-between py-6">
+<nav class="qb-glass qb-glass--sidebar fixed left-0 top-0 h-screen w-[240px] z-50 hidden min-[900px]:flex flex-col justify-between py-6">
   <div>
     <div class="px-6 mb-8">
       <h1 class="text-xl font-headline font-black text-primary-container flex items-center gap-2">
@@ -71,60 +84,152 @@
       <p class="text-xs text-brand-muted mt-1 font-medium">AI + Loyalty</p>
     </div>
     <div class="flex flex-col gap-1 font-body text-sm">
-      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-surface-container-high transition-colors duration-200 rounded-lg group" href="/dashboard">
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard">
         <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">dashboard</span>
         Dashboard
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/reviews">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">rate_review</span>
+        Reviews
       </a>
       <a class="flex items-center gap-3 bg-primary-container text-on-primary-container font-bold rounded-lg px-4 py-3 mx-2" href="/dashboard/loyalty-analytics" aria-current="page">
         <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
         Loyalty Analytics
       </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/loyalty-programs">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">redeem</span>
+        Loyalty Programs
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/qr-codes">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">qr_code_2</span>
+        QR Codes
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/google-profile">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">link</span>
+        Google Profile
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/settings">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">settings</span>
+        Settings
+      </a>
     </div>
   </div>
   <div class="px-4">
-    <div class="pt-4 border-t border-outline-variant flex items-center gap-3">
+    <button type="button" class="qb-account-trigger pt-4 border-t border-outline-variant/60 flex items-center gap-3 px-2 py-2"
+            data-account-trigger aria-haspopup="true" aria-expanded="false" aria-controls="more-sheet">
       <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-sm" data-user-initials aria-hidden="true">--</div>
       <div>
         <p class="text-sm font-bold text-brand-ink" data-user-role-label>Staff</p>
         <span class="inline-block px-2 py-0.5 mt-0.5 bg-surface-variant text-brand-muted text-xs font-semibold rounded-full" data-user-role-badge>&nbsp;</span>
       </div>
-    </div>
+    </button>
   </div>
 </nav>
 
-<main class="ml-[240px] flex-1 min-h-screen">
-  <header class="sticky top-0 right-0 z-40 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center w-full px-8 h-16">
+<!-- Mobile tab bar — see dashboard/index.html's equivalent comment. -->
+<nav class="qb-glass qb-mobile-tabbar min-[900px]:hidden" aria-label="Dashboard">
+  <a class="qb-tab" href="/dashboard">
+    <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
+    Dashboard
+  </a>
+  <a class="qb-tab" href="/dashboard/loyalty-analytics" aria-current="page">
+    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">analytics</span>
+    Analytics
+  </a>
+  <button type="button" class="qb-tab" data-account-trigger aria-haspopup="true" aria-expanded="false" aria-controls="more-sheet">
+    <span class="material-symbols-outlined" aria-hidden="true">more_horiz</span>
+    More
+  </button>
+</nav>
+
+<!-- More/account sheet — see dashboard/index.html's equivalent comment. -->
+<div class="qb-account-scrim min-[900px]:hidden" data-account-scrim hidden></div>
+<div class="qb-glass qb-account-sheet" id="more-sheet" role="dialog" aria-label="Account" hidden>
+  <div class="min-[900px]:hidden">
+    <a class="qb-more-nav-item" href="/dashboard/reviews">
+      <span class="material-symbols-outlined" aria-hidden="true">rate_review</span>
+      Reviews
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/loyalty-programs">
+      <span class="material-symbols-outlined" aria-hidden="true">redeem</span>
+      Loyalty Programs
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/qr-codes">
+      <span class="material-symbols-outlined" aria-hidden="true">qr_code_2</span>
+      QR Codes
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/google-profile">
+      <span class="material-symbols-outlined" aria-hidden="true">link</span>
+      Google Profile
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/settings">
+      <span class="material-symbols-outlined" aria-hidden="true">settings</span>
+      Settings
+    </a>
+    <div class="qb-more-divider"></div>
+  </div>
+  <div class="qb-account-sheet-head">
+    <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-sm" data-user-initials aria-hidden="true">--</div>
+    <div>
+      <p class="text-sm font-bold text-brand-ink" data-account-sheet-role>Staff</p>
+      <p class="text-xs text-brand-muted">QuickBite dashboard</p>
+    </div>
+  </div>
+  <button type="button" class="qb-account-signout" data-account-signout>
+    <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+    Sign out
+  </button>
+</div>
+
+<main class="min-[900px]:ml-[240px] flex-1 min-h-screen">
+  <header class="qb-glass sticky top-0 right-0 z-40 border-x-0 border-t-0 rounded-none flex justify-between items-center w-full px-5 min-[900px]:px-8 h-16">
     <h2 class="font-body font-bold text-brand-ink tracking-tight text-xl">Loyalty Analytics</h2>
     <div class="flex items-center gap-3">
       <label class="text-sm text-brand-muted" for="branch-filter">Branch</label>
-      <select id="branch-filter" class="text-sm border-none bg-surface-container-low rounded-md py-1.5 pl-3 pr-8 text-brand-ink font-medium focus:ring-2 focus:ring-brand-primary cursor-pointer">
+      <select id="branch-filter" class="text-sm border border-outline-variant/40 bg-white/70 rounded-md py-1.5 pl-3 pr-8 text-brand-ink font-medium focus:ring-2 focus:ring-brand-primary cursor-pointer">
         <option value="">All Branches</option>
       </select>
     </div>
   </header>
 
-  <div class="p-8 max-w-7xl mx-auto space-y-8">
+  <div class="p-5 min-[900px]:p-8 pb-28 min-[900px]:pb-8 max-w-7xl mx-auto space-y-6">
     <div id="analytics-error" class="hidden bg-brand-danger/10 text-brand-danger text-sm font-medium px-4 py-3 rounded-lg" role="alert"></div>
 
-    <!-- 3 metric cards, matching STITCH-07's stat-card style -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-l-brand-loyalty-teal animate__animated animate__fadeInUp">
-        <p class="text-sm font-medium text-brand-muted mb-1">Stamps This Month</p>
-        <h3 class="text-3xl font-black text-brand-ink tracking-tight" data-metric="total_stamps_month">—</h3>
+    <!-- One glass strip, three segments — matches dashboard/index.html's
+         KPI strip (no colored border-left cards). -->
+    <div class="qb-glass qb-kpi-strip qb-kpi-strip--3" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="qb-kpi">
+        <div class="qb-kpi-icon qb-kpi-icon--teal" aria-hidden="true">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">confirmation_number</span>
+        </div>
+        <div class="qb-kpi-body">
+          <p class="qb-kpi-label">Stamps This Month</p>
+          <h3 class="qb-kpi-value" data-metric="total_stamps_month">—</h3>
+        </div>
       </div>
-      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-l-brand-primary animate__animated animate__fadeInUp">
-        <p class="text-sm font-medium text-brand-muted mb-1">Active Loyalty Customers</p>
-        <h3 class="text-3xl font-black text-brand-ink tracking-tight" data-metric="active_customers">—</h3>
+      <div class="qb-kpi">
+        <div class="qb-kpi-icon qb-kpi-icon--blue" aria-hidden="true">
+          <span class="material-symbols-outlined">groups</span>
+        </div>
+        <div class="qb-kpi-body">
+          <p class="qb-kpi-label">Active Loyalty Customers</p>
+          <h3 class="qb-kpi-value" data-metric="active_customers">—</h3>
+        </div>
       </div>
-      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-l-brand-success animate__animated animate__fadeInUp">
-        <p class="text-sm font-medium text-brand-muted mb-1">Reward Redemption Rate</p>
-        <h3 class="text-3xl font-black text-brand-ink tracking-tight" data-metric="redemption_rate">—</h3>
+      <div class="qb-kpi">
+        <div class="qb-kpi-icon qb-kpi-icon--orange" aria-hidden="true">
+          <span class="material-symbols-outlined">redeem</span>
+        </div>
+        <div class="qb-kpi-body">
+          <p class="qb-kpi-label">Reward Redemption Rate</p>
+          <h3 class="qb-kpi-value" data-metric="redemption_rate">—</h3>
+        </div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Heatmap placeholder — id required per STITCH-09 AC -->
-      <div class="bg-white rounded-xl shadow-sm border border-outline-variant/30 p-6">
+      <div class="qb-glass p-6">
         <h3 class="text-lg font-bold text-brand-ink mb-4">Daily Scan Heatmap (Last 30 Days)</h3>
         <!-- grid-cols-24 is not a Tailwind utility (default scale tops out
              at 12), so the column count is set inline instead of relying on
@@ -136,16 +241,16 @@
       </div>
 
       <!-- Top customers — phone masked per DASH-02 AC -->
-      <div class="bg-white rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+      <div class="qb-glass overflow-hidden">
         <h3 class="text-lg font-bold text-brand-ink p-6 pb-4">Top 10 Customers</h3>
         <table class="w-full text-sm">
-          <thead class="bg-surface-container-low text-brand-muted text-xs uppercase">
+          <thead class="text-brand-muted text-xs uppercase border-t border-b border-outline-variant/20">
             <tr>
               <th class="text-left px-6 py-2 font-semibold">Phone</th>
               <th class="text-right px-6 py-2 font-semibold">Total Stamps</th>
             </tr>
           </thead>
-          <tbody data-top-customers-body class="divide-y divide-outline-variant/20">
+          <tbody data-top-customers-body class="divide-y divide-outline-variant/15">
             <tr><td class="px-6 py-4 text-brand-muted" colspan="2">No customers yet.</td></tr>
           </tbody>
         </table>
@@ -153,17 +258,17 @@
     </div>
 
     <!-- Fraud log — columns per STITCH-09 AC: scanned_at, distance, reason -->
-    <div class="bg-white rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+    <div class="qb-glass overflow-hidden">
       <h3 class="text-lg font-bold text-brand-ink p-6 pb-4">Fraud Log</h3>
       <table class="w-full text-sm">
-        <thead class="bg-surface-container-low text-brand-muted text-xs uppercase">
+        <thead class="text-brand-muted text-xs uppercase border-t border-b border-outline-variant/20">
           <tr>
             <th class="text-left px-6 py-2 font-semibold">Scanned At</th>
             <th class="text-right px-6 py-2 font-semibold">Distance from Branch</th>
             <th class="text-left px-6 py-2 font-semibold">Reason</th>
           </tr>
         </thead>
-        <tbody data-fraud-log-body class="divide-y divide-outline-variant/20">
+        <tbody data-fraud-log-body class="divide-y divide-outline-variant/15">
           <tr><td class="px-6 py-4 text-brand-muted" colspan="3">No fraud alerts.</td></tr>
         </tbody>
       </table>
@@ -171,6 +276,7 @@
   </div>
 </main>
 
+<script src="{{ url_for('static', path='js/dashboard-shell.js') }}" defer></script>
 <script src="{{ url_for('static', path='js/loyalty-analytics.js') }}" defer></script>
 </body>
 </html>

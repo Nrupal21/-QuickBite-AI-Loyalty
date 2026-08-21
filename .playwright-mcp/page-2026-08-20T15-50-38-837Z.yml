@@ -1,0 +1,51 @@
+- generic [active] [ref=f13e1]:
+  - link "Skip to content" [ref=f13e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f13e3]:
+    - generic [ref=f13e4]:
+      - link "QuickBite" [ref=f13e5] [cursor=pointer]:
+        - /url: /
+      - button "Your account" [ref=f13e13] [cursor=pointer]:
+        - generic [ref=f13e14]: J
+  - navigation "Primary":
+    - generic [ref=f13e19]:
+      - link "Home" [ref=f13e20] [cursor=pointer]:
+        - /url: /
+      - link "Stamps" [ref=f13e25] [cursor=pointer]:
+        - /url: /rewards
+      - link "Reviews" [ref=f13e30] [cursor=pointer]:
+        - /url: /profile#reviews
+      - link "Dashboard" [ref=f13e35] [cursor=pointer]:
+        - /url: /dashboard
+      - button "Your account" [ref=f13e44] [cursor=pointer]:
+        - generic: Profile
+  - main [ref=f13e50]:
+    - generic [ref=f13e52]:
+      - complementary [ref=f13e53]:
+        - generic [ref=f13e56]:
+          - generic [ref=f13e57]: J
+          - heading "jordan_bites" [level=1] [ref=f13e58]
+          - generic [ref=f13e59]: Owner
+        - generic [ref=f13e60]:
+          - heading "Account details" [level=2] [ref=f13e61]
+          - generic [ref=f13e62]:
+            - generic [ref=f13e63]:
+              - term [ref=f13e64]: Email
+              - definition [ref=f13e65]:
+                - text: jordan.m@example.com
+                - generic [ref=f13e66]: Verified
+            - generic [ref=f13e67]:
+              - term [ref=f13e68]: Username
+              - definition [ref=f13e69]: jordan_bites
+            - generic [ref=f13e70]:
+              - term [ref=f13e71]: Two-factor
+              - definition [ref=f13e72]: "Off"
+      - generic [ref=f13e74]:
+        - heading "Your restaurant" [level=2] [ref=f13e75]
+        - generic [ref=f13e76]:
+          - generic [ref=f13e83]:
+            - heading "Dashboard" [level=3] [ref=f13e84]
+            - paragraph [ref=f13e85]: Reviews, loyalty analytics and your team, all in one place.
+          - link "Open dashboard" [ref=f13e86] [cursor=pointer]:
+            - /url: /dashboard
+        - button "Sign out" [ref=f13e88] [cursor=pointer]

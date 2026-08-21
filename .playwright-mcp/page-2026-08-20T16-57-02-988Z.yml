@@ -1,0 +1,50 @@
+- generic [active] [ref=f5e1]:
+  - link "Skip to content" [ref=f5e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f5e3]:
+    - generic [ref=f5e4]:
+      - link "QuickBite" [ref=f5e5] [cursor=pointer]:
+        - /url: /
+      - navigation "Sections" [ref=f5e10]:
+        - link "Product" [ref=f5e11] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f5e12] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f5e13] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f5e15]:
+        - link "Sign in" [ref=f5e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f5e17] [cursor=pointer]:
+          - /url: /register
+  - main [ref=f5e18]:
+    - generic [ref=f5e19]:
+      - navigation "Progress" [ref=f5e20]:
+        - list [ref=f5e21]:
+          - listitem [ref=f5e22]:
+            - generic [ref=f5e24]: Who you are
+          - listitem [ref=f5e25]:
+            - generic [ref=f5e27]: Prove it
+          - listitem [ref=f5e28]:
+            - generic [ref=f5e30]: You're in
+      - generic [ref=f5e32]:
+        - generic [ref=f5e33]:
+          - heading "Sign in to QuickBite" [level=1] [ref=f5e34]
+          - paragraph [ref=f5e35]: One account, however you got here — a diner collecting stamps, an owner running the place, or a team member on shift.
+        - generic [ref=f5e36]:
+          - generic [ref=f5e37]:
+            - generic [ref=f5e38]: Email or phone number
+            - textbox "Email or phone number" [ref=f5e39]:
+              - /placeholder: you@restaurant.in or +919876543210
+            - paragraph [ref=f5e40]: Phone numbers need the country code, like +91.
+          - button "Continue" [ref=f5e41] [cursor=pointer]
+        - paragraph [ref=f5e43]: Or continue with
+        - generic [ref=f5e44]:
+          - button "Google" [ref=f5e45] [cursor=pointer]
+          - button "Apple" [ref=f5e51] [cursor=pointer]
+          - button "GitHub" [ref=f5e55] [cursor=pointer]
+        - paragraph [ref=f5e58]:
+          - text: New here? Continuing creates your account — no separate sign-up form. Prefer a password?
+          - link "Register with one" [ref=f5e59] [cursor=pointer]:
+            - /url: /register
+          - text: .

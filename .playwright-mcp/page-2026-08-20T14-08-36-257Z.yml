@@ -1,0 +1,165 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=e3]:
+    - generic [ref=e5]:
+      - link "QuickBite" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e11]:
+        - link "Product" [ref=e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=e15]:
+        - link "Sign in" [ref=e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=e17] [cursor=pointer]:
+          - /url: /register
+  - main [ref=e18]:
+    - generic [ref=e20]:
+      - complementary [ref=e21]:
+        - generic [ref=e24]:
+          - generic [ref=e25]: J
+          - generic [ref=e26]:
+            - generic [ref=e27]: Loyalty member
+            - heading "Jordan Miller" [level=1] [ref=e28]
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e31]: stars
+            - generic [ref=e33]:
+              - generic [ref=e34]: "42"
+              - generic [ref=e35]: Lifetime Stamps
+          - generic [ref=e36]:
+            - generic [ref=e37]: donut_large
+            - generic [ref=e39]:
+              - generic [ref=e40]: "8"
+              - generic [ref=e41]: Toward Next Reward
+          - generic [ref=e42]:
+            - generic [ref=e43]: location_on
+            - generic [ref=e45]:
+              - generic [ref=e46]: "3"
+              - generic [ref=e47]: Locations Visited
+        - generic [ref=e48]:
+          - heading "Account Details" [level=3] [ref=e49]
+          - generic [ref=e50]:
+            - generic [ref=e51]:
+              - generic [ref=e52]: Email
+              - generic [ref=e53]: jordan.m@example.com
+            - generic [ref=e54]:
+              - generic [ref=e55]: Username
+              - generic [ref=e56]: jordan_bites
+            - generic [ref=e57]:
+              - generic [ref=e58]: Member since
+              - generic [ref=e59]: 14 Jan 2023
+            - generic [ref=e60]:
+              - generic [ref=e61]: Favorite location
+              - generic [ref=e62]: Downtown QuickBite
+            - generic [ref=e63]:
+              - generic [ref=e64]: Last visit
+              - generic [ref=e65]: 24 Oct 2023
+      - generic [ref=e66]:
+        - region [ref=e67]:
+          - heading "Stamps by Location" [level=2] [ref=e68]
+          - generic [ref=e69]:
+            - article [ref=e70]:
+              - generic [ref=e71]:
+                - generic [ref=e72]: location_on
+                - heading "Downtown QuickBite" [level=4] [ref=e74]
+              - paragraph [ref=e75]: 123 Main St, Metro Center
+              - generic [ref=e76]:
+                - paragraph [ref=e77]:
+                  - generic [ref=e78]: "15"
+                  - generic [ref=e79]: stamps
+                - paragraph [ref=e80]: Last visited 24 Oct 2023
+            - article [ref=e81]:
+              - generic [ref=e82]:
+                - generic [ref=e83]: location_on
+                - heading "Uptown Campus" [level=4] [ref=e85]
+              - paragraph [ref=e86]: 88 College Ave, University District
+              - generic [ref=e87]:
+                - paragraph [ref=e88]:
+                  - generic [ref=e89]: "9"
+                  - generic [ref=e90]: stamps
+                - paragraph [ref=e91]: Last visited 12 Sept 2023
+            - article [ref=e92]:
+              - generic [ref=e93]:
+                - generic [ref=e94]: location_on
+                - heading "Westside Bites" [level=4] [ref=e96]
+              - paragraph [ref=e97]: 456 Oak Ave
+              - generic [ref=e98]:
+                - paragraph [ref=e99]:
+                  - generic [ref=e100]: "8"
+                  - generic [ref=e101]: stamps
+                - paragraph [ref=e102]: Last visited 2 Aug 2023
+        - region [ref=e103]:
+          - heading "Reviews You've Sent" [level=2] [ref=e104]
+          - generic [ref=e105]:
+            - article [ref=e106]:
+              - generic [ref=e107]:
+                - heading "Downtown QuickBite" [level=4] [ref=e108]
+                - generic [ref=e109]: 5 out of 5 stars
+              - paragraph [ref=e128]: The new spicy chicken sandwich was incredible. Perfect amount of heat and the bun was perfectly toasted. Will definitely be coming back for this one.
+              - generic [ref=e129]:
+                - generic [ref=e130]:
+                  - generic [ref=e131]: Fast service
+                  - generic [ref=e132]: Great vibe
+                - paragraph [ref=e133]: 24 Oct 2023
+            - article [ref=e134]:
+              - generic [ref=e135]:
+                - heading "Uptown Campus" [level=4] [ref=e136]
+                - generic [ref=e137]: 4 out of 5 stars
+              - paragraph [ref=e156]: Solid spot for a quick lunch between classes. The AI ordering system was a bit slow today, but the food quality is always consistent.
+              - generic [ref=e157]:
+                - generic [ref=e158]: Value
+                - paragraph [ref=e160]: 12 Sept 2023
+  - contentinfo [ref=e161]:
+    - generic [ref=e162]:
+      - generic [ref=e163]:
+        - generic [ref=e164]:
+          - link "QuickBite" [ref=e165] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=e170]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=e171]:
+          - heading "Product" [level=4] [ref=e172]
+          - list [ref=e173]:
+            - listitem [ref=e174]:
+              - link "Features" [ref=e175] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=e176]:
+              - link "How it works" [ref=e177] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=e178]:
+              - link "Pricing" [ref=e179] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=e180]:
+          - heading "Company" [level=4] [ref=e181]
+          - list [ref=e182]:
+            - listitem [ref=e183]:
+              - link "About" [ref=e184] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e185]:
+              - link "Careers" [ref=e186] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e187]:
+              - link "Contact" [ref=e188] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e189]:
+          - heading "Legal" [level=4] [ref=e190]
+          - list [ref=e191]:
+            - listitem [ref=e192]:
+              - link "Privacy" [ref=e193] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e194]:
+              - link "Terms" [ref=e195] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=e196]:
+        - generic [ref=e197]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=e198]:
+          - link "Email" [ref=e199] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=e203] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=e207] [cursor=pointer]:
+            - /url: "#"

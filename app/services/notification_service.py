@@ -119,6 +119,36 @@ DEFAULTS: dict[str, TemplateSpec] = {
         channel=CHANNEL_SMS,
         body="Your QuickBite code: {otp}",
     ),
+    "business_phone_otp_sms": TemplateSpec(
+        channel=CHANNEL_SMS,
+        body="Your QuickBite business verification code: {otp}",
+    ),
+    "business_email_otp_email": TemplateSpec(
+        channel=CHANNEL_EMAIL,
+        subject="Verify this email for your QuickBite business",
+        body=(
+            "<p>Use this code to add this address to your business account: "
+            "<strong>{otp}</strong></p>"
+            "<p>It expires in 5 minutes.</p>"
+            "<p>If you weren't setting up a QuickBite business, ignore this — "
+            "nothing has been created.</p>"
+        ),
+    ),
+    "staff_login_otp_sms": TemplateSpec(
+        channel=CHANNEL_SMS,
+        body="Your QuickBite sign-in code: {otp}. Expires in 5 minutes.",
+    ),
+    "staff_welcome_sms": TemplateSpec(
+        channel=CHANNEL_SMS,
+        body=(
+            "Welcome to QuickBite, {name}. Your account is ready — sign in any "
+            "time with a code sent to this number."
+        ),
+    ),
+    "restaurant_joined_sms": TemplateSpec(
+        channel=CHANNEL_SMS,
+        body="{restaurant_name} is live on QuickBite! You're all set as Owner.",
+    ),
     "staff_password_reset_otp_email": TemplateSpec(
         channel=CHANNEL_EMAIL,
         subject="Your QuickBite password reset code",

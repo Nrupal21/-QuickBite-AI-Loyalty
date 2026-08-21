@@ -1,0 +1,54 @@
+- generic [active] [ref=f18e1]:
+  - link "Skip to content" [ref=f18e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f18e3]:
+    - generic [ref=f18e4]:
+      - link "QuickBite" [ref=f18e5] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f18e11]:
+        - link "Join us" [ref=f18e12] [cursor=pointer]:
+          - /url: /onboarding
+        - button "Your account" [ref=f18e14] [cursor=pointer]:
+          - generic [ref=f18e15]: J
+  - navigation "Primary":
+    - generic [ref=f18e20]:
+      - link "Home" [ref=f18e21] [cursor=pointer]:
+        - /url: /
+      - link "Stamps" [ref=f18e26] [cursor=pointer]:
+        - /url: /rewards
+      - link "Reviews" [ref=f18e31] [cursor=pointer]:
+        - /url: /profile#reviews
+      - link "Join us" [ref=f18e36] [cursor=pointer]:
+        - /url: /onboarding
+      - button "Your account" [ref=f18e43] [cursor=pointer]:
+        - generic: Profile
+  - main [ref=f18e49]:
+    - generic [ref=f18e51]:
+      - complementary [ref=f18e52]:
+        - generic [ref=f18e55]:
+          - generic [ref=f18e56]: J
+          - heading "jordan_bites" [level=1] [ref=f18e57]
+          - generic [ref=f18e58]: Owner
+        - generic [ref=f18e59]:
+          - heading "Account details" [level=2] [ref=f18e60]
+          - generic [ref=f18e61]:
+            - generic [ref=f18e62]:
+              - term [ref=f18e63]: Email
+              - definition [ref=f18e64]:
+                - text: jordan.m@example.com
+                - generic [ref=f18e65]: Verified
+            - generic [ref=f18e66]:
+              - term [ref=f18e67]: Username
+              - definition [ref=f18e68]: jordan_bites
+            - generic [ref=f18e69]:
+              - term [ref=f18e70]: Two-factor
+              - definition [ref=f18e71]: "Off"
+      - generic [ref=f18e73]:
+        - heading "Your restaurant" [level=2] [ref=f18e74]
+        - generic [ref=f18e75]:
+          - generic [ref=f18e80]:
+            - heading "No restaurant yet" [level=3] [ref=f18e81]
+            - paragraph [ref=f18e82]: Register your business to start collecting reviews and loyalty stamps.
+          - link "Join us" [ref=f18e83] [cursor=pointer]:
+            - /url: /onboarding
+        - button "Sign out" [ref=f18e85] [cursor=pointer]

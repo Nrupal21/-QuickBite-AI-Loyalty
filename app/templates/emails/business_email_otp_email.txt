@@ -1,0 +1,9 @@
+{% extends "_layout.txt" %}
+
+{% block content -%}
+Use this code to add this address to your business account: {{ otp }}
+
+It expires in 5 minutes.
+
+If you weren't setting up a QuickBite business, ignore this email — nothing has been created.
+{%- endblock %}

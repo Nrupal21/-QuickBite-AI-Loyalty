@@ -1,0 +1,49 @@
+- generic [ref=f2e1]:
+  - navigation [ref=f2e3]:
+    - generic [ref=f2e4]:
+      - generic [ref=f2e5]:
+        - heading "restaurant QuickBite" [level=1] [ref=f2e6]:
+          - generic [ref=f2e7]: restaurant
+          - text: QuickBite
+        - paragraph [ref=f2e8]: AI + Loyalty
+      - generic [ref=f2e9]:
+        - link "dashboard Dashboard" [ref=f2e10] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=f2e11]: dashboard
+          - text: Dashboard
+        - link "analytics Loyalty Analytics" [ref=f2e12] [cursor=pointer]:
+          - /url: /dashboard/loyalty-analytics
+          - generic [ref=f2e13]: analytics
+          - text: Loyalty Analytics
+        - link "link Google Profile" [ref=f2e14] [cursor=pointer]:
+          - /url: /dashboard/google-profile
+          - generic [ref=f2e15]: link
+          - text: Google Profile
+    - button "Owner OWNER" [ref=f2e17] [cursor=pointer]:
+      - generic [ref=f2e18]: O
+      - generic [ref=f2e19]:
+        - paragraph [ref=f2e20]: Owner
+        - generic [ref=f2e21]: OWNER
+  - main [ref=f2e22]:
+    - generic [ref=f2e23]:
+      - heading "Google Profile" [level=2] [ref=f2e24]
+      - generic [ref=f2e25]:
+        - generic [ref=f2e26]: verified
+        - text: Replies post to Google once approved
+    - generic [ref=f2e27]:
+      - generic [ref=f2e28]:
+        - heading "Connect your branches to Google" [level=3] [ref=f2e29]
+        - paragraph [ref=f2e30]: Diners' reviews post straight to Google themselves — nothing here needs your approval. Connecting a branch only lets QuickBite draft and post your reply, which still waits for you on the Dashboard's Action Required panel.
+      - generic [ref=f2e31]:
+        - heading "Branches" [level=3] [ref=f2e32]
+        - generic [ref=f2e33]:
+          - generic [ref=f2e34]:
+            - generic [ref=f2e35]:
+              - paragraph [ref=f2e36]: Bandra West
+              - paragraph [ref=f2e37]: Connected · synced 2h ago
+            - button "Confirm disconnect?" [active] [ref=f2e49] [cursor=pointer]
+          - generic [ref=f2e40]:
+            - generic [ref=f2e41]:
+              - paragraph [ref=f2e42]: Koregaon Park
+              - paragraph [ref=f2e43]: Not connected
+            - button "Connect" [ref=f2e45] [cursor=pointer]

@@ -1,0 +1,26 @@
+- generic [active] [ref=f13e1]:
+  - link "Skip to content" [ref=f13e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f13e3]:
+    - link "QuickBite" [ref=f13e5] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f13e10]:
+      - navigation "Progress" [ref=f13e11]:
+        - list [ref=f13e12]:
+          - listitem [ref=f13e13]:
+            - generic [ref=f13e15]: Who you are
+          - listitem [ref=f13e16]:
+            - generic [ref=f13e18]: Prove it
+          - listitem [ref=f13e19]:
+            - generic [ref=f13e21]: You're in
+      - generic [ref=f13e51]:
+        - button "Use a different account" [ref=f13e52] [cursor=pointer]
+        - generic [ref=f13e55]:
+          - heading "How would you like to sign in?" [level=2] [ref=f13e56]
+          - paragraph [ref=f13e57]:
+            - text: Signing in as
+            - strong [ref=f13e58]: marco@pizzeria.in
+            - text: .
+        - generic [ref=f13e59]:
+          - button "Send me a one-time code" [ref=f13e60] [cursor=pointer]
+          - button "Use my password" [ref=f13e62] [cursor=pointer]

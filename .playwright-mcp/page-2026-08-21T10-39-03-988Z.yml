@@ -1,0 +1,106 @@
+- generic [ref=e1]:
+  - navigation "Dashboard" [ref=e3]:
+    - link "Dashboard" [ref=e4] [cursor=pointer]:
+      - /url: /dashboard
+      - generic [ref=e5]: dashboard
+      - text: Dashboard
+    - link "Analytics" [ref=e6] [cursor=pointer]:
+      - /url: /dashboard/loyalty-analytics
+      - generic [ref=e7]: analytics
+      - text: Analytics
+    - button "Account" [expanded] [ref=e8] [cursor=pointer]:
+      - generic [ref=e9]: account_circle
+      - text: Account
+  - dialog "Account" [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e13]: O
+      - generic [ref=e14]:
+        - paragraph [ref=e15]: Owner
+        - paragraph [ref=e16]: QuickBite dashboard
+    - button "Sign out" [active] [ref=e17] [cursor=pointer]:
+      - generic [ref=e18]: logout
+      - text: Sign out
+  - main [ref=e19]:
+    - generic [ref=e20]:
+      - heading "Dashboard" [level=2] [ref=e21]
+      - button "Live updates" [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: notifications
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]: star_rate
+          - generic [ref=e30]:
+            - paragraph [ref=e31]: Avg. Rating
+            - heading "4.6" [level=3] [ref=e32]
+        - generic [ref=e33]:
+          - generic [ref=e34]: rate_review
+          - generic [ref=e36]:
+            - paragraph [ref=e37]: Total Reviews
+            - heading "128" [level=3] [ref=e38]
+        - generic [ref=e39]:
+          - generic [ref=e40]: pending_actions
+          - generic [ref=e42]:
+            - paragraph [ref=e43]: Pending Approvals
+            - heading "3" [level=3] [ref=e44]
+        - generic [ref=e45]:
+          - generic [ref=e46]: qr_code_scanner
+          - generic [ref=e48]:
+            - paragraph [ref=e49]: Loyalty Scans Today
+            - heading "17" [level=3] [ref=e50]
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - heading "Sentiment Trend" [level=3] [ref=e54]
+            - generic [ref=e55]: Last 7 days
+          - img "Average review sentiment over the last 7 days" [ref=e57]:
+            - 'generic "2026-08-15: +0.42 sentiment" [ref=e62]'
+            - 'generic "2026-08-16: +0.51 sentiment" [ref=e63]'
+            - 'generic "2026-08-17: no reviews that day" [ref=e64]'
+            - 'generic "2026-08-18: +0.38 sentiment" [ref=e65]'
+            - 'generic "2026-08-19: +0.60 sentiment" [ref=e66]'
+            - 'generic "2026-08-20: +0.71 sentiment" [ref=e67]'
+            - 'generic "2026-08-21: +0.66 sentiment" [ref=e68]'
+            - generic [ref=e69]: 08-15
+            - generic [ref=e70]: 08-16
+            - generic [ref=e71]: 08-17
+            - generic [ref=e72]: 08-18
+            - generic [ref=e73]: 08-19
+            - generic [ref=e74]: 08-20
+            - generic [ref=e75]: 08-21
+        - generic [ref=e76]:
+          - generic [ref=e77]:
+            - heading "Action Required" [level=3] [ref=e78]
+            - generic [ref=e79]: 3 Pending
+          - generic [ref=e81]:
+            - generic [ref=e82]: task_alt
+            - paragraph [ref=e83]: Nothing waiting on you
+            - paragraph [ref=e84]: New reviews needing approval will show up here the moment a diner submits one.
+      - generic [ref=e85]:
+        - generic [ref=e86]:
+          - generic [ref=e87]:
+            - heading "This Month's Loyalty Snapshot" [level=3] [ref=e88]
+            - paragraph [ref=e89]: 89 customers earned stamps across 3 branches this month.
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - term [ref=e92]: Stamps this month
+              - definition [ref=e93]: "342"
+            - generic [ref=e94]:
+              - term [ref=e95]: Active customers
+              - definition [ref=e96]: "89"
+        - generic [ref=e97]:
+          - paragraph [ref=e98]: Reward Redemption
+          - generic [ref=e103]:
+            - generic [ref=e104]: 42%
+            - generic [ref=e105]: Redeemed
+        - generic [ref=e106]:
+          - heading "Branch Performance" [level=3] [ref=e107]
+          - generic [ref=e108]:
+            - generic [ref=e109]:
+              - generic "Bandra West" [ref=e110]
+              - generic [ref=e113]: "210"
+            - generic [ref=e114]:
+              - generic "Koregaon Park" [ref=e115]
+              - generic [ref=e118]: "140"
+            - generic [ref=e119]:
+              - generic "Andheri East" [ref=e120]
+              - generic [ref=e123]: "76"

@@ -1,0 +1,24 @@
+- generic [active] [ref=f17e1]:
+  - link "Skip to content" [ref=f17e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f17e3]:
+    - link "QuickBite" [ref=f17e5] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f17e10]:
+      - navigation "Progress" [ref=f17e11]:
+        - list [ref=f17e12]:
+          - listitem [ref=f17e13]:
+            - generic [ref=f17e15]: Your account
+          - listitem [ref=f17e16]:
+            - generic [ref=f17e18]: Your business
+          - listitem [ref=f17e19]:
+            - generic [ref=f17e21]: Second contact
+          - listitem [ref=f17e22]:
+            - generic [ref=f17e24]: What you run
+          - listitem [ref=f17e25]:
+            - generic [ref=f17e27]: Your plan
+          - listitem [ref=f17e28]:
+            - generic [ref=f17e30]: You're an owner
+      - generic [ref=f17e33]:
+        - heading "Loading your account…" [level=1] [ref=f17e34]
+        - paragraph [ref=f17e35]: One moment while we check who you're signed in as.

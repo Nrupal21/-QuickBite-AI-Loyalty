@@ -1,0 +1,11 @@
+{% extends "_layout.txt" %}
+
+{% block content -%}
+Welcome to QuickBite, {{ name }} — your account is ready.
+
+Sign in any time with a one-time code, a social account, or a password if you set one: {{ login_url }}
+
+Running a restaurant, cafe, or cloud kitchen? Choose "Join Us" once you're signed in to register your business and start turning receipts into reviews.
+
+You're getting this because an account was created with this address. If that wasn't you, reply to this email and we'll remove it.
+{%- endblock %}

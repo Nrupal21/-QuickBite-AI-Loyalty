@@ -57,23 +57,29 @@ async def _customer_from_otp_token(
     consumer is the *optional* variant, every authenticated scan silently
     degraded to anonymous instead of returning 401.
 
-    Also binds tenant context, which the original LOYALTY-03 implementation
-    never did — leaving customer requests with no `app.tenant_id`, so any
-    RLS-protected table they touched returned zero rows.
+    Binds tenant context from the token's own `tenant_id` claim *before* the
+    query — `customer.customers` is RLS-protected, so an unscoped select
+    returns zero rows against a real database, which the previous
+    query-then-bind ordering never actually exercised (the unit tests here
+    mock session.execute, so they can't see RLS filter anything out — this
+    only surfaces against Postgres, e.g. GET /customers/me returning 401 for
+    a genuinely valid cookie). Trusting the claim for *scoping* is safe the
+    same way it is for staff tokens (_resolve_local): the token is signed
+    with CUSTOMER_SECRET_KEY, and authorization still comes from the row
+    itself once it loads, not from the claim.
     """
     token = read_customer_session_token(request)
     if token is None:
         return None
 
-    customer_id = decode_customer_token(token)
-    if customer_id is None:
+    claims = decode_customer_token(token)
+    if claims is None:
         return None
+    customer_id, tenant_id_claim = claims
 
+    await rls.set_tenant_context(session, tenant_id_claim)
     result = await session.execute(select(Customer).where(Customer.id == customer_id))
-    customer = result.scalar_one_or_none()
-    if customer is not None:
-        await rls.set_tenant_context(session, customer.tenant_id)
-    return customer
+    return result.scalar_one_or_none()
 
 
 async def get_current_customer_optional(

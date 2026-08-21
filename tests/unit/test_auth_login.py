@@ -149,14 +149,18 @@ async def test_login_binds_tenant_before_reading_the_user_row(mocker):
 
 
 @pytest.mark.asyncio
-async def test_login_unknown_identifier_never_reads_the_users_table(mocker):
-    """No tenant owns the credential, so there is nothing to scope a read to.
-    Still a generic 401 — the caller cannot tell this from a wrong password."""
+async def test_login_unknown_identifier_falls_back_to_null_tenant_lookup(mocker):
+    """No tenant owns the credential — but that's also what a standard user's
+    (tenant_id IS NULL) identifier looks like from the bootstrap resolver's
+    single-uuid return, so login() always tries a direct null-tenant lookup
+    before giving up (see _get_user_by_identifier_hash). For a truly unknown
+    identifier that lookup also finds nothing, and login still ends in a
+    generic 401 — the caller cannot tell this from a wrong password."""
     mocker.patch(
         "app.services.auth_service.bootstrap.tenant_for_user_email_hash",
         AsyncMock(return_value=None),
     )
-    session = make_session([])
+    session = make_session([None])  # the null-tenant fallback query finds nobody
 
     with pytest.raises(HTTPException) as exc_info:
         await AuthService(session=session).login(
@@ -165,7 +169,7 @@ async def test_login_unknown_identifier_never_reads_the_users_table(mocker):
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail["error"]["code"] == "INVALID_CREDENTIALS"
-    session.execute.assert_not_awaited()
+    session.execute.assert_awaited_once()  # the null-tenant fallback, and nothing else
 
 
 @pytest.mark.asyncio
@@ -240,6 +244,31 @@ async def test_login_manager_without_totp_gets_enrollment_challenge(mocker):
 
     assert isinstance(response, MFAEnrollmentRequiredResponse)
     assert response.role == "MANAGER"
+
+
+@pytest.mark.asyncio
+async def test_login_standard_user_issues_tokens_with_null_tenant(mocker):
+    """A standard user (role USER, tenant_id NULL) resolves via the
+    null-tenant fallback in _get_user_by_identifier_hash, and gets a real
+    token pair — just with no tenant to scope, since USER's mfa_required is
+    False and there is nothing to challenge."""
+    mocker.patch(
+        "app.services.auth_service.bootstrap.tenant_for_user_email_hash",
+        AsyncMock(return_value=None),
+    )
+    user = make_user(tenant_id=None, mfa_enabled=False)
+    role = make_role(name="USER", level=6, mfa_required=False)
+    # execute calls: null-tenant fallback lookup -> user, role lookup
+    session = make_session([user, role])
+    mocker.patch("app.services.auth_service.create_refresh_token", return_value="refresh-std")
+
+    response = await AuthService(session=session).login(
+        UserLogin(identifier=EMAIL, password=PASSWORD), "iphash"
+    )
+
+    assert response.access_token
+    assert response.role == "USER"
+    assert response.tenant_id is None
 
 
 @pytest.mark.asyncio

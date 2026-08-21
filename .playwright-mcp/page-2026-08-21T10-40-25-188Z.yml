@@ -1,0 +1,117 @@
+- generic [ref=f1e1]:
+  - navigation [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - generic [ref=f1e5]:
+        - heading "restaurant QuickBite" [level=1] [ref=f1e6]:
+          - generic [ref=f1e7]: restaurant
+          - text: QuickBite
+        - paragraph [ref=f1e8]: AI + Loyalty
+      - generic [ref=f1e9]:
+        - link "dashboard Dashboard" [ref=f1e10] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=f1e11]: dashboard
+          - text: Dashboard
+        - link "analytics Loyalty Analytics" [ref=f1e12] [cursor=pointer]:
+          - /url: /dashboard/loyalty-analytics
+          - generic [ref=f1e13]: analytics
+          - text: Loyalty Analytics
+    - button "Owner OWNER" [expanded] [ref=f1e15] [cursor=pointer]:
+      - generic [ref=f1e16]: O
+      - generic [ref=f1e17]:
+        - paragraph [ref=f1e18]: Owner
+        - generic [ref=f1e19]: OWNER
+  - dialog "Account" [ref=f1e127]:
+    - generic [ref=f1e128]:
+      - generic [ref=f1e129]: O
+      - generic [ref=f1e130]:
+        - paragraph [ref=f1e131]: Owner
+        - paragraph [ref=f1e132]: QuickBite dashboard
+    - button "Sign out" [active] [ref=f1e133] [cursor=pointer]:
+      - generic [ref=f1e134]: logout
+      - text: Sign out
+  - main [ref=f1e20]:
+    - generic [ref=f1e21]:
+      - heading "Dashboard" [level=2] [ref=f1e22]
+      - generic [ref=f1e23]:
+        - generic [ref=f1e24]: Live
+        - button "Live updates" [ref=f1e26] [cursor=pointer]:
+          - generic [ref=f1e27]: notifications
+    - generic [ref=f1e28]:
+      - generic [ref=f1e29]:
+        - generic [ref=f1e30]:
+          - generic [ref=f1e31]: star_rate
+          - generic [ref=f1e33]:
+            - paragraph [ref=f1e34]: Avg. Rating
+            - heading "4.6" [level=3] [ref=f1e35]
+        - generic [ref=f1e36]:
+          - generic [ref=f1e37]: rate_review
+          - generic [ref=f1e39]:
+            - paragraph [ref=f1e40]: Total Reviews
+            - heading "128" [level=3] [ref=f1e41]
+        - generic [ref=f1e42]:
+          - generic [ref=f1e43]: pending_actions
+          - generic [ref=f1e45]:
+            - paragraph [ref=f1e46]: Pending Approvals
+            - heading "3" [level=3] [ref=f1e47]
+        - generic [ref=f1e48]:
+          - generic [ref=f1e49]: qr_code_scanner
+          - generic [ref=f1e51]:
+            - paragraph [ref=f1e52]: Loyalty Scans Today
+            - heading "17" [level=3] [ref=f1e53]
+      - generic [ref=f1e54]:
+        - generic [ref=f1e55]:
+          - generic [ref=f1e56]:
+            - heading "Sentiment Trend" [level=3] [ref=f1e57]
+            - generic [ref=f1e58]: Last 7 days
+          - img "Average review sentiment over the last 7 days" [ref=f1e60]:
+            - 'generic "2026-08-15: +0.42 sentiment" [ref=f1e65]'
+            - 'generic "2026-08-16: +0.51 sentiment" [ref=f1e66]'
+            - 'generic "2026-08-17: no reviews that day" [ref=f1e67]'
+            - 'generic "2026-08-18: +0.38 sentiment" [ref=f1e68]'
+            - 'generic "2026-08-19: +0.60 sentiment" [ref=f1e69]'
+            - 'generic "2026-08-20: +0.71 sentiment" [ref=f1e70]'
+            - 'generic "2026-08-21: +0.66 sentiment" [ref=f1e71]'
+            - generic [ref=f1e72]: 08-15
+            - generic [ref=f1e73]: 08-16
+            - generic [ref=f1e74]: 08-17
+            - generic [ref=f1e75]: 08-18
+            - generic [ref=f1e76]: 08-19
+            - generic [ref=f1e77]: 08-20
+            - generic [ref=f1e78]: 08-21
+        - generic [ref=f1e79]:
+          - generic [ref=f1e80]:
+            - heading "Action Required" [level=3] [ref=f1e81]
+            - generic [ref=f1e82]: 3 Pending
+          - generic [ref=f1e84]:
+            - generic [ref=f1e85]: task_alt
+            - paragraph [ref=f1e86]: Nothing waiting on you
+            - paragraph [ref=f1e87]: New reviews needing approval will show up here the moment a diner submits one.
+      - generic [ref=f1e88]:
+        - generic [ref=f1e89]:
+          - generic [ref=f1e90]:
+            - heading "This Month's Loyalty Snapshot" [level=3] [ref=f1e91]
+            - paragraph [ref=f1e92]: 89 customers earned stamps across 3 branches this month.
+          - generic [ref=f1e93]:
+            - generic [ref=f1e94]:
+              - term [ref=f1e95]: Stamps this month
+              - definition [ref=f1e96]: "342"
+            - generic [ref=f1e97]:
+              - term [ref=f1e98]: Active customers
+              - definition [ref=f1e99]: "89"
+        - generic [ref=f1e100]:
+          - paragraph [ref=f1e101]: Reward Redemption
+          - generic [ref=f1e106]:
+            - generic [ref=f1e107]: 42%
+            - generic [ref=f1e108]: Redeemed
+        - generic [ref=f1e109]:
+          - heading "Branch Performance" [level=3] [ref=f1e110]
+          - generic [ref=f1e111]:
+            - generic [ref=f1e112]:
+              - generic "Bandra West" [ref=f1e113]
+              - generic [ref=f1e116]: "210"
+            - generic [ref=f1e117]:
+              - generic "Koregaon Park" [ref=f1e118]
+              - generic [ref=f1e121]: "140"
+            - generic [ref=f1e122]:
+              - generic "Andheri East" [ref=f1e123]
+              - generic [ref=f1e126]: "76"

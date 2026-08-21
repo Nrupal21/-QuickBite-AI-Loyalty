@@ -9,7 +9,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 <!-- Tailwind CSS (STITCH-07: generated screen ships with its own Tailwind
      config carrying the exact Doc 4 hex palette as brand-* tokens — this
@@ -45,20 +45,29 @@
                 },
                 "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
                 "fontFamily": {
-                    "headline": ["Inter", "sans-serif"],
-                    "body": ["Inter", "sans-serif"]
+                    "headline": ["Hanken Grotesk", "sans-serif"],
+                    "body": ["Hanken Grotesk", "sans-serif"]
                 }
             }
         }
     }
 </script>
 <style>
-    body { background-color: theme('colors.brand-bg'); color: theme('colors.brand-ink'); font-family: 'Inter', sans-serif; }
+    body { background-color: theme('colors.brand-bg'); color: theme('colors.brand-ink'); font-family: 'Hanken Grotesk', sans-serif; }
 </style>
+<!-- Liquid-glass dashboard system, shared with dashboard/loyalty_analytics.html
+     — see the file header there for the direction contract. This is a
+     self-contained app shell: it does NOT include partials/nav.html. That
+     bar is the public marketing/customer nav (guest "Sign in / Get started"
+     CTA, the receipt-scan dock) and does not belong on an authenticated
+     staff/owner surface — this shell owns its own sidebar, mobile tab bar,
+     and account identity below instead. -->
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard.css') }}" />
 </head>
-<body class="bg-brand-bg font-body min-h-screen text-brand-ink overflow-x-hidden flex">
+<body class="qb-dash bg-brand-bg font-body min-h-screen text-brand-ink overflow-x-hidden flex">
+<div class="qb-dash-mesh" aria-hidden="true"></div>
 
-<nav class="fixed left-0 top-0 h-screen w-[240px] bg-surface shadow-sm z-50 flex flex-col justify-between py-6">
+<nav class="qb-glass qb-glass--sidebar fixed left-0 top-0 h-screen w-[240px] z-50 hidden min-[900px]:flex flex-col justify-between py-6">
   <div>
     <div class="px-6 mb-8">
       <h1 class="text-xl font-headline font-black text-primary-container flex items-center gap-2">
@@ -72,82 +81,244 @@
         <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
         Dashboard
       </a>
-      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-surface-container-high transition-colors duration-200 rounded-lg group" href="/dashboard/loyalty-analytics">
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/reviews">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">rate_review</span>
+        Reviews
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/loyalty-analytics">
         <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">analytics</span>
         Loyalty Analytics
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/loyalty-programs">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">redeem</span>
+        Loyalty Programs
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/qr-codes">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">qr_code_2</span>
+        QR Codes
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/google-profile">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">link</span>
+        Google Profile
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/settings">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">settings</span>
+        Settings
       </a>
     </div>
   </div>
   <div class="px-4">
-    <div class="pt-4 border-t border-outline-variant flex items-center gap-3">
+    <button type="button" class="qb-account-trigger pt-4 border-t border-outline-variant/60 flex items-center gap-3 px-2 py-2"
+            data-account-trigger aria-haspopup="true" aria-expanded="false" aria-controls="more-sheet">
       <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-sm" data-user-initials aria-hidden="true">--</div>
       <div>
         <p class="text-sm font-bold text-brand-ink" data-user-role-label>Staff</p>
         <span class="inline-block px-2 py-0.5 mt-0.5 bg-surface-variant text-brand-muted text-xs font-semibold rounded-full" data-user-role-badge>&nbsp;</span>
       </div>
-    </div>
+    </button>
   </div>
 </nav>
 
-<main class="ml-[240px] flex-1 min-h-screen">
-  <header class="sticky top-0 right-0 z-40 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center w-full px-8 h-16">
+<!-- Mobile tab bar — the dashboard's own navigation below 900px, replacing
+     the public site's floating dock. Two primary destinations plus More
+     (every other dashboard page + account, folded into #more-sheet below
+     rather than growing a tab bar slot per page). -->
+<nav class="qb-glass qb-mobile-tabbar min-[900px]:hidden" aria-label="Dashboard">
+  <a class="qb-tab" href="/dashboard" aria-current="page">
+    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">dashboard</span>
+    Dashboard
+  </a>
+  <a class="qb-tab" href="/dashboard/loyalty-analytics">
+    <span class="material-symbols-outlined" aria-hidden="true">analytics</span>
+    Analytics
+  </a>
+  <button type="button" class="qb-tab" data-account-trigger aria-haspopup="true" aria-expanded="false" aria-controls="more-sheet">
+    <span class="material-symbols-outlined" aria-hidden="true">more_horiz</span>
+    More
+  </button>
+</nav>
+
+<!-- More/account sheet — one panel, opened from either trigger above.
+     Desktop: a popover off the sidebar chip (account block only — the
+     sidebar already lists every page). Mobile: a bottom sheet off the tab
+     bar's More tab (nav links to every non-primary page, then the same
+     account block). Positioning is purely CSS (dashboard.css); the JS
+     (dashboard-shell.js) is identical either way. -->
+<div class="qb-account-scrim min-[900px]:hidden" data-account-scrim hidden></div>
+<div class="qb-glass qb-account-sheet" id="more-sheet" role="dialog" aria-label="Account" hidden>
+  <div class="min-[900px]:hidden">
+    <a class="qb-more-nav-item" href="/dashboard/reviews">
+      <span class="material-symbols-outlined" aria-hidden="true">rate_review</span>
+      Reviews
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/loyalty-programs">
+      <span class="material-symbols-outlined" aria-hidden="true">redeem</span>
+      Loyalty Programs
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/qr-codes">
+      <span class="material-symbols-outlined" aria-hidden="true">qr_code_2</span>
+      QR Codes
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/google-profile">
+      <span class="material-symbols-outlined" aria-hidden="true">link</span>
+      Google Profile
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/settings">
+      <span class="material-symbols-outlined" aria-hidden="true">settings</span>
+      Settings
+    </a>
+    <div class="qb-more-divider"></div>
+
+  </div>
+  <div class="qb-account-sheet-head">
+    <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-sm" data-user-initials aria-hidden="true">--</div>
+    <div>
+      <p class="text-sm font-bold text-brand-ink" data-account-sheet-role>Staff</p>
+      <p class="text-xs text-brand-muted">QuickBite dashboard</p>
+    </div>
+  </div>
+  <button type="button" class="qb-account-signout" data-account-signout>
+    <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+    Sign out
+  </button>
+</div>
+
+<main class="min-[900px]:ml-[240px] flex-1 min-h-screen">
+  <header class="qb-glass sticky top-0 right-0 z-40 border-x-0 border-t-0 rounded-none flex justify-between items-center w-full px-5 min-[900px]:px-8 h-16">
     <h2 class="font-body font-bold text-brand-ink tracking-tight text-xl">Dashboard</h2>
-    <div class="flex items-center gap-4 text-brand-primary">
-      <button class="relative opacity-80 hover:opacity-100 transition-colors" aria-label="Live updates" data-ws-indicator>
+    <div class="flex items-center gap-5">
+      <span class="hidden sm:flex items-center gap-2 text-xs font-semibold text-brand-muted" data-live-label>
+        <span class="qb-live-dot" aria-hidden="true"></span>
+        Live
+      </span>
+      <button class="relative opacity-80 hover:opacity-100 transition-colors text-brand-primary" aria-label="Live updates" data-ws-indicator>
         <span class="material-symbols-outlined">notifications</span>
         <span id="new-events-badge" class="hidden absolute -top-1 -right-1 w-3 h-3 rounded-full bg-brand-danger animate__animated animate__pulse animate__infinite"></span>
       </button>
     </div>
   </header>
 
-  <div class="p-8 max-w-7xl mx-auto space-y-8">
+  <div class="p-5 min-[900px]:p-8 pb-28 min-[900px]:pb-8 max-w-7xl mx-auto space-y-6">
     <div id="dashboard-error" class="hidden bg-brand-danger/10 text-brand-danger text-sm font-medium px-4 py-3 rounded-lg" role="alert"></div>
 
-    <!-- Stats Row — 4 cards, each wired to GET /api/v1/dashboard/stats via data-stat -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-l-brand-accent-orange animate__animated animate__fadeInUp">
-        <p class="text-sm font-medium text-brand-muted mb-1">Avg. Rating</p>
-        <h3 class="text-3xl font-black text-brand-ink tracking-tight" data-stat="avg_rating">—</h3>
+    <!-- KPI strip — one glass bar in four segments (not four identical
+         cards with colored borders), each wired to GET /api/v1/dashboard/stats
+         via data-stat. -->
+    <div class="qb-glass qb-kpi-strip">
+      <div class="qb-kpi">
+        <div class="qb-kpi-icon qb-kpi-icon--orange" aria-hidden="true">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star_rate</span>
+        </div>
+        <div class="qb-kpi-body">
+          <p class="qb-kpi-label">Avg. Rating</p>
+          <h3 class="qb-kpi-value"><span class="qb-skel" data-stat="avg_rating" data-stat-loading></span></h3>
+        </div>
       </div>
-      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-l-brand-primary animate__animated animate__fadeInUp">
-        <p class="text-sm font-medium text-brand-muted mb-1">Total Reviews</p>
-        <h3 class="text-3xl font-black text-brand-ink tracking-tight" data-stat="review_count">—</h3>
+      <div class="qb-kpi">
+        <div class="qb-kpi-icon qb-kpi-icon--blue" aria-hidden="true">
+          <span class="material-symbols-outlined">rate_review</span>
+        </div>
+        <div class="qb-kpi-body">
+          <p class="qb-kpi-label">Total Reviews</p>
+          <h3 class="qb-kpi-value"><span class="qb-skel" data-stat="review_count" data-stat-loading></span></h3>
+        </div>
       </div>
-      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-l-brand-warning animate__animated animate__fadeInUp">
-        <p class="text-sm font-medium text-brand-muted mb-1">Pending Approvals</p>
-        <h3 class="text-3xl font-black text-brand-ink tracking-tight" data-stat="pending_approvals">—</h3>
+      <div class="qb-kpi">
+        <div class="qb-kpi-icon qb-kpi-icon--warning" aria-hidden="true">
+          <span class="material-symbols-outlined">pending_actions</span>
+        </div>
+        <div class="qb-kpi-body">
+          <p class="qb-kpi-label">Pending Approvals</p>
+          <h3 class="qb-kpi-value"><span class="qb-skel" data-stat="pending_approvals" data-stat-loading></span></h3>
+        </div>
       </div>
-      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-l-brand-loyalty-teal animate__animated animate__fadeInUp">
-        <p class="text-sm font-medium text-brand-muted mb-1">Loyalty Scans Today</p>
-        <h3 class="text-3xl font-black text-brand-ink tracking-tight" data-stat="loyalty_scans_today">—</h3>
+      <div class="qb-kpi">
+        <div class="qb-kpi-icon qb-kpi-icon--teal" aria-hidden="true">
+          <span class="material-symbols-outlined">qr_code_scanner</span>
+        </div>
+        <div class="qb-kpi-body">
+          <p class="qb-kpi-label">Loyalty Scans Today</p>
+          <h3 class="qb-kpi-value"><span class="qb-skel" data-stat="loyalty_scans_today" data-stat-loading></span></h3>
+        </div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Sentiment trend — id required for Chart.js (STITCH-07 AC) -->
-      <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-outline-variant/30 p-6 flex flex-col">
-        <div class="flex justify-between items-center mb-6">
-          <h3 class="text-lg font-bold text-brand-ink">Sentiment Trend (Last 7 Days)</h3>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Sentiment trend — id required for the chart mount (STITCH-07 AC) -->
+      <div class="lg:col-span-2 qb-glass p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-lg font-bold text-brand-ink">Sentiment Trend</h3>
+          <span class="text-xs font-semibold text-brand-muted uppercase tracking-wide">Last 7 days</span>
         </div>
-        <div id="sentiment-chart" class="flex-1 min-h-[250px]"></div>
+        <div id="sentiment-chart" class="flex-1 min-h-[260px]"></div>
       </div>
 
       <!-- Pending reviews: no GET /reviews?state=pending endpoint exists yet
-           (REVIEW-02 only has approve/reject-by-id) — illustrative content
-           until a list endpoint lands. Buttons are inert placeholders. -->
-      <div class="bg-white rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden flex flex-col h-[400px]">
-        <div class="p-5 border-b border-outline-variant/30 flex justify-between items-center bg-surface-bright sticky top-0 z-10">
+           (REVIEW-02 only has approve/reject-by-id) — honest empty state
+           until a list endpoint lands. No approve/reject controls render
+           here (Doc 5 DASH-01: "Staff role: read-only response"). -->
+      <div class="qb-glass overflow-hidden flex flex-col h-[400px]">
+        <div class="p-5 border-b border-outline-variant/20 flex justify-between items-center sticky top-0 z-10">
           <h3 class="text-lg font-bold text-brand-ink">Action Required</h3>
           <span class="bg-brand-warning/10 text-brand-warning text-xs font-bold px-2.5 py-1 rounded-full" data-stat-badge="pending_approvals">— Pending</span>
         </div>
-        <div class="overflow-y-auto flex-1 p-0 divide-y divide-outline-variant/20" data-review-list>
-          <div class="p-5 text-sm text-brand-muted">No pending reviews to show yet.</div>
+        <div class="overflow-y-auto flex-1 p-0" data-review-list>
+          <div class="qb-empty">
+            <span class="qb-empty-icon material-symbols-outlined" aria-hidden="true">task_alt</span>
+            <p class="text-sm font-semibold text-brand-ink">Nothing waiting on you</p>
+            <p class="text-xs text-brand-muted max-w-[220px]">New reviews needing approval will show up here the moment a diner submits one.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loyalty snapshot bento — Manager and above only (mirrors GET
+         /loyalty/analytics's own require_role(MANAGER) boundary; a Staff
+         session never issues this fetch, so there is no 403 to swallow). -->
+    <div class="qb-bento" data-loyalty-bento hidden>
+      <div class="qb-glass qb-glass--tinted-teal p-6 flex flex-col justify-between">
+        <div>
+          <h3 class="text-lg font-bold text-brand-ink mb-1">This Month's Loyalty Snapshot</h3>
+          <p class="text-sm text-brand-muted" data-loyalty-insight>Loading loyalty activity…</p>
+        </div>
+        <dl class="flex items-end gap-8 mt-6">
+          <div>
+            <dt class="qb-kpi-label">Stamps this month</dt>
+            <dd class="qb-kpi-value" data-loyalty-metric="total_stamps_month">—</dd>
+          </div>
+          <div>
+            <dt class="qb-kpi-label">Active customers</dt>
+            <dd class="qb-kpi-value" data-loyalty-metric="active_loyalty_customers">—</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="qb-glass p-6 flex flex-col items-center justify-center text-center">
+        <p class="qb-kpi-label mb-3">Reward Redemption</p>
+        <div class="qb-gauge">
+          <svg viewBox="0 0 120 120">
+            <circle class="qb-gauge-track" cx="60" cy="60" r="50"></circle>
+            <circle class="qb-gauge-fill" cx="60" cy="60" r="50" data-gauge-fill
+                    stroke-dasharray="314.159" stroke-dashoffset="314.159"></circle>
+          </svg>
+          <div class="qb-gauge-label">
+            <span class="qb-gauge-value" data-gauge-value>—</span>
+            <span class="qb-gauge-caption">Redeemed</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="qb-glass p-6">
+        <h3 class="text-sm font-bold text-brand-ink mb-3">Branch Performance</h3>
+        <div data-branch-list>
+          <p class="text-sm text-brand-muted">No branch activity yet.</p>
         </div>
       </div>
     </div>
   </div>
 </main>
 
+<script src="{{ url_for('static', path='js/dashboard-shell.js') }}" defer></script>
 <script src="{{ url_for('static', path='js/dashboard.js') }}" defer></script>
 </body>
 </html>

@@ -20,6 +20,12 @@ class RoleLevel:
     # require_customer_session(), not require_role(). The level exists only so
     # Doc 3's matrix has a complete ranking; never pass it to require_role().
     CUSTOMER = 5
+    # Standard, tenant-less accounts: everyone who has verified their email but
+    # has not yet registered a restaurant (User.tenant_id IS NULL). Below every
+    # staff rank on purpose — require_role(RoleLevel.STAFF) and above already
+    # 403 a USER caller with no extra code, since every existing call site
+    # passes a level strictly less than this one.
+    USER = 6
 
 
 # Roles an Owner may hand out via /team/invite. SUPER_ADMIN and OWNER are

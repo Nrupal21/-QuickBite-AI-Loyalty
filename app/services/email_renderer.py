@@ -87,6 +87,10 @@ _DEFAULT_SUBJECTS: dict[str, str] = {
     "account_locked_email": "QuickBite — suspicious activity on your account",
     "staff_invite_email": "You've been invited to a QuickBite team",
     "otp_code_email": "Your QuickBite login code",
+    "restaurant_joined_email": "Welcome to QuickBite — your restaurant is live",
+    "staff_login_otp_email": "Your QuickBite sign-in code",
+    "business_email_otp_email": "Verify this email for your QuickBite business",
+    "welcome_email": "Your QuickBite account is ready",
 }
 
 

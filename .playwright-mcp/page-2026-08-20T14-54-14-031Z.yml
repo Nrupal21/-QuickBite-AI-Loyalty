@@ -1,0 +1,19 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e3]:
+    - link "QuickBite" [ref=e4] [cursor=pointer]:
+      - /url: /
+    - link "Home" [ref=e10] [cursor=pointer]:
+      - /url: /
+  - main [ref=e11]:
+    - generic [ref=e12]: Loading your profile…
+  - navigation "Profile sections" [ref=e14]:
+    - link "Home" [ref=e15] [cursor=pointer]:
+      - /url: /
+    - link "Stamps" [ref=e18] [cursor=pointer]:
+      - /url: "#stamps"
+    - link "Reviews" [ref=e21] [cursor=pointer]:
+      - /url: "#reviews"
+    - link "Profile" [ref=e24] [cursor=pointer]:
+      - /url: "#main-content"

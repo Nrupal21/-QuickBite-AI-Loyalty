@@ -1,0 +1,171 @@
+{# QuickBite — shared pieces of the auth stage.
+
+   The top step bar, the drawn icon set, and the form primitives that
+   /login, /register and /onboarding all render. Kept in one file so a
+   change to the journey (a step added, a label reworded) lands on all
+   three pages at once rather than on whichever one someone remembered.
+
+   Every icon here is drawn — one 1.75 stroke weight, 24-unit box, no fills
+   except where a mark is genuinely solid. No emoji stands in for an icon
+   anywhere on this surface. #}
+
+{# --------------------------------------------------------------- icons #}
+
+{% macro icon_sparkle(size=16) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.4 3.6 1.9 5.1 5.5 5.5-3.6.4-5.1 1.9-5.5 5.5-.4-3.6-1.9-5.1-5.5-5.5C10.1 7.1 11.6 5.6 12 2Z"/><path d="M19.5 14c.2 1.7.9 2.4 2.6 2.6-1.7.2-2.4.9-2.6 2.6-.2-1.7-.9-2.4-2.6-2.6 1.7-.2 2.4-.9 2.6-2.6Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_check(size=12) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12.5 5.5 5.5L20 6"/></svg>
+{%- endmacro %}
+
+{% macro icon_alert(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5"/><path d="M12 16.2h.01"/></svg>
+{%- endmacro %}
+
+{% macro icon_back(size=16) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5.5 8.5 12l6.5 6.5"/></svg>
+{%- endmacro %}
+
+{% macro icon_eye(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+{%- endmacro %}
+
+{% macro icon_eye_off(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.9 5.8A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3 3.8"/><path d="M6.3 7.7A17 17 0 0 0 2.5 12S6 18.5 12 18.5c1.4 0 2.6-.3 3.7-.8"/><path d="m10 10a3 3 0 0 0 4 4"/><path d="m4 4 16 16"/></svg>
+{%- endmacro %}
+
+{% macro icon_shield(size=24) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5.5c0 4.2 2.9 8.1 7 9.5 4.1-1.4 7-5.3 7-9.5V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+{%- endmacro %}
+
+{# The business-category icon set. `icon_key` on each static.business_categories
+   row names one of these — a drawn mark, never an emoji, never a fetched
+   asset, so the picker renders instantly and consistently. `plate` is the
+   fallback for a key added to the DB before its icon was drawn. #}
+{% macro icon_category(key, size=18) -%}
+{%- set s = size -%}
+{%- if key == 'cup' -%}
+<svg width="{{ s }}" height="{{ s }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M16 9h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M7 2.5v2M11 2.5v2"/></svg>
+{%- elif key == 'moped' -%}
+<svg width="{{ s }}" height="{{ s }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="17" r="3"/><circle cx="18.5" cy="17" r="3"/><path d="M8.5 17h7"/><path d="M18.5 17V9a3 3 0 0 0-3-3H14"/><path d="M5.5 14V9h5l3 5"/></svg>
+{%- elif key == 'bag' -%}
+<svg width="{{ s }}" height="{{ s }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8Z"/><path d="M8.5 8V6a3.5 3.5 0 0 1 7 0v2"/></svg>
+{%- elif key == 'croissant' -%}
+<svg width="{{ s }}" height="{{ s }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15.5c4.5 3 13.5 3 18 0"/><path d="M4.5 15.5C4.5 10.5 7.9 6.5 12 6.5s7.5 4 7.5 9"/><path d="M9 15.2c0-3.4 1.3-6.2 3-6.2s3 2.8 3 6.2"/><path d="M3 15.5 2 19M21 15.5 22 19"/></svg>
+{%- elif key == 'glass' -%}
+<svg width="{{ s }}" height="{{ s }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14l-7 8-7-8Z"/><path d="M12 12v7"/><path d="M8.5 19h7"/></svg>
+{%- elif key == 'cloche' -%}
+<svg width="{{ s }}" height="{{ s }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17h18"/><path d="M4.5 17a7.5 7.5 0 0 1 15 0"/><path d="M12 6.5V5"/><circle cx="12" cy="4" r="1"/></svg>
+{%- elif key == 'truck' -%}
+<svg width="{{ s }}" height="{{ s }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h11v10H2z"/><path d="M13 10h4l4 3.5V17h-8"/><circle cx="7" cy="18.5" r="2"/><circle cx="17" cy="18.5" r="2"/></svg>
+{%- else -%}
+<svg width="{{ s }}" height="{{ s }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/></svg>
+{%- endif -%}
+{%- endmacro %}
+
+{# Provider marks. Google keeps its four brand colours — a monochrome Google
+   "G" is the one thing users read as "not the real Google button". #}
+{% macro icon_google(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.7-.06-1.37-.18-2.02H12v3.82h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.24c1.89-1.74 2.98-4.3 2.98-7.32Z"/><path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.43l-3.24-2.5c-.9.6-2.05.96-3.38.96-2.6 0-4.8-1.76-5.59-4.12H3.06v2.59A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.41 13.91a6 6 0 0 1 0-3.82V7.5H3.06a10 10 0 0 0 0 9l3.35-2.59Z"/><path fill="#EA4335" d="M12 5.98c1.47 0 2.79.5 3.83 1.5l2.87-2.87C16.96 2.99 14.7 2 12 2a10 10 0 0 0-8.94 5.5l3.35 2.59C7.2 7.73 9.4 5.98 12 5.98Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_apple(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.14-2.7.8-3.4.8-.7 0-1.8-.78-3-.76-1.5.02-2.9.9-3.7 2.26-1.6 2.75-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.26 1.2-.05 1.6-.74 3-.74s1.8.74 3 .72c1.3-.02 2-1.1 2.8-2.2.9-1.26 1.2-2.5 1.3-2.56-.03-.01-2.5-.96-2.5-3.8Z"/><path d="M14.2 5.9c.65-.8 1.1-1.9 1-3-.94.04-2.1.63-2.77 1.42-.6.7-1.13 1.83-1 2.9 1.05.08 2.12-.53 2.77-1.32Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_github(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .26.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+{%- endmacro %}
+
+{# ------------------------------------------------------------ topbar #}
+
+{% macro auth_topbar() -%}
+<header class="auth-topbar">
+  <a href="/" class="auth-topbar-brand">
+    <span class="auth-topbar-brand-mark" aria-hidden="true">{{ icon_sparkle(15) }}</span>
+    QuickBite
+  </a>
+</header>
+{%- endmacro %}
+
+{# ------------------------------------------------------ top step bar #}
+
+{% macro auth_topsteps(steps, current, wide=false) -%}
+{# A horizontal segmented progress bar, centered above the plate: one thin
+   bar per step with its title underneath, solid accent for what's behind
+   the current position, dark for what's ahead — the same grammar as any
+   download/upload progress bar.
+
+   `data-rail-step` is what static/js/auth-core.js re-states as the plate
+   advances; the server renders the first state so the bar is correct before
+   any script runs. Below 640px the per-segment titles give way to one
+   caption naming the current step (JS keeps it in sync; see the same
+   `.auth-stepper-caption` node), because a title per segment stops fitting
+   once a flow — Join Us — reaches six steps on a phone-width bar. #}
+<nav class="auth-stepper{{ ' auth-stepper--wide' if wide else '' }}" aria-label="Progress">
+  <ol class="auth-stepper-track">
+    {% for step in steps %}
+      {% set state = 'done' if loop.index0 < current else ('current' if loop.index0 == current else 'upcoming') %}
+      <li class="auth-stepper-seg" data-rail-step="{{ step.key }}" data-state="{{ state }}"
+          {% if state == 'current' %}aria-current="step"{% endif %}>
+        <span class="auth-stepper-bar" aria-hidden="true"></span>
+        <span class="auth-stepper-title">{{ step.label }}</span>
+      </li>
+    {% endfor %}
+  </ol>
+  {# Rendered server-side so the mobile caption is correct before
+     auth-core.js's step machine runs a single paint — the same "Step N of
+     total — label" format JS restates on every later transition. #}
+  <p class="auth-stepper-caption" data-stepper-caption aria-live="polite">
+    Step {{ current + 1 }} of {{ steps|length }} — {{ steps[current].label }}
+  </p>
+</nav>
+{%- endmacro %}
+
+{# --------------------------------------------------------------- alert #}
+
+{% macro auth_alert() -%}
+<div class="auth-alert" role="alert" aria-live="assertive" data-auth-alert hidden>
+  {{ icon_alert(18) }}
+  <span data-auth-alert-text></span>
+</div>
+{%- endmacro %}
+
+{# ----------------------------------------------------------- OTP entry #}
+
+{% macro otp_entry(name='otp') -%}
+{# Six single-character boxes rather than one six-character field: a code
+   arriving by SMS is read in pairs, and the boxes make a mistyped digit
+   visible where a run of six characters does not. autocomplete="one-time-code"
+   on the first box is what lets iOS and Android offer the code from the
+   notification. #}
+<div class="otp-entry" data-otp-entry role="group" aria-label="6-digit verification code">
+  {% for i in range(6) %}
+    <input class="otp-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
+           name="{{ name }}-{{ i }}" data-otp-digit="{{ i }}"
+           aria-label="Digit {{ i + 1 }} of 6"
+           {% if i == 0 %}autocomplete="one-time-code"{% else %}autocomplete="off"{% endif %} />
+  {% endfor %}
+</div>
+{%- endmacro %}
+
+{# -------------------------------------------------------- social block #}
+
+{% macro oauth_block(label='Or continue with') -%}
+<p class="auth-divider">{{ label }}</p>
+<div class="oauth-grid">
+  <button type="button" class="oauth-btn" data-oauth="google">
+    {{ icon_google(18) }} Google
+  </button>
+  <button type="button" class="oauth-btn" data-oauth="apple">
+    {{ icon_apple(18) }} Apple
+  </button>
+  <button type="button" class="oauth-btn" data-oauth="github">
+    {{ icon_github(18) }} GitHub
+  </button>
+</div>
+<p class="auth-note" data-oauth-unavailable hidden>
+  Social sign-in isn't configured on this deployment. Use a code or a password instead.
+</p>
+{%- endmacro %}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Reviews — QuickBite AI + Loyalty</title>
+<!-- Seventh dashboard screen on the shared liquid-glass shell — see
+     static/css/dashboard.css's file-header direction contract and
+     dashboard/index.html's shell comment. Hand-authored like the other
+     dashboard/*.html screens. -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                "colors": {
+                    "primary-container": "#1a56db",
+                    "on-primary-container": "#d4dcff",
+                    "surface": "#faf8ff",
+                    "surface-container-low": "#f3f3fe",
+                    "surface-container": "#ededf8",
+                    "surface-container-high": "#e7e7f3",
+                    "surface-variant": "#e2e1ed",
+                    "surface-bright": "#faf8ff",
+                    "on-surface": "#191b23",
+                    "on-surface-variant": "#434654",
+                    "outline-variant": "#c3c5d7",
+                    "brand-primary": "#1A56DB",
+                    "brand-loyalty-teal": "#0D9488",
+                    "brand-accent-orange": "#FF6B35",
+                    "brand-success": "#059669",
+                    "brand-danger": "#DC2626",
+                    "brand-warning": "#D97706",
+                    "brand-ink": "#1E2A3A",
+                    "brand-muted": "#64748B",
+                    "brand-bg": "#F8FAFC"
+                },
+                "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                "fontFamily": {
+                    "headline": ["Hanken Grotesk", "sans-serif"],
+                    "body": ["Hanken Grotesk", "sans-serif"]
+                }
+            }
+        }
+    }
+</script>
+<style>
+    body { background-color: theme('colors.brand-bg'); color: theme('colors.brand-ink'); font-family: 'Hanken Grotesk', sans-serif; }
+</style>
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard.css') }}" />
+</head>
+<body class="qb-dash bg-brand-bg font-body min-h-screen text-brand-ink overflow-x-hidden flex">
+<div class="qb-dash-mesh" aria-hidden="true"></div>
+
+<nav class="qb-glass qb-glass--sidebar fixed left-0 top-0 h-screen w-[240px] z-50 hidden min-[900px]:flex flex-col justify-between py-6">
+  <div>
+    <div class="px-6 mb-8">
+      <h1 class="text-xl font-headline font-black text-primary-container flex items-center gap-2">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+        QuickBite
+      </h1>
+      <p class="text-xs text-brand-muted mt-1 font-medium">AI + Loyalty</p>
+    </div>
+    <div class="flex flex-col gap-1 font-body text-sm">
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">dashboard</span>
+        Dashboard
+      </a>
+      <a class="flex items-center gap-3 bg-primary-container text-on-primary-container font-bold rounded-lg px-4 py-3 mx-2" href="/dashboard/reviews" aria-current="page">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">rate_review</span>
+        Reviews
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/loyalty-analytics">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">analytics</span>
+        Loyalty Analytics
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/loyalty-programs">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">redeem</span>
+        Loyalty Programs
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/qr-codes">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">qr_code_2</span>
+        QR Codes
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/google-profile">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">link</span>
+        Google Profile
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/settings">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">settings</span>
+        Settings
+      </a>
+    </div>
+  </div>
+  <div class="px-4">
+    <button type="button" class="qb-account-trigger pt-4 border-t border-outline-variant/60 flex items-center gap-3 px-2 py-2"
+            data-account-trigger aria-haspopup="true" aria-expanded="false" aria-controls="more-sheet">
+      <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-sm" data-user-initials aria-hidden="true">--</div>
+      <div>
+        <p class="text-sm font-bold text-brand-ink" data-user-role-label>Staff</p>
+        <span class="inline-block px-2 py-0.5 mt-0.5 bg-surface-variant text-brand-muted text-xs font-semibold rounded-full" data-user-role-badge>&nbsp;</span>
+      </div>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile tab bar — see dashboard/index.html's equivalent comment. This
+     page (Reviews) is itself a "More" destination, same as every page
+     beyond the two primary tabs. -->
+<nav class="qb-glass qb-mobile-tabbar min-[900px]:hidden" aria-label="Dashboard">
+  <a class="qb-tab" href="/dashboard">
+    <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
+    Dashboard
+  </a>
+  <a class="qb-tab" href="/dashboard/loyalty-analytics">
+    <span class="material-symbols-outlined" aria-hidden="true">analytics</span>
+    Analytics
+  </a>
+  <button type="button" class="qb-tab" data-account-trigger aria-haspopup="true" aria-expanded="false" aria-controls="more-sheet" aria-current="page">
+    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">more_horiz</span>
+    More
+  </button>
+</nav>
+
+<!-- More/account sheet — see dashboard/index.html's equivalent comment. -->
+<div class="qb-account-scrim min-[900px]:hidden" data-account-scrim hidden></div>
+<div class="qb-glass qb-account-sheet" id="more-sheet" role="dialog" aria-label="Account" hidden>
+  <div class="min-[900px]:hidden">
+    <a class="qb-more-nav-item" href="/dashboard/reviews" aria-current="page">
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">rate_review</span>
+      Reviews
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/loyalty-programs">
+      <span class="material-symbols-outlined" aria-hidden="true">redeem</span>
+      Loyalty Programs
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/qr-codes">
+      <span class="material-symbols-outlined" aria-hidden="true">qr_code_2</span>
+      QR Codes
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/google-profile">
+      <span class="material-symbols-outlined" aria-hidden="true">link</span>
+      Google Profile
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/settings">
+      <span class="material-symbols-outlined" aria-hidden="true">settings</span>
+      Settings
+    </a>
+    <div class="qb-more-divider"></div>
+  </div>
+  <div class="qb-account-sheet-head">
+    <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-sm" data-user-initials aria-hidden="true">--</div>
+    <div>
+      <p class="text-sm font-bold text-brand-ink" data-account-sheet-role>Staff</p>
+      <p class="text-xs text-brand-muted">QuickBite dashboard</p>
+    </div>
+  </div>
+  <button type="button" class="qb-account-signout" data-account-signout>
+    <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+    Sign out
+  </button>
+</div>
+
+<main class="min-[900px]:ml-[240px] flex-1 min-h-screen">
+  <header class="qb-glass sticky top-0 right-0 z-40 border-x-0 border-t-0 rounded-none flex justify-between items-center w-full px-5 min-[900px]:px-8 h-16">
+    <h2 class="font-body font-bold text-brand-ink tracking-tight text-xl">Reviews</h2>
+  </header>
+
+  <div class="p-5 min-[900px]:p-8 pb-28 min-[900px]:pb-8 max-w-3xl mx-auto space-y-6">
+    <div id="reviews-error" class="hidden bg-brand-danger/10 text-brand-danger text-sm font-medium px-4 py-3 rounded-lg" role="alert"></div>
+
+    <div class="qb-glass p-6">
+      <h3 class="text-lg font-bold text-brand-ink mb-1">Every review, straight from Google</h3>
+      <p class="text-sm text-brand-muted max-w-[58ch]">
+        Diners post these directly — nothing here waits on you. Only the reply
+        QuickBite drafts back needs your say: edit it if you like, then approve
+        to post it, or regenerate for another take.
+      </p>
+    </div>
+
+    <div class="qb-glass overflow-hidden">
+      <div data-review-rows>
+        <div class="qb-empty">
+          <span class="qb-skel" style="width: 10rem; height: 1rem;"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="{{ url_for('static', path='js/dashboard-shell.js') }}" defer></script>
+<script src="{{ url_for('static', path='js/reviews.js') }}" defer></script>
+</body>
+</html>

@@ -36,9 +36,10 @@ from app.core.config import settings
 from app.db import rls
 from app.db.models.outbox import ProjectionOutbox
 from app.db.models.payment import BillingEvent
+from app.db.models.static_data import PlanCategory
 from app.db.models.subscription import Subscription, SubscriptionPlan
 from app.db.models.tenant import Tenant
-from app.schemas.billing import CheckoutResponse, SubscriptionStatusResponse
+from app.schemas.billing import CheckoutResponse, PlanOut, SubscriptionStatusResponse
 
 logger = structlog.get_logger(__name__)
 
@@ -140,6 +141,50 @@ def _tenant_id_from_notes(envelope: dict[str, Any]) -> uuid.UUID | None:
 class BillingService:
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    # --- Plans ------------------------------------------------------------
+
+    async def list_active_plans(
+        self, category_id: uuid.UUID | None = None
+    ) -> list[PlanOut]:
+        """Public pricing data for the registration/onboarding screens —
+        static.subscription_plans carries no RLS (shared reference data), so
+        this needs no tenant context and no auth.
+
+        `category_id` narrows the list to the plans mapped to that business
+        category in static.plan_categories. A category with no mapping rows
+        falls through to every active plan rather than to an empty list: an
+        operator who adds a category and forgets to map it should get a
+        conservative pricing page, not a dead end that blocks registration.
+        """
+        query = (
+            select(SubscriptionPlan)
+            .where(SubscriptionPlan.is_active.is_(True))
+            .order_by(SubscriptionPlan.price_monthly_inr)
+        )
+        if category_id is not None:
+            mapped_ids = (
+                await self.session.execute(
+                    select(PlanCategory.plan_id).where(
+                        PlanCategory.category_id == category_id
+                    )
+                )
+            ).scalars().all()
+            if mapped_ids:
+                query = query.where(SubscriptionPlan.id.in_(mapped_ids))
+
+        result = await self.session.execute(query)
+        return [
+            PlanOut(
+                id=str(plan.id),
+                name=plan.name,
+                display_name=plan.display_name,
+                price_monthly_inr=plan.price_monthly_inr,
+                trial_days=plan.trial_days,
+                feature_limits=plan.feature_limits,
+            )
+            for plan in result.scalars().all()
+        ]
 
     # --- Subscription status -------------------------------------------
 

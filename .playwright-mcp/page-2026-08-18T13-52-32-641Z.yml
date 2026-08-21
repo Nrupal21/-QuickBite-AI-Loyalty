@@ -1,0 +1,85 @@
+- generic [active] [ref=f1e1]:
+  - link "Skip to content" [ref=f1e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f1e3]:
+    - generic [ref=f1e5]:
+      - link "QuickBite" [ref=f1e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f1e11]:
+        - link "Product" [ref=f1e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f1e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f1e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f1e15]:
+        - link "Log in" [ref=f1e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f1e17] [cursor=pointer]:
+          - /url: /#pricing
+  - main [ref=f1e18]:
+    - generic [ref=f1e19]:
+      - generic [ref=f1e20]:
+        - link "Close and return home" [ref=f1e21] [cursor=pointer]:
+          - /url: /
+        - generic [ref=f1e25]:
+          - generic [ref=f1e26]: Get started
+          - heading "Create your account" [level=1] [ref=f1e27]
+          - paragraph [ref=f1e28]: Set up QuickBite in a few minutes — no credit card required. You can register your restaurant right after.
+        - generic [ref=f1e99]:
+          - paragraph [ref=f1e103]: We've sent a verification link to playwright-frontend-user@example.com. Click it to activate your account.
+          - link "Back to home" [ref=f1e104] [cursor=pointer]:
+            - /url: /
+      - paragraph [ref=f1e48]:
+        - text: Already have an account?
+        - link "Log in" [ref=f1e49] [cursor=pointer]:
+          - /url: /login
+  - contentinfo [ref=f1e50]:
+    - generic [ref=f1e51]:
+      - generic [ref=f1e52]:
+        - generic [ref=f1e53]:
+          - link "QuickBite" [ref=f1e54] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f1e59]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f1e60]:
+          - heading "Product" [level=4] [ref=f1e61]
+          - list [ref=f1e62]:
+            - listitem [ref=f1e63]:
+              - link "Features" [ref=f1e64] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f1e65]:
+              - link "How it works" [ref=f1e66] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f1e67]:
+              - link "Pricing" [ref=f1e68] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f1e69]:
+          - heading "Company" [level=4] [ref=f1e70]
+          - list [ref=f1e71]:
+            - listitem [ref=f1e72]:
+              - link "About" [ref=f1e73] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f1e74]:
+              - link "Careers" [ref=f1e75] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f1e76]:
+              - link "Contact" [ref=f1e77] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f1e78]:
+          - heading "Legal" [level=4] [ref=f1e79]
+          - list [ref=f1e80]:
+            - listitem [ref=f1e81]:
+              - link "Privacy" [ref=f1e82] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f1e83]:
+              - link "Terms" [ref=f1e84] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f1e85]:
+        - generic [ref=f1e86]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f1e87]:
+          - link "Email" [ref=f1e88] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f1e92] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f1e96] [cursor=pointer]:
+            - /url: "#"

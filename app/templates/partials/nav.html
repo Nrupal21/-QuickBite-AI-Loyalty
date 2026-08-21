@@ -1,23 +1,305 @@
+{# QuickBite AI + Loyalty — the one navigation, on every page.
+   ---------------------------------------------------------------------------
+   Built from the Stitch "Desktop Navigation - Profile Dropdown" and "Mobile
+   Navigation - Floating Dock" screens (project QuickBite Auth Redesign).
+
+   TWO BARS, ONE SOURCE OF TRUTH
+     Desktop (>=900px) — a floating glass pill, inset from the edges: brand,
+     section links, one primary action, and the avatar that opens the account
+     menu.
+     Mobile (<900px)   — no top bar at all. The floating macOS-style dock at
+     the bottom is the entire mobile navigation: Home, Reviews, a raised
+     centre Scan button (the app's core action — opens the camera, reads the
+     receipt QR, posts to the same loyalty-scan endpoint the rest of the app
+     uses), the Join us / Dashboard slot, and the account button.
+
+   AUTH STATE — rendered signed-out and swapped by static/js/nav.js from the
+   sessionStorage session the auth pages write. Guest markup ships first and
+   visible so the common case needs no JavaScript and never flashes the wrong
+   bar. Exactly one primary action is ever shown:
+
+       role USER, no tenant   -> "Join us"   (register a business)
+       any role with a tenant -> "Dashboard"
+
+   A signed-in *Customer* (loyalty diner) is deliberately not reflected here:
+   Customer and User are separate identities with no bridge between them
+   (app/core/principal.py), and a diner's session is an HttpOnly cookie this
+   page's scripts cannot read by design. #}
+
 {% macro icon_sparkle(size=16) -%}
 <svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.4 3.6 1.9 5.1 5.5 5.5-3.6.4-5.1 1.9-5.5 5.5-.4-3.6-1.9-5.1-5.5-5.5C10.1 7.1 11.6 5.6 12 2Z"/><path d="M19.5 14c.2 1.7.9 2.4 2.6 2.6-1.7.2-2.4.9-2.6 2.6-.2-1.7-.9-2.4-2.6-2.6 1.7-.2 2.4-.9 2.6-2.6Z"/></svg>
 {%- endmacro %}
 
-<nav class="nav" aria-label="Primary">
-  <div class="container">
-    <div class="nav-inner">
-      <a href="/" class="nav-brand">
-        <span class="nav-brand-mark" aria-hidden="true">{{ icon_sparkle(16) }}</span>
-        QuickBite
-      </a>
-      <div class="nav-links">
-        <a href="/#features">Product</a>
-        <a href="/#how-it-works">How it works</a>
-        <a href="/#pricing">Pricing</a>
+{% macro icon_chevron(size=16) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+{%- endmacro %}
+
+{% macro icon_user(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 20.5a7.5 7.5 0 0 0-15 0"/><circle cx="12" cy="7.5" r="3.75"/></svg>
+{%- endmacro %}
+
+{% macro icon_star(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2.6 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9l6.1-.9L12 2.6Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_grid(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
+{%- endmacro %}
+
+{% macro icon_storefront(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v9.5h16V10"/><path d="M3 6.5 4.6 3.5h14.8L21 6.5a2.75 2.75 0 0 1-5 1.6 2.75 2.75 0 0 1-4 0 2.75 2.75 0 0 1-4 0 2.75 2.75 0 0 1-5-1.6Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_signout(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 7.5V5.25A1.25 1.25 0 0 0 13.75 4H5.25A1.25 1.25 0 0 0 4 5.25v13.5A1.25 1.25 0 0 0 5.25 20h8.5A1.25 1.25 0 0 0 15 18.75V16.5"/><path d="M18.5 12H9.25"/><path d="m15.75 8.75 3.25 3.25-3.25 3.25"/></svg>
+{%- endmacro %}
+
+{% macro icon_home(size=20) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.75 10.5 12 3.75l8.25 6.75V20a.75.75 0 0 1-.75.75h-4.5v-6h-6v6h-4.5a.75.75 0 0 1-.75-.75v-9.5Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_chat(size=20) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.25 14.25a2.25 2.25 0 0 1-2.25 2.25H8.25L3.75 20.25V5.25A2.25 2.25 0 0 1 6 3h12a2.25 2.25 0 0 1 2.25 2.25v9Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_tag(size=20) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.75 11.4V4.75A1 1 0 0 1 4.75 3.75h6.65a1 1 0 0 1 .71.3l8.09 8.08a1 1 0 0 1 0 1.42l-6.65 6.65a1 1 0 0 1-1.42 0l-8.08-8.09a1 1 0 0 1-.3-.71Z"/><circle cx="8" cy="8" r="1.35" fill="currentColor" stroke="none"/></svg>
+{%- endmacro %}
+
+{% macro icon_scan(size=22) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8"/><path d="M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8"/><path d="M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16"/><path d="M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+{%- endmacro %}
+
+{% macro icon_close(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+{%- endmacro %}
+
+{% macro icon_check_circle(size=28) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.25 12.5 2.5 2.5 5-5.5"/></svg>
+{%- endmacro %}
+
+{% macro icon_alert_triangle(size=28) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.6 3.7 2.9 17.2a1.5 1.5 0 0 0 1.3 2.25h15.6a1.5 1.5 0 0 0 1.3-2.25L13.4 3.7a1.5 1.5 0 0 0-2.8 0Z"/><path d="M12 9.5v4"/><path d="M12 16.75h.01"/></svg>
+{%- endmacro %}
+
+{# ------------------------------------------------------ the account menu #}
+{# Rendered twice — once anchored under the top bar's avatar, once above the
+   dock's profile button. Both are filled from the same session by nav.js;
+   duplicating the markup is cheaper than moving one node between two very
+   different anchors as the viewport changes. #}
+{% macro account_menu(menu_id, placement) -%}
+<div class="sitemenu sitemenu--{{ placement }}" id="{{ menu_id }}" role="menu" data-account-menu hidden>
+  <div class="sitemenu-head">
+    <span class="sitemenu-avatar" data-account-avatar aria-hidden="true"></span>
+    <span class="sitemenu-identity">
+      <span class="sitemenu-name" data-account-name>Your account</span>
+      <span class="sitemenu-email" data-account-email></span>
+    </span>
+  </div>
+  <div class="sitemenu-divider" role="separator"></div>
+  <div class="sitemenu-group">
+    <a class="sitemenu-item" role="menuitem" href="/profile">
+      <span class="sitemenu-icon" aria-hidden="true">{{ icon_user(18) }}</span>My profile
+    </a>
+    <a class="sitemenu-item" role="menuitem" href="/rewards">
+      <span class="sitemenu-icon sitemenu-icon--teal" aria-hidden="true">{{ icon_star(18) }}</span>My rewards
+    </a>
+    <a class="sitemenu-item" role="menuitem" href="/dashboard" data-account-dashboard hidden>
+      <span class="sitemenu-icon" aria-hidden="true">{{ icon_grid(18) }}</span>Dashboard
+    </a>
+    <a class="sitemenu-item" role="menuitem" href="/onboarding" data-account-joinus hidden>
+      <span class="sitemenu-icon" aria-hidden="true">{{ icon_storefront(18) }}</span>Join us
+    </a>
+  </div>
+  <div class="sitemenu-divider" role="separator"></div>
+  <div class="sitemenu-group">
+    <button type="button" class="sitemenu-item sitemenu-item--danger" role="menuitem" data-account-signout>
+      <span class="sitemenu-icon" aria-hidden="true">{{ icon_signout(18) }}</span>Sign out
+    </button>
+  </div>
+</div>
+{%- endmacro %}
+
+{# ---------------------------------------------------------------- top bar #}
+<header class="sitenav" data-sitenav>
+  <div class="sitenav-inner">
+    <a href="/" class="sitenav-brand">
+      <span class="sitenav-brand-mark" aria-hidden="true">{{ icon_sparkle(16) }}</span>
+      QuickBite
+    </a>
+
+    <nav class="sitenav-links" aria-label="Sections">
+      <a href="/#features">Product</a>
+      <a href="/#how-it-works">How it works</a>
+      <a href="/#pricing">Pricing</a>
+    </nav>
+
+    <div class="sitenav-actions">
+      {# Signed out — shipped visible, so a guest is right without JS. #}
+      <div class="sitenav-group" data-nav-guest>
+        <a href="/login" class="sitenav-btn sitenav-btn--ghost">Sign in</a>
+        <a href="/register" class="sitenav-btn sitenav-btn--primary">Get started</a>
       </div>
-      <div class="nav-cta">
-        <a href="/login" class="btn btn-ghost-light">Log in</a>
-        <a href="/#pricing" class="btn btn-primary">Get started</a>
+
+      {# Signed in. #}
+      <div class="sitenav-group" data-nav-authed hidden>
+        <a href="/dashboard" class="sitenav-btn sitenav-btn--ghost" data-nav-dashboard hidden>Dashboard</a>
+        <a href="/onboarding" class="sitenav-btn sitenav-btn--primary" data-nav-joinus hidden>Join us</a>
+
+        <div class="sitenav-account">
+          <button type="button" class="sitenav-avatar-btn" data-account-trigger
+                  aria-haspopup="menu" aria-expanded="false" aria-controls="sitenav-account-menu">
+            <span class="sitenav-avatar" data-account-avatar aria-hidden="true"></span>
+            <span class="sitenav-chevron" aria-hidden="true">{{ icon_chevron(16) }}</span>
+            <span class="visually-hidden">Your account</span>
+          </button>
+          {{ account_menu('sitenav-account-menu', 'top') }}
+        </div>
       </div>
     </div>
   </div>
+</header>
+
+{# ------------------------------------------------------------- the dock #}
+{# Phone navigation — the ONLY navigation on a phone; the top bar is
+   desktop-only (see .sitenav in nav.css). A floating dock whose icons
+   magnify around the pointer, macOS-style, with the scan button raised and
+   centred as the app's one core action. nav.js drives the magnification;
+   without it the dock is still five perfectly usable, correctly sized
+   targets. #}
+<nav class="sitedock" aria-label="Primary" data-dock>
+  <div class="sitedock-panel" data-dock-panel>
+    <a class="sitedock-item" href="/" data-dock-item>
+      <span class="sitedock-label" aria-hidden="true">Home</span>
+      <span class="sitedock-icon">{{ icon_home(20) }}</span>
+      <span class="visually-hidden">Home</span>
+    </a>
+
+    <a class="sitedock-item" href="/profile#reviews" data-dock-item>
+      <span class="sitedock-label" aria-hidden="true">Reviews</span>
+      <span class="sitedock-icon">{{ icon_chat(20) }}</span>
+      <span class="visually-hidden">Reviews</span>
+    </a>
+
+    {# The core loop this whole product exists for: scan the receipt QR,
+       collect a stamp. Stamps themselves live one tap away on the profile
+       page (also reachable from the account menu's "My rewards"), so this
+       slot is spent on the action that gets you a stamp, not a second way
+       to look at ones you already have. #}
+    <button type="button" class="sitedock-item sitedock-item--scan" data-dock-item data-scan-open
+            aria-haspopup="dialog" aria-controls="scansheet">
+      <span class="sitedock-label" aria-hidden="true">Scan</span>
+      <span class="sitedock-icon">{{ icon_scan(22) }}</span>
+      <span class="visually-hidden">Scan a receipt QR code</span>
+    </button>
+
+    {# One adaptive slot: pricing for a guest, then whichever of Join us /
+       Dashboard the account has earned. #}
+    <a class="sitedock-item" href="/#pricing" data-dock-item data-dock-adaptive>
+      <span class="sitedock-label" aria-hidden="true">Pricing</span>
+      <span class="sitedock-icon" data-dock-adaptive-icon>{{ icon_tag(20) }}</span>
+      <span class="visually-hidden" data-dock-adaptive-name>Pricing</span>
+    </a>
+
+    <div class="sitedock-account">
+      {# Guest: a plain link to sign in. Signed in: the button that opens the
+         same account menu the top bar's avatar opens. #}
+      <a class="sitedock-item" href="/login" data-dock-item data-dock-signin>
+        <span class="sitedock-label" aria-hidden="true">Sign in</span>
+        <span class="sitedock-icon">{{ icon_user(20) }}</span>
+        <span class="visually-hidden">Sign in</span>
+      </a>
+
+      <button type="button" class="sitedock-item sitedock-item--current" data-dock-item data-dock-profile
+              hidden aria-haspopup="menu" aria-expanded="false" aria-controls="sitedock-account-menu"
+              data-account-trigger>
+        <span class="sitedock-label" aria-hidden="true">Profile</span>
+        <span class="sitedock-icon">{{ icon_user(20) }}</span>
+        <span class="visually-hidden">Your account</span>
+      </button>
+
+      {{ account_menu('sitedock-account-menu', 'dock') }}
+    </div>
+  </div>
 </nav>
+
+{# ------------------------------------------------------------ scan sheet #}
+{# Opened by the dock's centre button, on every page. A real, working flow —
+   POST /api/v1/loyalty/scan already exists and is what the rest of the
+   loyalty system uses — not a decorative button with nowhere to go.
+   static/js/scan.js drives the state machine between the six steps below;
+   this markup is deliberately state-dumb, every step just a hidden/shown
+   sibling. #}
+<div class="scansheet" id="scansheet" data-scansheet hidden>
+  <div class="scansheet-scrim" data-scansheet-close></div>
+  <div class="scansheet-panel" role="dialog" aria-modal="true" aria-labelledby="scansheet-title">
+    <div class="scansheet-head">
+      <h2 class="scansheet-title" id="scansheet-title">Scan to collect a stamp</h2>
+      <button type="button" class="scansheet-close" data-scansheet-close aria-label="Close">
+        {{ icon_close(16) }}
+      </button>
+    </div>
+
+    <div class="scanstep" data-scan-step="prompt">
+      <p class="scanstep-text">
+        Point your camera at the QR code on your receipt. QuickBite needs
+        camera and location access to confirm you're at the restaurant.
+      </p>
+      <button type="button" class="scan-btn scan-btn--primary" data-scan-start>Start scanning</button>
+      {# Temporarily disabled — remove `hidden` to bring this entry point back.
+         static/js/scan.js still falls back to the manual step automatically
+         when the camera is unsupported/denied, so that path stays working;
+         this only removes the voluntary "skip the camera" choice. #}
+      <button type="button" class="scan-btn scan-btn--ghost" data-scan-manual-open hidden>Enter the code instead</button>
+    </div>
+
+    <div class="scanstep" data-scan-step="camera" hidden>
+      <div class="scan-viewfinder">
+        <video class="scan-video" data-scan-video autoplay playsinline muted></video>
+        <div class="scan-frame" aria-hidden="true">
+          <span class="scan-corner scan-corner--tl"></span>
+          <span class="scan-corner scan-corner--tr"></span>
+          <span class="scan-corner scan-corner--bl"></span>
+          <span class="scan-corner scan-corner--br"></span>
+          <span class="scan-line"></span>
+        </div>
+      </div>
+      <p class="scanstep-hint" data-scan-hint>Looking for a QR code…</p>
+      <button type="button" class="scan-btn scan-btn--ghost" data-scan-cancel>Cancel</button>
+    </div>
+
+    <div class="scanstep" data-scan-step="manual" hidden>
+      <label class="scan-label" for="scan-manual-input">Code printed on your receipt</label>
+      <input class="scan-input" id="scan-manual-input" type="text" inputmode="text" autocomplete="off"
+             autocapitalize="characters" spellcheck="false" placeholder="e.g. QB-BANDRA-04X7"
+             data-scan-manual-input />
+      <button type="button" class="scan-btn scan-btn--primary" data-scan-manual-submit>Submit</button>
+      <button type="button" class="scan-btn scan-btn--ghost" data-scan-manual-cancel>Back</button>
+    </div>
+
+    <div class="scanstep scanstep--center" data-scan-step="submitting" hidden>
+      <span class="scan-spinner" aria-hidden="true"></span>
+      <p class="scanstep-text">Confirming your stamp…</p>
+    </div>
+
+    <div class="scanstep scanstep--center" data-scan-step="success" hidden>
+      <span class="scan-success-icon" aria-hidden="true">{{ icon_check_circle(32) }}</span>
+      <p class="scan-success-count"><span data-scan-stamp-count>0</span> lifetime stamps</p>
+      <div class="scan-progress" aria-hidden="true">
+        <div class="scan-progress-fill" data-scan-progress-fill></div>
+      </div>
+      <p class="scanstep-hint" data-scan-progress-text></p>
+      <div class="scan-reward" data-scan-reward hidden>
+        <p class="scan-reward-label">Reward unlocked</p>
+        <p class="scan-reward-code" data-scan-redemption-code></p>
+      </div>
+      <button type="button" class="scan-btn scan-btn--primary" data-scansheet-close>Done</button>
+    </div>
+
+    <div class="scanstep scanstep--center" data-scan-step="error" hidden>
+      <span class="scan-error-icon" aria-hidden="true">{{ icon_alert_triangle(32) }}</span>
+      <p class="scanstep-text" data-scan-error-message>Something went wrong.</p>
+      <button type="button" class="scan-btn scan-btn--primary" data-scan-retry>Try again</button>
+    </div>
+  </div>
+</div>

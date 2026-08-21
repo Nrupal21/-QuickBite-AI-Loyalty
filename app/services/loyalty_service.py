@@ -28,6 +28,7 @@ from app.schemas.loyalty import (
     RedeemCodeResponse,
     RewardProgramCreateRequest,
     RewardProgramResponse,
+    RewardProgramUpdateRequest,
     ScanResponse,
 )
 from app.services import messaging_service
@@ -239,16 +240,7 @@ class LoyaltyService:
         query to `owner.tenant_id`, so a branch belonging to another tenant
         reads back as not found rather than a cross-tenant 403 that would
         confirm the id exists."""
-        result = await self.session.execute(
-            select(Branch.id).where(Branch.id == request.branch_id)
-        )
-        if result.scalar_one_or_none() is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "error": {"code": "BRANCH_NOT_FOUND", "message": "No such branch."}
-                },
-            )
+        branch = await self._get_branch_or_404(request.branch_id)
 
         program = RewardProgram(
             # id/is_active set explicitly, not left to the column defaults —
@@ -273,9 +265,45 @@ class LoyaltyService:
             tenant_id=str(owner.tenant_id),
             branch_id=str(request.branch_id),
         )
+        return self._to_response(program, branch.name)
+
+    async def list_reward_programs(self) -> list[RewardProgramResponse]:
+        """RLS already scopes `reward_programs` to the caller's tenant — see
+        branch_service.list_branches for the same pattern with the same
+        outer-join-free join (every program has exactly one branch, FK-
+        enforced, so this is a plain inner join)."""
+        result = await self.session.execute(
+            select(RewardProgram, Branch.name)
+            .join(Branch, Branch.id == RewardProgram.branch_id)
+            .order_by(RewardProgram.name)
+        )
+        return [self._to_response(program, branch_name) for program, branch_name in result.all()]
+
+    async def update_reward_program(
+        self, program_id: uuid.UUID, request: RewardProgramUpdateRequest, owner: User
+    ) -> RewardProgramResponse:
+        program = await self._get_owned_reward_program(program_id, owner)
+        branch = await self._get_branch_or_404(program.branch_id)
+
+        updates = request.model_dump(exclude_unset=True)
+        for field, value in updates.items():
+            setattr(program, field, value)
+        await self.session.commit()
+
+        logger.info(
+            "loyalty.reward_program.updated",
+            tenant_id=str(owner.tenant_id),
+            program_id=str(program_id),
+            fields=sorted(updates),
+        )
+        return self._to_response(program, branch.name)
+
+    @staticmethod
+    def _to_response(program: RewardProgram, branch_name: str) -> RewardProgramResponse:
         return RewardProgramResponse(
             id=program.id,
             branch_id=program.branch_id,
+            branch_name=branch_name,
             name=program.name,
             stamps_required=program.stamps_required,
             reward_type=program.reward_type,
@@ -283,6 +311,38 @@ class LoyaltyService:
             validity_days=program.validity_days,
             is_active=program.is_active,
         )
+
+    async def _get_branch_or_404(self, branch_id: uuid.UUID) -> Branch:
+        result = await self.session.execute(select(Branch).where(Branch.id == branch_id))
+        branch = result.scalar_one_or_none()
+        if branch is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": {"code": "BRANCH_NOT_FOUND", "message": "No such branch."}},
+            )
+        return branch
+
+    async def _get_owned_reward_program(
+        self, program_id: uuid.UUID, owner: User
+    ) -> RewardProgram:
+        """Same 404-for-both shape as team_service._get_user_by_id: RLS should
+        already hide another tenant's program, this is the belt to that
+        braces."""
+        result = await self.session.execute(
+            select(RewardProgram).where(RewardProgram.id == program_id)
+        )
+        program = result.scalar_one_or_none()
+        if program is None or program.tenant_id != owner.tenant_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": {
+                        "code": "REWARD_PROGRAM_NOT_FOUND",
+                        "message": "No such reward program.",
+                    }
+                },
+            )
+        return program
 
     async def redeem_code(self, code: str, staff: User) -> RedeemCodeResponse:
         """Staff-facing verification at the till. RLS already scopes the

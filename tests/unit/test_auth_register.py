@@ -5,6 +5,7 @@ DB session, Redis, and SendGrid are mocked per AGENTS.md testing rules.
 
 import json
 import uuid
+from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -33,15 +34,23 @@ def make_session(execute_results: list) -> MagicMock:
     return session
 
 
+@asynccontextmanager
+async def _noop_admin_bypass(session):  # noqa: ARG001
+    yield
+
+
 @pytest.fixture(autouse=True)
 def _mock_rls(mocker):
-    """verify_email() binds RLS tenant context via a plain session.execute
-    call (see app/db/rls.py) — mocking it out here, same as
-    test_identity_link_service.py's _mock_rls, keeps that call from
-    consuming a slot in the execute_results lists every test below sets up
-    to describe verify_email's *other* queries (email/username re-check,
-    owner role lookup, subdomain uniqueness)."""
+    """verify_email()/become_restaurant() bind RLS tenant context via a plain
+    session.execute call (see app/db/rls.py), and _email_exists/_username_exists
+    wrap their lookup in admin_bypass_context — mocking both out here, same as
+    test_identity_link_service.py's set_tenant_context mock and
+    test_admin_service.py's admin_bypass_context mock, keeps those calls from
+    consuming a slot in the execute_results lists every test below sets up to
+    describe the service's *other* queries (email/username re-check, role
+    lookup, subdomain uniqueness)."""
     mocker.patch("app.services.auth_service.rls.set_tenant_context", AsyncMock())
+    mocker.patch("app.services.auth_service.rls.admin_bypass_context", _noop_admin_bypass)
 
 
 def make_request(**overrides) -> UserRegister:
@@ -49,7 +58,6 @@ def make_request(**overrides) -> UserRegister:
         "email": "owner@marcos.in",
         "password": STRONG_PASSWORD,
         "name": "Marco",
-        "restaurant_name": "Marcos Pizzeria",
     }
     data.update(overrides)
     return UserRegister(**data)
@@ -175,17 +183,16 @@ async def test_register_writes_audit_log(mocker):
 
 
 @pytest.mark.asyncio
-async def test_verify_email_creates_tenant_and_owner_in_one_transaction(mocker):
-    owner_role = Role(name="OWNER", level=2, permissions={}, mfa_required=True)
-    owner_role.id = uuid.uuid4()
-    # execute calls: email re-check -> None, owner role, subdomain free -> None
-    session = make_session([None, owner_role, None])
+async def test_verify_email_creates_standard_user_no_tenant(mocker):
+    user_role = Role(name="USER", level=6, permissions={}, mfa_required=False)
+    user_role.id = uuid.uuid4()
+    # execute calls: email re-check -> None, user role
+    session = make_session([None, user_role])
     pending = json.dumps(
         {
             "email": "owner@marcos.in",
             "password_hash": "$2b$12$fakehashfakehashfakehash",
             "name": "Marco",
-            "restaurant_name": "Marcos Pizzeria",
         }
     )
     mocker.patch("app.services.auth_service.cache_service.get", AsyncMock(return_value=pending))
@@ -196,32 +203,33 @@ async def test_verify_email_creates_tenant_and_owner_in_one_transaction(mocker):
     response = await AuthService(session=session).verify_email("some-token")
 
     assert response.status == "verified"
-    assert response.subdomain == "marcos-pizzeria"
+    assert response.subdomain is None  # no Tenant exists yet
     tenants = added_instances(session, Tenant)
     users = added_instances(session, User)
-    assert len(tenants) == 1 and len(users) == 1
-    assert users[0].tenant_id == tenants[0].id
+    assert tenants == []
+    assert len(users) == 1
+    assert users[0].tenant_id is None
     assert users[0].email_verified is True
-    assert users[0].role_id == owner_role.id
+    assert users[0].role_id == user_role.id
     assert users[0].encrypted_email.startswith("v1:")  # PII encrypted at rest
     audit_rows = added_instances(session, AuditLog)
     assert audit_rows[0].action == "email_verified"
-    session.commit.assert_awaited_once()  # tenant + user + audit in ONE transaction
+    assert audit_rows[0].tenant_id is None
+    session.commit.assert_awaited_once()  # user + audit in ONE transaction
     cache_delete.assert_awaited_once_with("pending_reg:some-token")
 
 
 @pytest.mark.asyncio
 async def test_verify_email_creates_user_with_username(mocker):
-    owner_role = Role(name="OWNER", level=2, permissions={}, mfa_required=True)
-    owner_role.id = uuid.uuid4()
-    # execute calls: email re-check -> None, username re-check -> None, owner role, subdomain free -> None
-    session = make_session([None, None, owner_role, None])
+    user_role = Role(name="USER", level=6, permissions={}, mfa_required=False)
+    user_role.id = uuid.uuid4()
+    # execute calls: email re-check -> None, username re-check -> None, user role
+    session = make_session([None, None, user_role])
     pending = json.dumps(
         {
             "email": "owner@marcos.in",
             "password_hash": "$2b$12$fakehashfakehashfakehash",
             "name": "Marco",
-            "restaurant_name": "Marcos Pizzeria",
             "username": "marcoowner",
         }
     )
@@ -244,7 +252,6 @@ async def test_verify_email_duplicate_username_returns_409(mocker):
             "email": "owner@marcos.in",
             "password_hash": "$2b$12$fakehashfakehashfakehash",
             "name": "Marco",
-            "restaurant_name": "Marcos Pizzeria",
             "username": "marcoowner",
         }
     )

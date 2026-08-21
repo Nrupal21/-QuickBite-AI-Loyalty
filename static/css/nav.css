@@ -1,0 +1,1005 @@
+/* QuickBite AI + Loyalty — the shared navigation (top bar + dock + account menu).
+   ---------------------------------------------------------------------------
+   Built from the Stitch "Desktop Navigation - Profile Dropdown" and "Mobile
+   Navigation - Floating Dock" screens.
+
+   SELF-CONTAINED — this file declares its own --nav-* tokens rather than
+   leaning on landing.css or auth.css, because the same bar also ships on the
+   dashboard shells, which load neither. The values are the same palette every
+   other surface uses (Doc 4): obsidian ground, one blue for action, loyalty
+   teal for anything loyalty.
+
+   DESKTOP (>=900px) — a floating glass pill, inset from the viewport edges
+   and sticky just below the top: brand, section links, one primary action,
+   avatar. The avatar opens the account menu below it, right-aligned.
+
+   MOBILE (<900px) — the top bar is not shown at all; the floating dock at the
+   bottom is the entire mobile navigation. Five circular icon buttons magnify
+   around the pointer, macOS-style, with a raised QR-scan button in the centre
+   — the app's core action (scan a receipt to draft a review and collect a
+   stamp) gets the most prominent target. nav.js sets --dock-scale per item;
+   with no JS the row simply sits at rest size and still navigates.
+
+   MOTION — the magnify arc, the menu's settle, and the scan sheet's slide-up.
+   All are off under prefers-reduced-motion; everything keeps working, it just
+   stops moving. */
+
+:root {
+  --nav-h: 64px;
+
+  --nav-ground: #0b0b0d;
+  --nav-surface: #131318;
+  --nav-raised: #191920;
+  --nav-hairline: rgba(255, 255, 255, 0.08);
+  --nav-hairline-strong: rgba(255, 255, 255, 0.16);
+  --nav-fg: #f5f5f7;
+  --nav-fg-muted: #a1a1aa;
+  --nav-fg-dim: #71717a;
+  --nav-teal: #0d9488;
+  --nav-teal-lift: #2dd4bf;
+  --nav-blue: #1a56db;
+  --nav-blue-hover: #1544ad;
+  --nav-danger: #fca5a5;
+
+  --nav-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 24px 64px -20px rgba(0, 0, 0, 0.75);
+  --nav-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Author styles beat the UA stylesheet's `[hidden] { display: none }`, so any
+   node below that carries a `display:` needs this to stay hidden when nav.js
+   toggles the attribute — otherwise the guest and signed-in bars render at
+   once. */
+.sitenav [hidden],
+.sitedock [hidden],
+.sitemenu[hidden],
+.scansheet[hidden],
+.scansheet [hidden] {
+  display: none !important;
+}
+
+/* The dashboards do not load landing.css, and the bar labels its icon-only
+   controls for a screen reader — so the helper travels with the nav. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------------ top bar */
+
+/* Desktop-only — see the file banner. Nothing below 900px ever sees this
+   bar; the dock is the phone's entire navigation. */
+.sitenav {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  /* Fixed, not sticky — the pill floats detached over the page rather than
+     docking to the top of the document flow. It never reserves its own row,
+     so every page that renders it (all but the dashboards, which already
+     hand-offset their own sidebar and content) adds top clearance below. */
+  .sitenav {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    color: var(--nav-fg);
+    font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* The bar itself stays transparent and full-width for centering the
+       pill; every visible pixel — fill, blur, border, shadow — lives on
+       .sitenav-inner. */
+  }
+}
+
+/* Clearance so the floating pill never overlaps the first thing on the page.
+   Skipped on .has-dark-hero (the landing page): its hero already carries
+   generous top padding of its own, and stacking this on top of that would
+   just be dead space. Skipped below 900px too — .sitenav is display:none
+   there, so there is nothing to clear. */
+@media (min-width: 900px) {
+  body:not(.has-dark-hero):not(.has-sitenav-fixed) {
+    padding-top: calc(var(--nav-h) + 12px + 32px);
+  }
+}
+
+/* Full screen width — no centered 1200px column. A small horizontal inset
+   (not auto-centered margins) is what keeps it reading as a floating pill
+   rather than a bar glued flush to the glass. */
+.sitenav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: var(--nav-h);
+  margin: 12px 16px 0;
+  padding-inline: 1.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--nav-hairline);
+  border-top-color: rgba(255, 255, 255, 0.22); /* light catching the top of the glass */
+  background: rgba(19, 19, 24, 0.66);
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--nav-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+@media (min-width: 1600px) {
+  .sitenav-inner {
+    margin-inline: 32px;
+  }
+}
+
+.sitenav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--nav-fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sitenav-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: rgba(13, 148, 136, 0.16);
+  color: var(--nav-teal-lift);
+  flex-shrink: 0;
+}
+
+/* The section links belong to the marketing site; the dock carries
+   navigation on a phone, and the parent .sitenav is display:none there, so
+   these need no breakpoint guard of their own. */
+.sitenav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.sitenav-links a {
+  color: var(--nav-fg-muted);
+  text-decoration: none;
+  transition: color 160ms var(--nav-ease);
+}
+
+.sitenav-links a:hover {
+  color: var(--nav-teal-lift);
+}
+
+.sitenav-actions,
+.sitenav-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sitenav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 1.125rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 180ms var(--nav-ease), border-color 180ms var(--nav-ease),
+    transform 160ms var(--nav-ease);
+}
+
+.sitenav-btn:active {
+  transform: scale(0.97);
+}
+
+.sitenav-btn--primary {
+  background: var(--nav-blue);
+  color: #fff;
+}
+
+.sitenav-btn--primary:hover {
+  background: var(--nav-blue-hover);
+}
+
+.sitenav-btn--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--nav-hairline-strong);
+  color: var(--nav-fg);
+}
+
+.sitenav-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sitenav-account {
+  position: relative;
+}
+
+.sitenav-avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--nav-fg-muted);
+  cursor: pointer;
+  transition: background-color 160ms var(--nav-ease);
+}
+
+.sitenav-avatar-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sitenav-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--nav-teal);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.sitenav-chevron {
+  display: inline-flex;
+  transition: transform 200ms var(--nav-ease);
+}
+
+.sitenav-avatar-btn[aria-expanded='true'] .sitenav-chevron {
+  transform: rotate(180deg);
+}
+
+.sitenav :focus-visible,
+.sitedock :focus-visible,
+.sitemenu :focus-visible,
+.scansheet :focus-visible {
+  outline: 2px solid var(--nav-teal-lift);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* -------------------------------------------------------------- account menu */
+
+.sitemenu {
+  position: absolute;
+  z-index: 120;
+  width: 260px;
+  padding: 0;
+  border: 1px solid var(--nav-hairline);
+  border-radius: 16px;
+  background: var(--nav-raised);
+  box-shadow: var(--nav-shadow);
+  color: var(--nav-fg);
+  font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+  animation: sitemenu-in 180ms var(--nav-ease) both;
+}
+
+/* Under the top bar's avatar, right-aligned so it never runs off-screen. */
+.sitemenu--top {
+  top: calc(100% + 10px);
+  right: 0;
+  transform-origin: top right;
+}
+
+/* Above the dock, centred on it. Fixed rather than absolute: the dock itself
+   is fixed, and an absolutely-positioned child would scroll with the page. */
+.sitemenu--dock {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--dock-bottom, 12px) + var(--dock-panel-h, 68px) + 12px);
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  animation-name: sitemenu-in-dock;
+}
+
+@keyframes sitemenu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+}
+
+@keyframes sitemenu-in-dock {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}
+
+.sitemenu-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.sitemenu-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--nav-teal);
+  color: #fff;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.sitemenu-identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sitemenu-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sitemenu-email {
+  font-size: 0.75rem;
+  color: var(--nav-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sitemenu-email:empty {
+  display: none;
+}
+
+.sitemenu-divider {
+  height: 1px;
+  background: var(--nav-hairline);
+}
+
+.sitemenu-group {
+  padding: 0.25rem;
+}
+
+.sitemenu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  height: 40px;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--nav-fg);
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 140ms var(--nav-ease);
+}
+
+.sitemenu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sitemenu-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--nav-fg-muted);
+}
+
+.sitemenu-icon--teal {
+  color: var(--nav-teal-lift);
+}
+
+.sitemenu-item--danger {
+  color: var(--nav-danger);
+}
+
+.sitemenu-item--danger .sitemenu-icon {
+  color: var(--nav-danger);
+}
+
+.sitemenu-item--danger:hover {
+  background: rgba(220, 38, 38, 0.14);
+}
+
+/* --------------------------------------------------------------------- dock */
+
+.sitedock {
+  --dock-bottom: 12px;
+  --dock-panel-h: 68px;
+
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--dock-bottom) + env(safe-area-inset-bottom));
+  z-index: 110;
+  display: flex;
+  justify-content: center;
+  pointer-events: none; /* only the panel itself takes the taps */
+}
+
+.sitedock-panel {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: var(--dock-panel-h);
+  max-width: calc(100vw - 24px);
+  padding: 0.75rem;
+  border: 1px solid var(--nav-hairline);
+  border-radius: 24px;
+  background: rgba(19, 19, 24, 0.82);
+  backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: var(--nav-shadow);
+  pointer-events: auto;
+}
+
+.sitedock-account {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sitedock-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--nav-fg-muted);
+  cursor: pointer;
+  text-decoration: none;
+  /* nav.js writes --dock-scale per item from the pointer's distance; the
+     transform-origin keeps a growing icon anchored to the panel floor, which
+     is what makes the row read as an arc rather than a jitter. */
+  transform: scale(var(--dock-scale, 1));
+  transform-origin: bottom center;
+  transition: background-color 160ms var(--nav-ease), color 160ms var(--nav-ease);
+}
+
+.sitedock-item:hover,
+.sitedock-item[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--nav-fg);
+}
+
+.sitedock-item--current {
+  color: var(--nav-teal-lift);
+}
+
+/* The scan button — QuickBite's one core action (scan the receipt QR, get an
+   AI review draft and a stamp) — sits centred and raised above the row, the
+   way iOS docks give their primary action a bigger, punched-through target.
+   `translate` moves it independently of the `transform: scale()` above, so
+   the raise and the pointer-proximity magnify never fight each other. */
+.sitedock-item--scan {
+  width: 60px;
+  height: 60px;
+  color: #fff;
+  background: linear-gradient(150deg, var(--nav-teal-lift), var(--nav-teal));
+  border: 3px solid rgba(19, 19, 24, 0.82); /* matches the panel fill — reads as "punched through" the glass */
+  box-shadow: 0 8px 20px -4px rgba(13, 148, 136, 0.55);
+  translate: 0 -18px;
+}
+
+.sitedock-item--scan:hover,
+.sitedock-item--scan:focus-visible {
+  color: #fff;
+  background: linear-gradient(150deg, var(--nav-teal-lift), var(--nav-teal));
+  filter: brightness(1.08);
+}
+
+.sitedock-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The dock's tooltip: shown for the item the pointer is actually over, the
+   way the macOS dock names the icon it is magnifying. */
+.sitedock-label {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--nav-hairline-strong);
+  border-radius: 8px;
+  background: var(--nav-raised);
+  color: var(--nav-fg);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms var(--nav-ease), transform 160ms var(--nav-ease);
+}
+
+.sitedock-item:hover .sitedock-label,
+.sitedock-item:focus-visible .sitedock-label,
+.sitedock-item.is-magnified .sitedock-label,
+.sitedock-item[aria-expanded='true'] .sitedock-label {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  /* Counter-scale, so a magnified icon does not blow its label up with it. */
+  scale: calc(1 / var(--dock-scale, 1));
+}
+
+/* The dock is the phone's navigation; the wide bar already carries all of it. */
+@media (min-width: 900px) {
+  .sitedock {
+    display: none;
+  }
+}
+
+/* Room under every page so the floating dock never covers the last element. */
+@media (max-width: 899px) {
+  body {
+    padding-bottom: calc(var(--nav-h) + 32px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ---------------------------------------------------------------- scan sheet */
+
+/* Opened by the dock's centre button. A real feature, not a placeholder: it
+   drives the camera, reads a QR code with the native BarcodeDetector API (no
+   library — Chrome/Edge/Android; browsers without it fall straight to the
+   manual-code field), and posts to the same POST /api/v1/loyalty/scan the
+   rest of the loyalty system already uses. static/js/scan.js owns the state
+   machine; this file only draws each state. */
+
+.scansheet {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.scansheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  animation: scansheet-scrim-in 200ms var(--nav-ease) both;
+}
+
+.scansheet-panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+  max-height: min(680px, 88vh);
+  overflow-y: auto;
+  padding: 1.75rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
+  border: 1px solid var(--nav-hairline);
+  border-radius: 24px 24px 0 0;
+  background: rgba(19, 19, 24, 0.94);
+  backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: var(--nav-shadow);
+  color: var(--nav-fg);
+  font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  animation: scansheet-panel-in 280ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+/* A drag-handle affordance, the way a native bottom sheet signals "swipe me
+   away" even though this one only closes by tap — familiarity over novelty. */
+.scansheet-panel::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--nav-hairline-strong);
+  translate: -50% 0;
+}
+
+@media (min-width: 640px) {
+  .scansheet {
+    align-items: center;
+  }
+
+  .scansheet-panel {
+    border-radius: 24px;
+  }
+}
+
+@keyframes scansheet-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes scansheet-panel-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.scansheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.scansheet-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.scansheet-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--nav-fg-muted);
+  cursor: pointer;
+  transition: background-color 160ms var(--nav-ease), color 160ms var(--nav-ease);
+}
+
+.scansheet-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--nav-fg);
+}
+
+.scanstep {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.scanstep--center {
+  align-items: center;
+  padding-block: 1.25rem;
+  text-align: center;
+}
+
+.scanstep-text {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--nav-fg-muted);
+}
+
+.scanstep-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  text-align: center;
+  color: var(--nav-fg-dim);
+}
+
+.scan-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 1.25rem;
+  margin-top: 0.375rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 160ms var(--nav-ease), background-color 160ms var(--nav-ease),
+    filter 160ms var(--nav-ease);
+}
+
+.scan-btn:active {
+  transform: scale(0.97);
+}
+
+/* Teal, not the account blue — this sheet is the loyalty moment itself, the
+   one carve-out auth.css also makes for OTP code entry. */
+.scan-btn--primary {
+  background: var(--nav-teal);
+  color: #fff;
+}
+
+.scan-btn--primary:hover {
+  filter: brightness(1.08);
+}
+
+.scan-btn--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--nav-hairline-strong);
+  color: var(--nav-fg);
+}
+
+.scan-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.scan-viewfinder {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  max-height: 50vh;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #000;
+}
+
+.scan-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scan-frame {
+  position: absolute;
+  inset: 12%;
+  pointer-events: none;
+}
+
+.scan-corner {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--nav-teal-lift);
+}
+
+.scan-corner--tl {
+  top: 0;
+  left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 8px 0 0 0;
+}
+
+.scan-corner--tr {
+  top: 0;
+  right: 0;
+  border-left: 0;
+  border-bottom: 0;
+  border-radius: 0 8px 0 0;
+}
+
+.scan-corner--bl {
+  bottom: 0;
+  left: 0;
+  border-right: 0;
+  border-top: 0;
+  border-radius: 0 0 0 8px;
+}
+
+.scan-corner--br {
+  bottom: 0;
+  right: 0;
+  border-left: 0;
+  border-top: 0;
+  border-radius: 0 0 8px 0;
+}
+
+.scan-line {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  height: 2px;
+  top: 4%;
+  background: linear-gradient(90deg, transparent, var(--nav-teal-lift), transparent);
+  animation: scan-line-sweep 2.2s ease-in-out infinite;
+}
+
+@keyframes scan-line-sweep {
+  0%,
+  100% {
+    top: 4%;
+  }
+  50% {
+    top: 94%;
+  }
+}
+
+.scan-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--nav-fg-muted);
+}
+
+.scan-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 1rem;
+  border: 1px solid var(--nav-hairline-strong);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--nav-fg);
+  font: inherit;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.scan-input::placeholder {
+  color: var(--nav-fg-dim);
+  text-transform: none;
+}
+
+.scan-input:focus-visible {
+  outline: 2px solid var(--nav-teal-lift);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.scan-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 3px solid var(--nav-hairline-strong);
+  border-top-color: var(--nav-teal-lift);
+  animation: scan-spin 800ms linear infinite;
+}
+
+@keyframes scan-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.scan-success-icon {
+  color: var(--nav-teal-lift);
+}
+
+.scan-success-count {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.scan-progress {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.scan-progress-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--nav-teal), var(--nav-teal-lift));
+  /* Scale, not width — a layout property under transition thrashes layout on
+     every frame; transform is compositor-only. */
+  transform: scaleX(var(--scan-progress, 0));
+  transform-origin: left;
+  transition: transform 500ms var(--nav-ease);
+}
+
+.scan-reward {
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: rgba(13, 148, 136, 0.14);
+  text-align: center;
+}
+
+.scan-reward-label {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--nav-teal-lift);
+}
+
+.scan-reward-code {
+  margin: 0.25rem 0 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-family: ui-monospace, 'SF Mono', 'JetBrains Mono', monospace;
+}
+
+.scan-error-icon {
+  color: var(--nav-danger);
+}
+
+/* ------------------------------------------------------------------- motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .sitemenu {
+    animation: none;
+  }
+
+  .sitedock-item {
+    transform: none;
+    transition: background-color 160ms linear, color 160ms linear;
+  }
+
+  .scansheet-scrim,
+  .scansheet-panel {
+    animation: none;
+  }
+
+  .scansheet-panel {
+    transform: none;
+  }
+
+  .scan-line {
+    animation: none;
+    top: 50%;
+  }
+
+  .scan-spinner {
+    animation-duration: 1400ms;
+  }
+
+  .sitedock-label,
+  .sitenav-chevron,
+  .sitenav-btn,
+  .sitenav-links a {
+    transition: none;
+  }
+}
+
+/* Glass surfaces get frostier instead, per prefers-reduced-transparency:
+   raise the fill's opacity and drop the blur so content underneath stops
+   showing through, without collapsing the surfaces to plain solid boxes. */
+@media (prefers-reduced-transparency: reduce) {
+  .sitenav-inner,
+  .sitedock-panel,
+  .scansheet-panel {
+    background: var(--nav-raised);
+    backdrop-filter: none;
+  }
+
+  .scansheet-scrim {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}

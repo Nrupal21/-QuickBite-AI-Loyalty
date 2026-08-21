@@ -1,0 +1,40 @@
+- generic [ref=f4e1]:
+  - link "Skip to content" [ref=f4e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f4e3]:
+    - complementary "Sign-up progress" [ref=f4e4]:
+      - link "QuickBite" [ref=f4e5] [cursor=pointer]:
+        - /url: /
+      - paragraph [ref=f4e10]: Join us
+      - list [ref=f4e11]:
+        - listitem [ref=f4e12]:
+          - generic [ref=f4e16]: Your account
+        - listitem [ref=f4e17]:
+          - generic [ref=f4e21]: Your business
+        - listitem [ref=f4e23]:
+          - generic [ref=f4e27]: Second contact
+        - listitem [ref=f4e28]:
+          - generic [ref=f4e32]: What you run
+        - listitem [ref=f4e33]:
+          - generic [ref=f4e37]: Your plan
+        - listitem [ref=f4e38]:
+          - generic [ref=f4e42]:
+            - text: You're an owner
+            - generic [ref=f4e202]: Dashboard, QR codes, and your loyalty program.
+      - paragraph
+    - generic [ref=f4e203]:
+      - generic [ref=f4e208]:
+        - heading "Your business is registered" [level=2] [ref=f4e209]
+        - paragraph [ref=f4e210]: Owner accounts require two-factor authentication before they get a session. Scan this in any authenticator app, then enter the code it shows.
+      - generic [ref=f4e212]:
+        - generic [ref=f4e213]: Setup key
+        - generic [ref=f4e214]: YEOO6J7GDD6N74RECRPJK4HHQ767HQUX
+      - generic [ref=f4e215]:
+        - group "6-digit verification code" [ref=f4e216]:
+          - textbox "Digit 1 of 6" [active] [ref=f4e217]
+          - textbox "Digit 2 of 6" [ref=f4e218]
+          - textbox "Digit 3 of 6" [ref=f4e219]
+          - textbox "Digit 4 of 6" [ref=f4e220]
+          - textbox "Digit 5 of 6" [ref=f4e221]
+          - textbox "Digit 6 of 6" [ref=f4e222]
+        - button "Turn on two-factor" [ref=f4e223] [cursor=pointer]

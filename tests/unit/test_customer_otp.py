@@ -24,7 +24,13 @@ OTP_CODE = "482913"
 def make_session(execute_results: list) -> MagicMock:
     session = MagicMock()
     session.commit = AsyncMock()
-    results = []
+    # First call is always rls.set_tenant_context(), right before the actual
+    # customer lookup in both request_otp() and verify_otp() — its return
+    # value is never read. A throwaway result absorbs that call so the real
+    # query results below line up with _get_customer()'s call. Harmless for
+    # the early-exit (429) tests too, since an unused side_effect entry
+    # doesn't count as a call for assert_not_awaited().
+    results = [MagicMock()]
     for value in execute_results:
         result = MagicMock()
         result.scalar_one_or_none.return_value = value

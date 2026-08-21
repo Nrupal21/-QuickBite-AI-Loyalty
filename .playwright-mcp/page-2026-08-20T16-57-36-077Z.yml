@@ -1,0 +1,64 @@
+- generic [active] [ref=f7e1]:
+  - banner [ref=f7e2]:
+    - generic [ref=f7e3]:
+      - link "QuickBite" [ref=f7e4] [cursor=pointer]:
+        - /url: /
+      - navigation "Sections" [ref=f7e9]:
+        - link "Product" [ref=f7e10] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f7e11] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f7e12] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f7e14]:
+        - link "Dashboard" [ref=f7e15] [cursor=pointer]:
+          - /url: /dashboard
+        - button "Your account" [ref=f7e17] [cursor=pointer]:
+          - generic [ref=f7e18]: J
+  - navigation [ref=f7e23]:
+    - generic [ref=f7e24]:
+      - generic [ref=f7e25]:
+        - heading "restaurant QuickBite" [level=1] [ref=f7e26]:
+          - generic [ref=f7e27]: restaurant
+          - text: QuickBite
+        - paragraph [ref=f7e28]: AI + Loyalty
+      - generic [ref=f7e29]:
+        - link "dashboard Dashboard" [ref=f7e30] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=f7e31]: dashboard
+          - text: Dashboard
+        - link "analytics Loyalty Analytics" [ref=f7e32] [cursor=pointer]:
+          - /url: /dashboard/loyalty-analytics
+          - generic [ref=f7e33]: analytics
+          - text: Loyalty Analytics
+    - generic [ref=f7e35]:
+      - generic [ref=f7e36]: O
+      - generic [ref=f7e37]:
+        - paragraph [ref=f7e38]: Owner
+        - generic [ref=f7e39]: OWNER
+  - main [ref=f7e40]:
+    - generic [ref=f7e41]:
+      - heading "Dashboard" [level=2] [ref=f7e42]
+      - button "Live updates" [ref=f7e44] [cursor=pointer]:
+        - generic [ref=f7e45]: notifications
+    - generic [ref=f7e46]:
+      - generic [ref=f7e47]:
+        - generic [ref=f7e48]:
+          - paragraph [ref=f7e49]: Avg. Rating
+          - heading "—" [level=3] [ref=f7e50]
+        - generic [ref=f7e51]:
+          - paragraph [ref=f7e52]: Total Reviews
+          - heading "—" [level=3] [ref=f7e53]
+        - generic [ref=f7e54]:
+          - paragraph [ref=f7e55]: Pending Approvals
+          - heading "—" [level=3] [ref=f7e56]
+        - generic [ref=f7e57]:
+          - paragraph [ref=f7e58]: Loyalty Scans Today
+          - heading "—" [level=3] [ref=f7e59]
+      - generic [ref=f7e60]:
+        - heading "Sentiment Trend (Last 7 Days)" [level=3] [ref=f7e63]
+        - generic [ref=f7e65]:
+          - generic [ref=f7e66]:
+            - heading "Action Required" [level=3] [ref=f7e67]
+            - generic [ref=f7e68]: undefined Pending
+          - generic [ref=f7e69]: No pending reviews to show yet.

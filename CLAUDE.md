@@ -255,3 +255,4 @@ YES / NO — explain if YES (any auth, OTP, encryption, or RLS changes)
 2. pytest tests/unit/test_{area}.py -v
 3. [Manual test steps if needed]
 ```
+                                                                                                                ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup

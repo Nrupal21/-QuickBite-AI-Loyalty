@@ -1,0 +1,9 @@
+{% extends "_layout.txt" %}
+
+{% block content -%}
+{{ restaurant_name }} is now live on QuickBite AI + Loyalty.
+
+You're set up as Owner — sign in any time to draft AI review replies and manage your loyalty program.
+
+Didn't do this? Contact support right away.
+{%- endblock %}

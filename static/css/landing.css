@@ -3,19 +3,22 @@
    generous whitespace, restrained motion. Inspired by high-end minimalist
    SaaS/marketing sites (Apple-adjacent), built fresh for this product. */
 
-/* Inter is loaded via <link> in base.html (preconnect + stylesheet) rather
-   than @import here, so the font request starts in parallel with CSS. */
+/* Hanken Grotesk is loaded via <link> in base.html (preconnect + stylesheet)
+   rather than @import here, so the font request starts in parallel with CSS. */
 
 :root {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  /* Core palette: near-black ink, near-white paper, one blue accent */
+  /* Core palette: near-black ink, near-white paper, one blue accent.
+     --accent is Doc 4's locked brand blue (#1A56DB) — every other blue in
+     this stylesheet derives from it, never a second ad-hoc blue. */
   --ink: #0b0b0d;
   --paper: #fafafa;
   --paper-card: #ffffff;
   --muted: #64748b;
   --border: #e4e4e7;
-  --accent: #2563eb;
+  --accent: #1a56db;
+  --accent-hover: #1544ad;
   --accent-ink: #ffffff;
   --success: #059669;
 
@@ -44,7 +47,6 @@
   --space-7: 6rem;
   --space-8: 8rem;
 
-  --container: 1200px;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -52,6 +54,44 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/* Browser surfaces we didn't draw still carry the design — theme them from
+   the palette instead of leaving OS defaults. */
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+* {
+  scrollbar-color: var(--hero-border) transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--hero-border);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+  background-clip: padding-box;
+}
+
+input,
+textarea {
+  caret-color: var(--accent);
 }
 
 html {
@@ -98,9 +138,11 @@ button {
   font-family: inherit;
 }
 
+/* Full width — no centered max-width column. Every section fills the
+   available screen; padding-inline is the only thing keeping content off
+   the literal edge. */
 .container {
   width: 100%;
-  max-width: var(--container);
   margin-inline: auto;
   padding-inline: var(--space-3);
 }
@@ -108,6 +150,12 @@ button {
 @media (min-width: 768px) {
   .container {
     padding-inline: var(--space-4);
+  }
+}
+
+@media (min-width: 1600px) {
+  .container {
+    padding-inline: var(--space-6);
   }
 }
 
@@ -161,6 +209,15 @@ p {
 
 /* ---------- Buttons ---------- */
 
+.btn[hidden] {
+  /* `display: inline-flex` below beats the UA stylesheet's `[hidden] {
+     display: none }` in the cascade (author styles win over UA styles
+     regardless of specificity) — without this override, any script that
+     toggles the `hidden` attribute on a .btn (e.g. nav-auth.js) renders it
+     anyway. */
+  display: none;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -194,7 +251,7 @@ p {
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--accent-hover);
 }
 
 .btn-ghost-light {
@@ -222,44 +279,11 @@ p {
   width: 100%;
 }
 
-/* ---------- Nav ---------- */
+/* ---------- Brand lockup ---------- */
 
-.nav {
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 100;
-  padding: var(--space-2) 0;
-}
-
-.nav-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: 0.625rem 0.75rem 0.625rem 1.25rem;
-  border-radius: var(--radius-full);
-  border: 1px solid transparent;
-  transition: background-color 300ms var(--ease-out), border-color 300ms var(--ease-out),
-    box-shadow 300ms var(--ease-out);
-}
-
-.nav.is-scrolled .nav-inner {
-  background: rgba(11, 11, 13, 0.72);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(16px) saturate(160%);
-}
-
-/* The nav's default (transparent, light text) state assumes it's overlaid on
-   a dark hero. Pages without one (has-dark-hero unset) render it pinned in
-   its "scrolled" glass state from the first frame instead, so the brand and
-   links stay legible over a light page background. */
-body:not(.has-dark-hero) .nav-inner {
-  background: rgba(11, 11, 13, 0.72);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(16px) saturate(160%);
-}
+/* The navbar that used to live here is now partials/nav.html + nav.css
+   (.sitenav / .sitedock). Only the brand lockup stayed behind, because
+   partials/footer.html reuses it. */
 
 .nav-brand {
   display: flex;
@@ -282,41 +306,9 @@ body:not(.has-dark-hero) .nav-inner {
   flex-shrink: 0;
 }
 
-.nav-links {
-  display: none;
-  align-items: center;
-  gap: var(--space-4);
-  font-size: 0.9375rem;
-  color: var(--hero-muted);
-}
-
-.nav-links a {
-  transition: color 200ms var(--ease-out);
-}
-
-.nav-links a:hover {
-  color: var(--hero-fg);
-}
-
-@media (min-width: 900px) {
-  .nav-links {
-    display: flex;
+.nav-brand {
+    font-size: 0.9375rem;
   }
-}
-
-.nav-cta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.nav-cta .btn {
-  /* Kept >=44px tall even at "compact" nav scale — anything shorter fails
-     the 44x44 minimum touch target for a primary nav action. */
-  min-height: 44px;
-  padding: 0 1.125rem;
-  font-size: 0.875rem;
-}
 
 /* ---------- Hero ---------- */
 
@@ -1372,3 +1364,4 @@ body:not(.has-dark-hero) .nav-inner {
     transform: none;
   }
 }
+

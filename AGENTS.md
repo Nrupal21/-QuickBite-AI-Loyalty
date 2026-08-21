@@ -52,7 +52,7 @@ When implementing any ticket, always read the relevant acceptance criteria from 
 - **Animate.css 4.1.1** — all CSS utility animations (entrances, shakes, toasts)
 
 ### External Services
-- **Twilio** — SMS OTP delivery + WhatsApp (Pro+ only)
+- **Twilio** — SMS OTP delivery + WhatsApp (Pro+ only). `SMS_PROVIDER=2factor` (`app/core/config.py`) swaps OTP-only SMS to 2Factor.in (India, no-DLT-template quick-OTP API) — WhatsApp and non-OTP SMS stay on Twilio regardless; see `app/services/messaging_service.py`.
 - **SendGrid** — Email OTP + campaigns
 - **Google My Business API v4.9** — review sync + response posting
 - **Stripe 2024-04-10** — subscription billing

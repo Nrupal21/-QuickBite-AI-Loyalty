@@ -33,23 +33,44 @@ class Role(Base):
 
 
 class User(Base):
-    """Owner/Manager/Staff login accounts. NOT loyalty customers (customer.customers)."""
+    """Owner/Manager/Staff login accounts. NOT loyalty customers (customer.customers).
+
+    tenant_id is nullable for standard users (role USER) who have registered
+    and verified their email but not yet registered a restaurant — see
+    AuthService.become_restaurant(). Every other role always carries a
+    concrete tenant_id.
+    """
 
     __tablename__ = "users"
     __table_args__ = {"schema": "restaurant"}
 
-    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.tenants.id"), index=True)
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("restaurant.tenants.id"), nullable=True, index=True
+    )
     role_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("static.roles.id"))
-    email_hash: Mapped[str] = mapped_column(String, unique=True)
-    encrypted_email: Mapped[str] = mapped_column(String)
-    # v3.1 TIER 3 — staff mobile: hash for lookup + AES-256-GCM for display
-    phone_hash: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    # Nullable since migration 0014: an account registered by phone OTP has no
+    # email until "Join Us" verifies one as its second contact method — the
+    # mirror image of how an email-registered account acquires its phone.
+    # Still globally unique wherever it exists; Postgres ignores NULLs there.
+    email_hash: Mapped[str | None] = mapped_column(String, nullable=True, unique=True)
+    encrypted_email: Mapped[str | None] = mapped_column(String, nullable=True)
+    # v3.1 TIER 3 — staff mobile: hash for lookup + AES-256-GCM for display.
+    # Globally unique (migration 0014) because OTP sign-up made phone a primary
+    # login identifier, not just a contact field. Postgres unique indexes ignore
+    # NULLs, so accounts with no phone are unconstrained.
+    phone_hash: Mapped[str | None] = mapped_column(String, nullable=True, unique=True)
     encrypted_phone: Mapped[str | None] = mapped_column(String, nullable=True)
     # Optional third login identifier (identify-first login) — TIER 3 like
     # email, globally unique for the same reason email is.
     username_hash: Mapped[str | None] = mapped_column(String, nullable=True, unique=True)
     encrypted_username: Mapped[str | None] = mapped_column(String, nullable=True)
-    hashed_password: Mapped[str] = mapped_column(String)  # bcrypt rounds=12
+    # NULL for accounts created by OTP or OAuth, which never chose a password.
+    # verify_password_constant_time() accepts None and still pays the bcrypt
+    # cost, so a NULL hash is an ordinary credential mismatch to every caller;
+    # login() turns it into an explicit "signs in without a password" error.
+    hashed_password: Mapped[str | None] = mapped_column(
+        String, nullable=True
+    )  # bcrypt rounds=12
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     totp_secret: Mapped[str | None] = mapped_column(String, nullable=True)  # AES-256-GCM
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -71,13 +92,19 @@ class User(Base):
 
 
 class Session(Base):
-    """Active Owner/Staff logins. Enables 'logout all devices'."""
+    """Active Owner/Staff logins. Enables 'logout all devices'.
+
+    tenant_id is nullable for the same reason as User.tenant_id — a standard
+    user's session carries no tenant until they register a restaurant.
+    """
 
     __tablename__ = "sessions"
     __table_args__ = {"schema": "restaurant"}
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.users.id"), index=True)
-    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.tenants.id"), index=True)
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("restaurant.tenants.id"), nullable=True, index=True
+    )
     refresh_token_hash: Mapped[str] = mapped_column(String, unique=True)
     # v3.1 TIER 2 — SHA-256 of source IP, never the raw address
     ip_address_hash: Mapped[str] = mapped_column(String)

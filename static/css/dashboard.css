@@ -1,0 +1,1215 @@
+/* QuickBite AI + Loyalty — Owner/Staff dashboard shells (dashboard/index.html,
+   dashboard/loyalty_analytics.html).
+   ---------------------------------------------------------------------------
+   LIQUID GLASS, EXTENDED FROM THE NAV — nav.css already commits this product
+   to a frosted-glass material (backdrop-filter: blur + saturate, a lit top
+   hairline, layered offset shadows) on its floating pill and mobile dock.
+   This file carries that same recipe into the dashboard content area rather
+   than inventing a second material: one glass grammar, two densities (the
+   dark nav pill, the light content panels below).
+
+   Doc 4's locked hex palette is unchanged — glass is a finish, not a new
+   brand. The panels float over a very low-alpha mesh of the three brand
+   hues (blue trust, teal loyalty, orange conversion) so the frost has
+   something real to refract; at rest it reads as a barely-there tint.
+
+   DIRECTION CONTRACT (impeccable, whole-surface-in-established-world,
+   shaped directly — reference image + "liquid glass" + the locked palette
+   were pinned by the request, so no concept-seed round ran):
+     THESIS: replace the flat white stat-card dashboard with layered frosted
+       glass over a brand-tinted mesh, without breaking from the locked
+       palette, the existing data contracts, or the dark glass nav already
+       shipping.
+     OWN-WORLD: Doc 4 palette through frosted panels — blur(20-24px)
+       saturate(160-180%), a lit top edge, soft layered shadow, on a pale
+       three-hue gradient mesh. Hanken Grotesk throughout (Operate mode: one
+       workhorse family, no display pairing).
+     STORY: staff/owner reads today's health from one glass KPI strip (no
+       colored side-stripes, no uniform icon-card grid — the craft floor
+       bans both), scans a real 7-day sentiment trend, sees what's waiting
+       on approval (read-only until a list-pending endpoint ships — Action
+       Required is a status view today, not yet an action surface), and —
+       Manager and above — reads loyalty performance across branches, all
+       wired to the endpoints that already exist.
+     FIRST VIEWPORT: header, then the KPI strip as one divided glass bar,
+       then the sentiment chart (2/3) beside Action Required (1/3), all
+       visible without scrolling at 1440px.
+     FORM: extension of the established glass world into an existing Operate
+       surface; shaped directly per new-work.md's "never run [concept-seed]
+       for a local extension or a precisely specified narrow request" —
+       reference image, "liquid glass" material, and the locked palette
+       were all pinned by the request itself, leaving nothing for a
+       structure roll to decide.
+     SEED: none — see FORM. DESIGN.md records the resulting system.
+     FINISH: unreviewed and undocumented is unfinished; this build ends with
+       the finish review, the verdict, the surface brief, and every shipping
+       raster carrying its provenance.
+*/
+
+.qb-dash {
+  --glass-blur: 24px;
+  --glass-sat: 180%;
+  --glass-fill-top: rgba(255, 255, 255, 0.74);
+  --glass-fill-bottom: rgba(255, 255, 255, 0.5);
+  --glass-border: rgba(30, 42, 58, 0.08);
+  --glass-border-top: rgba(255, 255, 255, 0.95);
+  --glass-shadow: 0 1px 2px rgba(30, 42, 58, 0.05), 0 20px 40px -24px rgba(30, 42, 58, 0.28);
+  --glass-radius: 1.25rem;
+  --ink: #1e2a3a;
+  --muted: #64748b;
+}
+
+/* ------------------------------------------------------------ mesh ground */
+/* Fixed so the mesh never scrolls away from behind the fixed sidebar; the
+   dashboard body has no other background painted beneath it (base bg
+   token stays as a solid fallback under prefers-reduced-transparency /
+   forced-colors, where the mesh and blur may not render). */
+.qb-dash-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(900px 620px at 6% -8%, rgba(26, 86, 219, 0.24), transparent 62%),
+    radial-gradient(760px 620px at 100% 4%, rgba(13, 148, 136, 0.2), transparent 60%),
+    radial-gradient(680px 560px at 14% 112%, rgba(255, 107, 53, 0.16), transparent 62%),
+    radial-gradient(720px 520px at 86% 96%, rgba(13, 148, 136, 0.14), transparent 60%);
+}
+
+/* ------------------------------------------------------------ glass panel */
+.qb-glass {
+  position: relative;
+  background: linear-gradient(180deg, var(--glass-fill-top), var(--glass-fill-bottom));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  border: 1px solid var(--glass-border);
+  border-top-color: var(--glass-border-top);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .qb-glass {
+    background: #ffffff;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  .qb-glass {
+    background: #ffffff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+.qb-glass--sidebar {
+  border-radius: 0 var(--glass-radius) var(--glass-radius) 0;
+  border-left: none;
+}
+
+.qb-glass--tinted-teal {
+  background: linear-gradient(180deg, rgba(240, 253, 250, 0.8), rgba(255, 255, 255, 0.52));
+}
+
+/* The specular catch a frosted pane throws under overhead light — a
+   fixed-position highlight, not a hover effect, so it reads on every panel
+   at rest. Pinned by the "liquid glass" brief as a specific material cue,
+   not decoration. */
+.qb-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(120% 60% at 15% -10%, rgba(255, 255, 255, 0.55), transparent 55%);
+  pointer-events: none;
+}
+
+.qb-glass > * {
+  position: relative;
+}
+
+/* ------------------------------------------------------------- KPI strip */
+/* One divided bar, not four identical cards — the craft floor refuses the
+   uniform icon+heading+text grid and the colored border-left as page
+   scaffolding, so the four figures live as segments of a single panel
+   instead. */
+.qb-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.qb-kpi {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1.25rem 1.5rem;
+  border-left: 1px solid var(--glass-border);
+  min-width: 0;
+}
+
+.qb-kpi:first-child {
+  border-left: none;
+}
+
+.qb-kpi-icon {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qb-kpi-icon .material-symbols-outlined {
+  font-size: 1.375rem;
+}
+
+.qb-kpi-icon--orange { background: rgba(255, 107, 53, 0.14); color: #c2410c; }
+.qb-kpi-icon--blue { background: rgba(26, 86, 219, 0.12); color: #1a56db; }
+.qb-kpi-icon--warning { background: rgba(217, 119, 6, 0.14); color: #b45309; }
+.qb-kpi-icon--teal { background: rgba(13, 148, 136, 0.14); color: #0d9488; }
+
+.qb-kpi-body {
+  min-width: 0;
+}
+
+.qb-kpi-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+.qb-kpi-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Loading skeleton — replaces the value node's text while the first fetch
+   is in flight; no spinner mid-content per Operate guidance. */
+.qb-skel {
+  display: inline-block;
+  width: 3.5rem;
+  height: 1.5rem;
+  border-radius: 0.375rem;
+  background: linear-gradient(90deg, rgba(30, 42, 58, 0.08) 25%, rgba(30, 42, 58, 0.14) 37%, rgba(30, 42, 58, 0.08) 63%);
+  background-size: 400% 100%;
+  animation: qb-shimmer 1.4s ease infinite;
+}
+
+@keyframes qb-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qb-skel { animation: none; background-position: 50% 0; }
+}
+
+/* ------------------------------------------------------------------ chart */
+.qb-chart-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.qb-chart-area {
+  fill: url(#qb-area-gradient);
+}
+
+.qb-chart-line {
+  fill: none;
+  stroke: #1a56db;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.qb-chart-point {
+  fill: #ffffff;
+  stroke: #1a56db;
+  stroke-width: 2;
+}
+
+.qb-chart-point--empty {
+  fill: #e2e1ed;
+  stroke: #c3c5d7;
+}
+
+.qb-chart-point--last {
+  fill: #1a56db;
+  stroke: #ffffff;
+}
+
+.qb-chart-gridline {
+  stroke: rgba(30, 42, 58, 0.08);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.qb-chart-axis {
+  font-size: 11px;
+  fill: var(--muted);
+  font-family: 'Hanken Grotesk', sans-serif;
+}
+
+/* ------------------------------------------------------------ action list */
+.qb-action-row {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--glass-border);
+  transition: background-color 180ms ease;
+}
+
+.qb-action-row:last-child {
+  border-bottom: none;
+}
+
+.qb-action-row:hover {
+  background: rgba(26, 86, 219, 0.04);
+}
+
+.qb-empty {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.qb-empty-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  background: rgba(26, 86, 219, 0.1);
+  color: #1a56db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+}
+
+/* ------------------------------------------------------------ bento row */
+.qb-bento {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1.2fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1100px) {
+  .qb-bento {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Radial gauge — a real percentage (redemption_rate), not a decorative
+   ring: the arc length is set from the fetched value. */
+.qb-gauge {
+  --gauge-pct: 0;
+  width: 9rem;
+  height: 9rem;
+  margin: 0 auto;
+  position: relative;
+}
+
+.qb-gauge svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.qb-gauge-track {
+  fill: none;
+  stroke: rgba(13, 148, 136, 0.14);
+  stroke-width: 10;
+}
+
+.qb-gauge-fill {
+  fill: none;
+  stroke: #0d9488;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.qb-gauge-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.qb-gauge-value {
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+.qb-gauge-caption {
+  font-size: 0.6875rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Branch performance — real bars proportional to scan_count. */
+.qb-branch-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+}
+
+.qb-branch-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  flex: 0 0 auto;
+  width: 6.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qb-branch-bar-track {
+  display: block;
+  flex: 1;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: rgba(30, 42, 58, 0.07);
+  overflow: hidden;
+}
+
+.qb-branch-bar-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #1a56db, #0d9488);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.qb-branch-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  flex: 0 0 auto;
+  width: 2.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------- browser skin */
+/* Craft-floor: the parts you did not draw still carry the design. */
+.qb-dash ::selection {
+  background: rgba(26, 86, 219, 0.22);
+  color: var(--ink);
+}
+
+.qb-dash *:focus-visible {
+  outline: 2px solid #1a56db;
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+.qb-dash ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.qb-dash ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.qb-dash ::-webkit-scrollbar-thumb {
+  background: rgba(30, 42, 58, 0.18);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.qb-dash ::-webkit-scrollbar-thumb:hover {
+  background: rgba(30, 42, 58, 0.3);
+  background-clip: padding-box;
+}
+
+.qb-dash {
+  scrollbar-color: rgba(30, 42, 58, 0.18) transparent;
+  scrollbar-width: thin;
+}
+
+/* ----------------------------------------------------------- live badge */
+.qb-live-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
+}
+
+/* ------------------------------------------------------- google profile */
+.qb-gmb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.125rem 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.qb-gmb-row:last-child {
+  border-bottom: none;
+}
+
+.qb-gmb-branch-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.qb-gmb-status {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  margin-top: 0.125rem;
+}
+
+.qb-gmb-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: rgba(100, 116, 139, 0.4);
+  flex: none;
+}
+
+.qb-gmb-status--connected {
+  color: #0d9488;
+  font-weight: 600;
+}
+
+.qb-gmb-status--connected .qb-gmb-dot {
+  background: #0d9488;
+}
+
+.qb-gmb-action {
+  flex: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.qb-gmb-action--connect {
+  background: #1a56db;
+  color: #ffffff;
+}
+
+.qb-gmb-action--connect:hover {
+  background: #1544ad;
+}
+
+.qb-gmb-action--disconnect {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+.qb-gmb-action--disconnect:hover {
+  background: rgba(220, 38, 38, 0.16);
+}
+
+.qb-gmb-action--disconnect[data-confirming='true'] {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.qb-gmb-action[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------------ toast */
+.qb-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.25rem;
+  max-width: calc(100vw - 2rem);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+@media (min-width: 900px) {
+  .qb-toast {
+    bottom: 1.5rem;
+  }
+}
+
+.qb-toast--success {
+  color: #0d9488;
+}
+
+.qb-toast--error {
+  color: #dc2626;
+}
+
+.qb-toast .material-symbols-outlined {
+  font-size: 1.25rem;
+}
+
+/* ---------------------------------------------------------------- reviews */
+.qb-review-row {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.qb-review-row:last-child {
+  border-bottom: none;
+}
+
+.qb-review-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-bottom: 0.375rem;
+}
+
+.qb-review-stars {
+  color: #d97706;
+  letter-spacing: 0.05em;
+  font-size: 0.875rem;
+}
+
+.qb-review-reviewer {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.qb-review-meta {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.qb-review-body {
+  font-size: 0.875rem;
+  color: var(--ink);
+  line-height: 1.5;
+  max-width: 68ch;
+}
+
+.qb-review-response {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 0.875rem;
+  background: rgba(26, 86, 219, 0.04);
+  border: 1px solid rgba(26, 86, 219, 0.1);
+}
+
+.qb-review-response-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.625rem;
+}
+
+.qb-review-response-text {
+  width: 100%;
+  min-height: 4.5rem;
+  border: 1px solid rgba(30, 42, 58, 0.14);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 0.875rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  color: var(--ink);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.qb-review-response-text:focus {
+  outline: 2px solid #1a56db;
+  outline-offset: 1px;
+}
+
+.qb-review-response-text[readonly] {
+  background: transparent;
+  border-color: transparent;
+  padding-left: 0;
+  resize: none;
+  color: var(--muted);
+}
+
+.qb-review-response-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.qb-review-approve {
+  padding: 0.5rem 1rem;
+  border-radius: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+}
+
+.qb-review-approve:hover {
+  background: #047857;
+}
+
+.qb-review-approve[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------- qr codes */
+.qb-qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: 1.25rem;
+}
+
+.qb-qr-card {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.qb-qr-card--inactive {
+  opacity: 0.6;
+}
+
+.qb-qr-image-frame {
+  align-self: center;
+  width: 9.5rem;
+  height: 9.5rem;
+  background: #ffffff;
+  border-radius: 0.875rem;
+  padding: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(30, 42, 58, 0.08);
+}
+
+.qb-qr-image-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.qb-qr-token {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: rgba(30, 42, 58, 0.05);
+  border-radius: 0.875rem;
+  padding: 0.5rem 0.625rem;
+}
+
+.qb-qr-token-value {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qb-qr-copy {
+  flex: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  padding: 0.125rem;
+}
+
+.qb-qr-copy .material-symbols-outlined {
+  font-size: 1.125rem;
+}
+
+.qb-qr-copy:hover {
+  color: #1a56db;
+}
+
+.qb-qr-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.qb-qr-download {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: #1a56db;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.qb-qr-download:hover {
+  background: #1544ad;
+}
+
+.qb-qr-download .material-symbols-outlined {
+  font-size: 1.125rem;
+}
+
+/* ----------------------------------------------------- reward programs */
+.qb-program-row {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.qb-program-row:last-child {
+  border-bottom: none;
+}
+
+.qb-program-row--paused .qb-program-name,
+.qb-program-row--paused .qb-program-meta {
+  opacity: 0.55;
+}
+
+.qb-program-main {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.qb-program-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.qb-program-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.qb-program-meta {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  margin-top: 0.125rem;
+}
+
+.qb-program-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: none;
+}
+
+.qb-program-action {
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(30, 42, 58, 0.14);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--ink);
+  transition: background-color 150ms ease;
+}
+
+.qb-program-action:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.qb-program-edit-panel {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--glass-border);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.qb-program-edit-panel[hidden] {
+  display: none;
+}
+
+.qb-program-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  grid-column: 1 / -1;
+}
+
+/* --------------------------------------------------------------- team */
+.qb-team-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.qb-team-row:last-child {
+  border-bottom: none;
+}
+
+.qb-team-row--inactive {
+  opacity: 0.55;
+}
+
+.qb-team-avatar {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: rgba(26, 86, 219, 0.1);
+  color: #1a56db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8125rem;
+}
+
+.qb-team-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.qb-team-email {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qb-team-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.125rem;
+}
+
+.qb-role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(30, 42, 58, 0.06);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.qb-team-flag {
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+}
+
+.qb-team-flag .material-symbols-outlined {
+  font-size: 0.9375rem;
+}
+
+/* Invite panel — a form, not a modal (craft-floor: no modal for a task that
+   needs neither interruption nor protected focus). */
+.qb-invite-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.qb-invite-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.qb-invite-input,
+.qb-invite-select {
+  border: 1px solid rgba(30, 42, 58, 0.14);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 0.875rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.qb-invite-input:focus,
+.qb-invite-select:focus {
+  outline: 2px solid #1a56db;
+  outline-offset: 1px;
+}
+
+.qb-invite-submit {
+  background: #1a56db;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.qb-invite-submit:hover {
+  background: #1544ad;
+}
+
+.qb-invite-submit[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------- account identity */
+/* One trigger grammar, two anchors: the sidebar chip (desktop) and the
+   mobile tab bar's Account tab both open the same #account-sheet panel —
+   this is the dashboard's own identity affordance, replacing the public
+   nav's account menu now that partials/nav.html is not included here. */
+.qb-account-trigger {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 0.875rem;
+  transition: background-color 150ms ease;
+}
+
+.qb-account-trigger:hover {
+  background: rgba(30, 42, 58, 0.04);
+}
+
+.qb-account-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 190;
+  background: rgba(11, 11, 13, 0.32);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+.qb-account-sheet {
+  position: fixed;
+  z-index: 200;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.125rem 1.25rem 1.25rem;
+}
+
+.qb-account-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Nav links inside the shared sheet — mobile only (min-[900px]:hidden in the
+   markup): the "More" tab folds every non-primary destination in here
+   instead of the mobile tab bar growing a slot per page. Desktop never
+   shows this block since the sidebar already lists everything. */
+.qb-more-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.5rem;
+  border-radius: 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.qb-more-nav-item:hover {
+  background: rgba(30, 42, 58, 0.04);
+}
+
+.qb-more-nav-item[aria-current='page'] {
+  color: #1a56db;
+  background: rgba(26, 86, 219, 0.08);
+}
+
+.qb-more-nav-item .material-symbols-outlined {
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+
+.qb-more-nav-item[aria-current='page'] .material-symbols-outlined {
+  color: #1a56db;
+}
+
+.qb-more-divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 0.25rem 0;
+}
+
+.qb-account-signout {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  background: rgba(220, 38, 38, 0.06);
+  color: #dc2626;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.qb-account-signout:hover {
+  background: rgba(220, 38, 38, 0.12);
+}
+
+.qb-account-signout .material-symbols-outlined {
+  font-size: 1.125rem;
+}
+
+@media (min-width: 900px) {
+  .qb-account-sheet {
+    left: 1rem;
+    bottom: 5.5rem;
+  }
+}
+
+/* ------------------------------------------------------- mobile tab bar */
+/* Replaces the public site's floating dark dock on dashboard screens: a
+   full-width light-glass bar (this surface's own material, not the
+   marketing chrome's dark one) with exactly the sidebar's two
+   destinations plus the account trigger. */
+.qb-mobile-tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 150;
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+  border-radius: 1.25rem 1.25rem 0 0;
+  border-bottom: none;
+  padding: 0.5rem 0.625rem calc(0.5rem + env(safe-area-inset-bottom));
+}
+
+.qb-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  padding: 0.375rem 0.25rem;
+  border-radius: 0.875rem;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  min-height: 44px;
+}
+
+.qb-tab .material-symbols-outlined {
+  font-size: 1.375rem;
+}
+
+.qb-tab[aria-current='page'],
+.qb-tab[aria-expanded='true'] {
+  color: #1a56db;
+  background: rgba(26, 86, 219, 0.1);
+}
+
+/* --------------------------------------------------------------- mobile */
+@media (max-width: 900px) {
+  .qb-account-sheet {
+    left: 50%;
+    right: auto;
+    bottom: calc(4.75rem + env(safe-area-inset-bottom));
+    width: min(320px, calc(100vw - 2rem));
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 900px) {
+  .qb-kpi-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .qb-kpi:nth-child(2) {
+    border-left: 1px solid var(--glass-border);
+  }
+
+  .qb-kpi:nth-child(3) {
+    border-left: none;
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .qb-kpi:nth-child(4) {
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .qb-kpi-strip--3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qb-kpi-strip--3 .qb-kpi {
+    border-left: none !important;
+  }
+
+  .qb-kpi-strip--3 .qb-kpi:not(:first-child) {
+    border-top: 1px solid var(--glass-border);
+  }
+}

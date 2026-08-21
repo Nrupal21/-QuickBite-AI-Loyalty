@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% import "customer/_auth_macros.html" as ui %}
+
+{% block title %}Create your account — QuickBite{% endblock %}
+{% block meta_description %}Create a QuickBite account with a one-time code, a social account, or a password. Register your restaurant afterwards.{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/auth.css') }}" />
+{% endblock %}
+
+{% block content %}
+<!--
+  SEED auth-stage-01 · surface: /register (see /login for the full contract)
+  Same stage, same step bar, one difference in emphasis: this page leads with
+  the code and social routes and treats the password as the option you take
+  if you want it, because that is the order the product actually recommends.
+  Registering never creates a restaurant — that is "Join Us", later, on the
+  same step bar.
+-->
+<main id="main-content" class="auth-stage">
+
+  <div class="auth-main">
+    {{ ui.auth_topsteps(
+        [
+          {'key': 'identify', 'label': 'Your contact'},
+          {'key': 'verify', 'label': 'Verify it'},
+          {'key': 'account', 'label': 'Your account'}
+        ],
+        0
+    ) }}
+
+    <div class="auth-plate">
+      {{ ui.auth_alert() }}
+
+      {# ------------------------------------------------- pick contact #}
+      <section class="auth-step" data-step="identify" data-entering>
+        <div class="auth-head">
+          <h1 class="auth-title">Create your QuickBite account</h1>
+          <p class="auth-sub">Everyone starts here — diners, owners, and staff alike. Registering a restaurant is a separate step you can take whenever you're ready.</p>
+        </div>
+
+        <form class="auth-form" data-identify-form novalidate>
+          <div class="field">
+            <label class="field-label" for="identifier">Email or phone number</label>
+            <input class="field-input" id="identifier" name="identifier" type="text"
+                   inputmode="email" autocomplete="username" autocapitalize="none"
+                   spellcheck="false" placeholder="you@restaurant.in or +919876543210"
+                   data-field-identifier required />
+            <p class="field-hint">We'll send a 6-digit code here to prove it's yours. Phone numbers need the country code.</p>
+          </div>
+
+          <button type="submit" class="auth-btn auth-btn--primary" data-submit>
+            <span class="auth-btn-label">Send me a code</span>
+          </button>
+        </form>
+
+        {{ ui.oauth_block('Or sign up with') }}
+
+        <p class="auth-note">
+          Already have an account? <a class="auth-link" href="/login">Sign in</a>.
+          Prefer to set a password up front? <a class="auth-link" href="#" data-show-password-signup>Use email and password</a>.
+        </p>
+      </section>
+
+      {# ------------------------------------------------------ verify #}
+      <section class="auth-step" data-step="otp" hidden>
+        <button type="button" class="auth-back" data-back="identify">
+          {{ ui.icon_back(15) }} Change contact
+        </button>
+
+        <div class="auth-head">
+          <h2 class="auth-title">Enter your code</h2>
+          <p class="auth-sub">We sent a 6-digit code to <strong data-echo-identifier></strong>. It expires in five minutes.</p>
+        </div>
+
+        <form data-otp-form novalidate>
+          {{ ui.otp_entry('register-otp') }}
+
+          <div class="otp-meta">
+            <span data-otp-status aria-live="polite"></span>
+            <button type="button" class="auth-btn auth-btn--quiet" data-resend disabled>
+              Resend code
+            </button>
+          </div>
+
+          <button type="submit" class="auth-btn auth-btn--primary auth-mt-2" data-submit>
+            <span class="auth-btn-label">Verify</span>
+          </button>
+        </form>
+      </section>
+
+      {# ----------------------------------------------------- account #}
+      <section class="auth-step" data-step="register-name" hidden>
+        <div class="auth-head">
+          <h2 class="auth-title">Nearly there</h2>
+          <p class="auth-sub">Your <span data-echo-identifier-type>email</span> is verified. Tell us what to call you.</p>
+        </div>
+
+        <form class="auth-form" data-complete-form novalidate>
+          <div class="field">
+            <label class="field-label" for="reg-name">Your name</label>
+            <input class="field-input" id="reg-name" name="name" type="text"
+                   autocomplete="name" placeholder="Marco D'Souza"
+                   data-field-name required />
+          </div>
+
+          <div class="field">
+            <div class="field-label-row">
+              <label class="field-label" for="reg-password">Password</label>
+              <span class="field-hint">Optional</span>
+            </div>
+            <div class="field-with-action">
+              <input class="field-input" id="reg-password" name="password" type="password"
+                     autocomplete="new-password" data-field-password
+                     placeholder="Leave blank to sign in by code" />
+              <button type="button" class="field-action" data-toggle-password
+                      aria-label="Show password" aria-pressed="false">
+                <span data-icon-show>{{ ui.icon_eye(18) }}</span>
+                <span data-icon-hide hidden>{{ ui.icon_eye_off(18) }}</span>
+              </button>
+            </div>
+            <p class="field-hint">Add one if you'd rather not wait for a code each time. At least 8 characters.</p>
+          </div>
+
+          <button type="submit" class="auth-btn auth-btn--primary" data-submit>
+            <span class="auth-btn-label">Create my account</span>
+          </button>
+        </form>
+      </section>
+
+      {# ------------------------------------------- password-first path #}
+      <section class="auth-step" data-step="password-signup" hidden>
+        <button type="button" class="auth-back" data-back="identify">
+          {{ ui.icon_back(15) }} Use a code instead
+        </button>
+
+        <div class="auth-head">
+          <h2 class="auth-title">Sign up with a password</h2>
+          <p class="auth-sub">We'll email you a link to confirm the address before the account goes live.</p>
+        </div>
+
+        <form class="auth-form" data-password-signup-form novalidate>
+          <div class="field">
+            <label class="field-label" for="pw-name">Your name</label>
+            <input class="field-input" id="pw-name" name="name" type="text"
+                   autocomplete="name" placeholder="Marco D'Souza" data-field-name required />
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="pw-email">Email address</label>
+            <input class="field-input" id="pw-email" name="email" type="email"
+                   autocomplete="email" autocapitalize="none" spellcheck="false"
+                   placeholder="you@restaurant.in" data-field-email required />
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="pw-password">Password</label>
+            <div class="field-with-action">
+              <input class="field-input" id="pw-password" name="password" type="password"
+                     autocomplete="new-password" data-field-password required />
+              <button type="button" class="field-action" data-toggle-password
+                      aria-label="Show password" aria-pressed="false">
+                <span data-icon-show>{{ ui.icon_eye(18) }}</span>
+                <span data-icon-hide hidden>{{ ui.icon_eye_off(18) }}</span>
+              </button>
+            </div>
+            <p class="field-hint">At least 8 characters, and not one you use elsewhere.</p>
+          </div>
+
+          <button type="submit" class="auth-btn auth-btn--primary" data-submit>
+            <span class="auth-btn-label">Create my account</span>
+          </button>
+        </form>
+      </section>
+
+      {# ---------------------------------------------- verification sent #}
+      <section class="auth-step" data-step="sent" hidden>
+        <div class="auth-done-mark">{{ ui.icon_check(24) }}</div>
+        <div class="auth-head">
+          <h2 class="auth-title">Check your inbox</h2>
+          <p class="auth-sub" data-sent-message></p>
+        </div>
+        <p class="auth-note">
+          Nothing after a minute or two? Check spam, or
+          <a class="auth-link" href="/register">try a different address</a>.
+        </p>
+      </section>
+
+      {# ---------------------------------------- social: confirm a name #}
+      <section class="auth-step" data-step="oauth-name" hidden>
+        <div class="auth-head">
+          <h2 class="auth-title">Confirm your name</h2>
+          <p class="auth-sub" data-oauth-email-line></p>
+        </div>
+
+        <form class="auth-form" data-oauth-complete-form novalidate>
+          <div class="field">
+            <label class="field-label" for="oauth-name">Your name</label>
+            <input class="field-input" id="oauth-name" name="name" type="text"
+                   autocomplete="name" data-field-name required />
+          </div>
+
+          <button type="submit" class="auth-btn auth-btn--primary" data-submit>
+            <span class="auth-btn-label">Create my account</span>
+          </button>
+        </form>
+      </section>
+
+      {# --------------------------------------------- registration done #}
+      <section class="auth-step" data-step="complete" hidden>
+        <div class="auth-done-mark">{{ ui.icon_check(24) }}</div>
+        <div class="auth-head">
+          <h1 class="auth-title">You're all set</h1>
+          <p class="auth-sub" data-complete-message>Your QuickBite account is ready.</p>
+        </div>
+
+        <div class="auth-actions">
+          <a class="auth-btn auth-btn--primary" href="/profile">
+            <span class="auth-btn-label">Continue to my profile</span>
+          </a>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  window.QUICKBITE_FIREBASE = {{ firebase_web_config_json | safe }};
+</script>
+{% if firebase_web_configured %}
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+{% endif %}
+<script src="{{ url_for('static', path='js/auth-core.js') }}"></script>
+<script src="{{ url_for('static', path='js/auth-register.js') }}"></script>
+{% endblock %}

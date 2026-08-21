@@ -1,0 +1,40 @@
+- generic [active] [ref=f11e1]:
+  - generic [ref=f11e3]:
+    - generic [ref=f11e4]:
+      - generic [ref=f11e6]:
+        - generic [ref=f11e7]: Loading
+        - progressbar [ref=f11e8]
+      - main [ref=f11e15]:
+        - generic [ref=f11e16]:
+          - generic [ref=f11e17]: Sign in with Google
+          - generic [ref=f11e23]:
+            - heading "Choose an account" [level=1] [ref=f11e24]
+            - generic [ref=f11e26]:
+              - text: to continue to
+              - button "Boat booking" [ref=f11e27] [cursor=pointer]
+        - list [ref=f11e38]:
+          - listitem [ref=f11e39]:
+            - link "Nrupal Thakur nrupal85@gmail.com" [ref=f11e40] [cursor=pointer]:
+              - generic [ref=f11e44]:
+                - generic [ref=f11e45]: Nrupal Thakur
+                - generic [ref=f11e46]: nrupal85@gmail.com
+          - listitem [ref=f11e47]:
+            - link "Use another account" [ref=f11e48] [cursor=pointer]
+    - contentinfo [ref=f11e59]:
+      - combobox "Change language English (United Kingdom)" [ref=f11e63] [cursor=pointer]:
+        - generic: English (United Kingdom)
+      - list [ref=f11e65]:
+        - listitem [ref=f11e66]:
+          - link "Open Google Account Help Centre (external, opens in a new window)" [ref=f11e67] [cursor=pointer]:
+            - /url: https://support.google.com/accounts?hl=en-GB&p=account_iph
+            - text: Help
+        - listitem [ref=f11e68]:
+          - link "Privacy Policy (external, opens in a new window)" [ref=f11e69] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=IN&hl=en-GB&privacy=true
+            - text: Privacy
+        - listitem [ref=f11e70]:
+          - link "Google Terms of Service (external, opens in a new window)" [ref=f11e71] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=IN&hl=en-GB
+            - text: Terms
+  - iframe [ref=f11e72]:
+    

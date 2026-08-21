@@ -8,20 +8,32 @@ import json
 import uuid
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
 from app.core import cache_service
 from app.core.customer_security import create_customer_token
-from app.core.encryption import encrypt_pii, sha256_hex
+from app.core.encryption import decrypt_pii, encrypt_pii, sha256_hex
 from app.core.principal import AuthProvider, SubjectType
-from app.db.models.customer import Customer
+from app.db import rls
+from app.db.models.branch import Branch
+from app.db.models.customer import Customer, ReviewDraft
 from app.db.models.identity_link import IdentityLink
-from app.schemas.customers import CustomerRegister, CustomerRegisterResponse
+from app.db.models.loyalty import StampLog
+from app.schemas.customers import (
+    CustomerProfileResponse,
+    CustomerRegister,
+    CustomerRegisterResponse,
+    LocationStampsOut,
+    ReviewDraftOut,
+)
 from app.services import identity_link_service
 from app.services.identity_service import classify_identifier
+
+# Recent drafts only — this is a profile-page preview, not a full export.
+_RECENT_REVIEW_DRAFTS_LIMIT = 20
 
 
 async def register(request: CustomerRegister, session: AsyncSession) -> tuple[CustomerRegisterResponse, str]:
@@ -56,6 +68,13 @@ async def register(request: CustomerRegister, session: AsyncSession) -> tuple[Cu
             )
         classify_identifier(request.phone)  # validates E.164 shape, raises 422 if not
         phone = request.phone
+
+    # customer.customers is RLS-protected and nothing has authenticated yet on
+    # this request — the tenant_id came from the registration_token's own
+    # pending-registration record (itself only mintable via a prior
+    # /otp-request for this tenant), so it's safe to bind before the lookup
+    # and insert below run.
+    await rls.set_tenant_context(session, tenant_id)
 
     phone_hash = sha256_hex(phone)
     if await _customer_exists(session, tenant_id, Customer.phone_hash, phone_hash):
@@ -145,6 +164,70 @@ async def _link_oauth_identity(
         # and here. The customer row this call created is unaffected either
         # way, so just drop the redundant link rather than fail registration.
         await session.rollback()
+
+
+async def get_profile(session: AsyncSession, customer: Customer) -> CustomerProfileResponse:
+    """GET /customers/me — "My Rewards": stamps grouped by branch (location),
+    plus the customer's own recent review-draft history.
+
+    Both queries are scoped by `customer_id = :cid` on top of the RLS
+    tenant_id filter already bound by `get_current_customer` — RLS alone
+    would return every diner's rows for this tenant, not just this one's.
+    """
+    stamps_result = await session.execute(
+        select(
+            Branch.id,
+            Branch.name,
+            Branch.encrypted_address,
+            func.count(StampLog.id),
+            func.max(StampLog.scanned_at),
+        )
+        .join(Branch, Branch.id == StampLog.branch_id)
+        .where(StampLog.customer_id == customer.id, StampLog.is_fraudulent.is_(False))
+        .group_by(Branch.id, Branch.name, Branch.encrypted_address)
+        .order_by(func.max(StampLog.scanned_at).desc())
+    )
+    stamps_by_location = [
+        LocationStampsOut(
+            branch_id=str(branch_id),
+            branch_name=branch_name,
+            branch_address=decrypt_pii(encrypted_address) if encrypted_address else None,
+            stamp_count=stamp_count,
+            last_scanned_at=last_scanned_at,
+        )
+        for branch_id, branch_name, encrypted_address, stamp_count, last_scanned_at in stamps_result.all()
+    ]
+
+    drafts_result = await session.execute(
+        select(ReviewDraft, Branch.name)
+        .join(Branch, Branch.id == ReviewDraft.branch_id)
+        .where(ReviewDraft.customer_id == customer.id)
+        .order_by(ReviewDraft.created_at.desc())
+        .limit(_RECENT_REVIEW_DRAFTS_LIMIT)
+    )
+    recent_review_drafts = [
+        ReviewDraftOut(
+            id=str(draft.id),
+            branch_name=branch_name,
+            rating=draft.rating,
+            tags=draft.tags,
+            draft_excerpt=draft.draft_excerpt,
+            created_at=draft.created_at,
+        )
+        for draft, branch_name in drafts_result.all()
+    ]
+
+    return CustomerProfileResponse(
+        customer_id=str(customer.id),
+        name=decrypt_pii(customer.encrypted_name) if customer.encrypted_name else None,
+        email=decrypt_pii(customer.encrypted_email) if customer.encrypted_email else None,
+        username=decrypt_pii(customer.encrypted_username) if customer.encrypted_username else None,
+        member_since=customer.created_at,
+        total_stamps_alltime=customer.total_stamps_alltime,
+        current_reward_count=customer.current_reward_count,
+        stamps_by_location=stamps_by_location,
+        recent_review_drafts=recent_review_drafts,
+    )
 
 
 async def _customer_exists(

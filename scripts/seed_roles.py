@@ -44,6 +44,12 @@ ROLES = [
         "mfa_required": False,
         "permissions": {"view_dashboard": True},
     },
+    {
+        "name": "USER",
+        "level": 6,
+        "mfa_required": False,
+        "permissions": {},
+    },
 ]
 
 

@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     # --- Google OAuth ---
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
+    # REVIEW-03 — where Google redirects after the owner grants (or denies)
+    # GMB access. Must exactly match a URI registered on the OAuth client, or
+    # Google rejects the whole flow before the app ever sees a request.
+    GMB_OAUTH_REDIRECT_URI: str = ""
 
     # --- Customer OTP Auth ---
     CUSTOMER_JWT_TTL_DAYS: int = 7
@@ -85,6 +89,17 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_FROM_NUMBER: str = ""
     TWILIO_WHATSAPP_FROM: str = ""
+
+    # --- SMS provider selection (OTP sends only — see messaging_service.py) ---
+    # 2Factor.in's no-DLT-template "quick OTP" API only carries a bare OTP
+    # value in its own fixed copy, not the app's editable SMS templates, so
+    # switching providers only ever affects the three *_otp_sms senders;
+    # WhatsApp and non-OTP SMS (welcome, restaurant-joined) stay on Twilio
+    # regardless of this setting.
+    SMS_PROVIDER: str = "twilio"  # twilio | 2factor
+
+    # --- 2Factor.in (SMS OTP — India-only alternative to Twilio) ---
+    TWOFACTOR_API_KEY: str = ""
 
     # --- Email (SMTP transport) ---
     # Every field has a default on purpose: `settings = Settings()` runs at
@@ -297,6 +312,15 @@ class Settings(BaseSettings):
         allowed = {"smtp", "sendgrid"}
         if v not in allowed:
             msg = f"EMAIL_PROVIDER must be one of {sorted(allowed)} (current: {v!r})"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("SMS_PROVIDER")
+    @classmethod
+    def validate_sms_provider(cls, v: str) -> str:
+        allowed = {"twilio", "2factor"}
+        if v not in allowed:
+            msg = f"SMS_PROVIDER must be one of {sorted(allowed)} (current: {v!r})"
             raise ValueError(msg)
         return v
 

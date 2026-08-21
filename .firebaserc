@@ -1,1 +1,7 @@
-{}
+{
+  "projects": {
+    "default": "quickai-1b3ce"
+  },
+  "targets": {},
+  "etags": {}
+}

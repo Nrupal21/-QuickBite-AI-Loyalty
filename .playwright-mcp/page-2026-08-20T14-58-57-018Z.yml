@@ -1,0 +1,39 @@
+- generic [active] [ref=f6e1]:
+  - link "Skip to content" [ref=f6e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f6e3]:
+    - link "QuickBite" [ref=f6e4] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f6e9]:
+      - link "Home" [ref=f6e10] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f6e11]: "N"
+  - main [ref=f6e12]:
+    - generic [ref=f6e14]:
+      - complementary [ref=f6e15]:
+        - generic [ref=f6e18]:
+          - generic [ref=f6e19]: "N"
+          - heading "New Diner" [level=1] [ref=f6e20]
+          - generic [ref=f6e21]: Loyalty member
+        - generic [ref=f6e22]:
+          - generic [ref=f6e27]:
+            - generic [ref=f6e28]: "0"
+            - generic [ref=f6e29]: Lifetime stamps
+          - generic [ref=f6e35]:
+            - generic [ref=f6e36]: "0"
+            - generic [ref=f6e37]: Toward next reward
+          - generic [ref=f6e42]:
+            - generic [ref=f6e43]: "0"
+            - generic [ref=f6e44]: Locations visited
+        - generic [ref=f6e45]:
+          - heading "Account details" [level=2] [ref=f6e46]
+          - generic [ref=f6e48]:
+            - term [ref=f6e49]: Member since
+            - definition [ref=f6e50]: 1 Aug 2026
+      - generic [ref=f6e51]:
+        - generic [ref=f6e52]:
+          - heading "Stamps by location" [level=2] [ref=f6e53]
+          - paragraph [ref=f6e54]: No stamps yet. Scan the QR code on your receipt and your first one lands here.
+        - generic [ref=f6e55]:
+          - heading "Reviews you've sent" [level=2] [ref=f6e56]
+          - paragraph [ref=f6e57]: Nothing sent yet. Reviews you draft while signed in show up here.

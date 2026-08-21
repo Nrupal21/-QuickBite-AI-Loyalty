@@ -1,0 +1,36 @@
+- generic [active] [ref=f4e1]:
+  - link "Skip to content" [ref=f4e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f4e3]:
+    - link "QuickBite" [ref=f4e5] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f4e10]:
+      - navigation "Progress" [ref=f4e11]:
+        - list [ref=f4e12]:
+          - listitem [ref=f4e13]:
+            - generic [ref=f4e15]: Who you are
+          - listitem [ref=f4e16]:
+            - generic [ref=f4e18]: Prove it
+          - listitem [ref=f4e19]:
+            - generic [ref=f4e21]: You're in
+      - generic [ref=f4e23]:
+        - generic [ref=f4e24]:
+          - heading "Sign in to QuickBite" [level=1] [ref=f4e25]
+          - paragraph [ref=f4e26]: One account, however you got here — a diner collecting stamps, an owner running the place, or a team member on shift.
+        - generic [ref=f4e27]:
+          - generic [ref=f4e28]:
+            - generic [ref=f4e29]: Email or phone number
+            - textbox "Email or phone number" [ref=f4e30]:
+              - /placeholder: you@restaurant.in or +919876543210
+            - paragraph [ref=f4e31]: Phone numbers need the country code, like +91.
+          - button "Continue" [ref=f4e32] [cursor=pointer]
+        - paragraph [ref=f4e34]: Or continue with
+        - generic [ref=f4e35]:
+          - button "Google" [ref=f4e36] [cursor=pointer]
+          - button "Apple" [ref=f4e42] [cursor=pointer]
+          - button "GitHub" [ref=f4e46] [cursor=pointer]
+        - paragraph [ref=f4e49]:
+          - text: New here? Continuing creates your account — no separate sign-up form. Prefer a password?
+          - link "Register with one" [ref=f4e50] [cursor=pointer]:
+            - /url: /register
+          - text: .

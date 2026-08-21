@@ -32,9 +32,26 @@ class RewardProgramCreateRequest(BaseModel):
     validity_days: int = Field(ge=1, le=365)
 
 
+class RewardProgramUpdateRequest(BaseModel):
+    """PATCH /loyalty/reward-programs/{id}. Every field optional — only what
+    the caller sends changes. `is_active` alone is how a program is paused
+    or resumed; there is no separate archive/delete endpoint (LOYALTY-04's
+    RewardRedemption rows FK onto reward_program_id, so a hard delete would
+    orphan redemption history — same "never DELETE, flip a flag" rule
+    team_service.deactivate already follows for staff)."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    stamps_required: int | None = Field(default=None, ge=1, le=100)
+    reward_type: Literal["free_item", "percentage_off", "fixed_off"] | None = None
+    reward_value: str | None = Field(default=None, min_length=1, max_length=100)
+    validity_days: int | None = Field(default=None, ge=1, le=365)
+    is_active: bool | None = None
+
+
 class RewardProgramResponse(BaseModel):
     id: uuid.UUID
     branch_id: uuid.UUID
+    branch_name: str
     name: str
     stamps_required: int
     reward_type: str

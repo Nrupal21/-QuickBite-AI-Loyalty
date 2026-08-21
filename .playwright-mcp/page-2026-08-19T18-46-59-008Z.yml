@@ -1,0 +1,29 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=e3]:
+    - complementary "Sign-up progress" [ref=e4]:
+      - link "QuickBite" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - paragraph [ref=e10]: Sign in
+      - list [ref=e11]:
+        - listitem [ref=e12]:
+          - generic [ref=e16]: Who you are
+        - listitem [ref=e18]:
+          - generic [ref=e22]:
+            - text: Prove it
+            - generic [ref=e58]: A one-time code, your password, or a social account.
+        - listitem [ref=e23]:
+          - generic [ref=e27]: You're in
+      - paragraph
+    - generic [ref=e59]:
+      - button "Use a different account" [ref=e60] [cursor=pointer]
+      - generic [ref=e63]:
+        - heading "How would you like to sign in?" [level=2] [ref=e64]
+        - paragraph [ref=e65]:
+          - text: Signing in as
+          - strong [ref=e66]: marco@pizzeria.in
+          - text: .
+      - generic [ref=e67]:
+        - button "Send me a one-time code" [ref=e68] [cursor=pointer]
+        - button "Use my password" [ref=e70] [cursor=pointer]

@@ -1,0 +1,40 @@
+- generic [active] [ref=f4e1]:
+  - link "Skip to content" [ref=f4e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f4e3]:
+    - link "QuickBite" [ref=f4e4] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f4e9]:
+      - link "Home" [ref=f4e10] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f4e11]: A
+  - main [ref=f4e12]:
+    - generic [ref=f4e14]:
+      - complementary [ref=f4e15]:
+        - generic [ref=f4e18]:
+          - generic [ref=f4e19]: A
+          - heading "anita" [level=1] [ref=f4e20]
+          - generic [ref=f4e21]: Branch manager
+        - generic [ref=f4e22]:
+          - heading "Account details" [level=2] [ref=f4e23]
+          - generic [ref=f4e24]:
+            - generic [ref=f4e25]:
+              - term [ref=f4e26]: Email
+              - definition [ref=f4e27]:
+                - text: anita@spicegarden.in
+                - generic [ref=f4e28]: Verified
+            - generic [ref=f4e29]:
+              - term [ref=f4e30]: Username
+              - definition [ref=f4e31]: anita
+            - generic [ref=f4e32]:
+              - term [ref=f4e33]: Two-factor
+              - definition [ref=f4e34]: Required, not set up
+      - generic [ref=f4e36]:
+        - heading "Your restaurant" [level=2] [ref=f4e37]
+        - generic [ref=f4e38]:
+          - generic [ref=f4e45]:
+            - heading "Dashboard" [level=3] [ref=f4e46]
+            - paragraph [ref=f4e47]: Reviews, loyalty analytics and your team, all in one place.
+          - link "Open dashboard" [ref=f4e48] [cursor=pointer]:
+            - /url: /dashboard
+        - button "Sign out" [ref=f4e50] [cursor=pointer]

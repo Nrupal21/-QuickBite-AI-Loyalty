@@ -1,0 +1,106 @@
+- generic [active] [ref=f3e1]:
+  - link "Skip to content" [ref=f3e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f3e3]:
+    - link "QuickBite" [ref=f3e4] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f3e9]:
+      - link "Home" [ref=f3e10] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f3e11]: J
+  - main [ref=f3e12]:
+    - generic [ref=f3e14]:
+      - complementary [ref=f3e15]:
+        - generic [ref=f3e18]:
+          - generic [ref=f3e19]: J
+          - heading "Jordan Miller" [level=1] [ref=f3e20]
+          - generic [ref=f3e21]: Loyalty member
+        - generic [ref=f3e22]:
+          - generic [ref=f3e27]:
+            - generic [ref=f3e28]: "42"
+            - generic [ref=f3e29]: Lifetime stamps
+          - generic [ref=f3e35]:
+            - generic [ref=f3e36]: "8"
+            - generic [ref=f3e37]: Toward next reward
+          - generic [ref=f3e42]:
+            - generic [ref=f3e43]: "3"
+            - generic [ref=f3e44]: Locations visited
+        - generic [ref=f3e45]:
+          - heading "Account details" [level=2] [ref=f3e46]
+          - generic [ref=f3e47]:
+            - generic [ref=f3e48]:
+              - term [ref=f3e49]: Email
+              - definition [ref=f3e50]: jordan.m@example.com
+            - generic [ref=f3e51]:
+              - term [ref=f3e52]: Username
+              - definition [ref=f3e53]: jordan_bites
+            - generic [ref=f3e54]:
+              - term [ref=f3e55]: Favourite location
+              - definition [ref=f3e56]: Downtown QuickBite
+            - generic [ref=f3e57]:
+              - term [ref=f3e58]: Last visit
+              - definition [ref=f3e59]: 24 Oct 2023
+            - generic [ref=f3e60]:
+              - term [ref=f3e61]: Member since
+              - definition [ref=f3e62]: 11 Feb 2023
+      - generic [ref=f3e63]:
+        - generic [ref=f3e64]:
+          - heading "Stamps by location" [level=2] [ref=f3e65]
+          - generic [ref=f3e66]:
+            - article [ref=f3e67]:
+              - heading "Downtown QuickBite" [level=3] [ref=f3e72]
+              - paragraph [ref=f3e73]: 123 Main St, Metro Center
+              - generic [ref=f3e74]:
+                - paragraph [ref=f3e75]:
+                  - generic [ref=f3e76]: "15"
+                  - generic [ref=f3e77]: Stamps
+                - paragraph [ref=f3e78]: Last visited 24 Oct 2023
+            - article [ref=f3e79]:
+              - heading "Uptown Campus" [level=3] [ref=f3e84]
+              - paragraph [ref=f3e85]: 88 College Ave, University District
+              - generic [ref=f3e86]:
+                - paragraph [ref=f3e87]:
+                  - generic [ref=f3e88]: "9"
+                  - generic [ref=f3e89]: Stamps
+                - paragraph [ref=f3e90]: Last visited 12 Sept 2023
+            - article [ref=f3e91]:
+              - heading "Westside Bites" [level=3] [ref=f3e96]
+              - paragraph [ref=f3e97]: 456 Oak Ave
+              - generic [ref=f3e98]:
+                - paragraph [ref=f3e99]:
+                  - generic [ref=f3e100]: "6"
+                  - generic [ref=f3e101]: Stamps
+                - paragraph [ref=f3e102]: Last visited 2 Aug 2023
+        - generic [ref=f3e103]:
+          - heading "Reviews you've sent" [level=2] [ref=f3e104]
+          - generic [ref=f3e105]:
+            - article [ref=f3e106]:
+              - generic [ref=f3e107]:
+                - heading "Downtown QuickBite" [level=3] [ref=f3e108]
+                - paragraph [ref=f3e109]:
+                  - generic [ref=f3e110]: 5 out of 5 stars
+              - paragraph [ref=f3e126]: The new spicy chicken sandwich was incredible. Perfect amount of heat and the bun was perfectly toasted. Will definitely be coming back for this one.
+              - generic [ref=f3e127]:
+                - paragraph [ref=f3e128]:
+                  - generic [ref=f3e129]: Fast service
+                  - generic [ref=f3e130]: Great vibe
+                - paragraph [ref=f3e131]: 24 Oct 2023
+            - article [ref=f3e132]:
+              - generic [ref=f3e133]:
+                - heading "Uptown Campus" [level=3] [ref=f3e134]
+                - paragraph [ref=f3e135]:
+                  - generic [ref=f3e136]: 4 out of 5 stars
+              - paragraph [ref=f3e152]: Solid spot for a quick lunch between classes. The AI ordering system was a bit slow today, but the food quality is always consistent.
+              - generic [ref=f3e153]:
+                - paragraph [ref=f3e154]:
+                  - generic [ref=f3e155]: Value
+                - paragraph [ref=f3e156]: 12 Sept 2023
+  - navigation "Profile sections" [ref=f3e157]:
+    - link "Home" [ref=f3e158] [cursor=pointer]:
+      - /url: /
+    - link "Stamps" [ref=f3e162] [cursor=pointer]:
+      - /url: "#stamps"
+    - link "Reviews" [ref=f3e166] [cursor=pointer]:
+      - /url: "#reviews"
+    - link "Profile" [ref=f3e170] [cursor=pointer]:
+      - /url: "#main-content"

@@ -1,0 +1,10 @@
+{% extends "_layout.html" %}
+
+{% block title %}Verify this email for your QuickBite business{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 16px 0;">Use this code to add this address to your business account:</p>
+<p style="margin:0 0 16px 0;font-size:32px;font-weight:700;letter-spacing:0.3em;color:#0b0b0d;">{{ otp }}</p>
+<p style="margin:0 0 16px 0;">It expires in 5 minutes.</p>
+<p style="margin:0;font-size:13px;color:#64748b;">If you weren't setting up a QuickBite business, ignore this email — nothing has been created.</p>
+{% endblock %}

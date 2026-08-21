@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% import "customer/_auth_macros.html" as ui %}
+
+{% block title %}Sign in — QuickBite{% endblock %}
+{% block meta_description %}Sign in to QuickBite with a one-time code, a password, or a social account.{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{# The nav is the landing site's; this surface carries its own top bar and
+   would otherwise show two brand marks and two sets of links. #}
+{% block footer %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/auth.css') }}" />
+{% endblock %}
+
+{% block content %}
+<!--
+  SEED auth-stage-01 · surface: /login /register /onboarding
+  WORLD    Obsidian stage from landing.css. One blue carries every action;
+           loyalty teal is reserved for code entry, the one loyalty moment.
+  VIEWPORT A full-height stage: a centered horizontal step bar naming the
+           whole journey above one form plate. Never a modal, never a
+           floating card on a marketing page.
+  PATH     Identify -> verify -> you are in. The same three steps whether the
+           proof is a code, a password, or a provider. "Join Us" continues on
+           the same step bar rather than starting a new screen.
+  MOMENT   Each segment brightens solid as its step completes; the incoming
+           plate settles from below and out of blur.
+  RISK     Below 640px the per-segment titles give way to one caption naming
+           the current step; the bars alone still carry the progress.
+-->
+<main id="main-content" class="auth-stage">
+
+  <div class="auth-main">
+    {{ ui.auth_topsteps(
+        [
+          {'key': 'identify', 'label': 'Who you are'},
+          {'key': 'verify', 'label': 'Prove it'},
+          {'key': 'done', 'label': "You're in"}
+        ],
+        0
+    ) }}
+
+    <div class="auth-plate">
+      {{ ui.auth_alert() }}
+
+      {# ---------------------------------------------------- identify #}
+      <section class="auth-step" data-step="identify" data-entering>
+        <div class="auth-head">
+          <h1 class="auth-title">Sign in to QuickBite</h1>
+          <p class="auth-sub">One account, however you got here — a diner collecting stamps, an owner running the place, or a team member on shift.</p>
+        </div>
+
+        <form class="auth-form" data-identify-form novalidate>
+          <div class="field">
+            <label class="field-label" for="identifier">Email or phone number</label>
+            <input class="field-input" id="identifier" name="identifier" type="text"
+                   inputmode="email" autocomplete="username" autocapitalize="none"
+                   spellcheck="false" placeholder="you@restaurant.in or +919876543210"
+                   data-field-identifier required />
+            <p class="field-hint">Phone numbers need the country code, like +91.</p>
+          </div>
+
+          <button type="submit" class="auth-btn auth-btn--primary" data-submit>
+            <span class="auth-btn-label">Continue</span>
+          </button>
+        </form>
+
+        {{ ui.oauth_block('Or continue with') }}
+
+        <p class="auth-note">
+          New here? Continuing creates your account — no separate sign-up form.
+          Prefer a password? <a class="auth-link" href="/register">Register with one</a>.
+        </p>
+      </section>
+
+      {# -------------------------------------------------- choose method #}
+      <section class="auth-step" data-step="method" hidden>
+        <button type="button" class="auth-back" data-back="identify">
+          {{ ui.icon_back(15) }} Use a different account
+        </button>
+
+        <div class="auth-head">
+          <h2 class="auth-title">How would you like to sign in?</h2>
+          <p class="auth-sub">Signing in as <strong data-echo-identifier></strong>.</p>
+        </div>
+
+        <div class="auth-actions">
+          <button type="button" class="auth-btn auth-btn--primary" data-method-otp>
+            <span class="auth-btn-label">Send me a one-time code</span>
+          </button>
+          <button type="button" class="auth-btn auth-btn--ghost" data-method-password>
+            <span class="auth-btn-label">Use my password</span>
+          </button>
+        </div>
+
+        <p class="auth-note" data-password-unavailable hidden>
+          This account signs in with a code or a social account — it has no password set.
+        </p>
+      </section>
+
+      {# ------------------------------------------------------ password #}
+      <section class="auth-step" data-step="password" hidden>
+        <button type="button" class="auth-back" data-back="method">
+          {{ ui.icon_back(15) }} Back
+        </button>
+
+        <div class="auth-head">
+          <h2 class="auth-title">Enter your password</h2>
+          <p class="auth-sub">Signing in as <strong data-echo-identifier></strong>.</p>
+        </div>
+
+        <form class="auth-form" data-password-form novalidate>
+          <div class="field">
+            <div class="field-label-row">
+              <label class="field-label" for="password">Password</label>
+              <button type="button" class="auth-btn auth-btn--quiet" data-forgot>Forgot it?</button>
+            </div>
+            <div class="field-with-action">
+              <input class="field-input" id="password" name="password" type="password"
+                     autocomplete="current-password" data-field-password required />
+              <button type="button" class="field-action" data-toggle-password
+                      aria-label="Show password" aria-pressed="false">
+                <span data-icon-show>{{ ui.icon_eye(18) }}</span>
+                <span data-icon-hide hidden>{{ ui.icon_eye_off(18) }}</span>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="auth-btn auth-btn--primary" data-submit>
+            <span class="auth-btn-label">Sign in</span>
+          </button>
+        </form>
+      </section>
+
+      {# ----------------------------------------------------------- OTP #}
+      <section class="auth-step" data-step="otp" hidden>
+        <button type="button" class="auth-back" data-back="method">
+          {{ ui.icon_back(15) }} Back
+        </button>
+
+        <div class="auth-head">
+          <h2 class="auth-title">Enter your code</h2>
+          <p class="auth-sub">We sent a 6-digit code to <strong data-echo-identifier></strong>. It expires in five minutes.</p>
+        </div>
+
+        <form data-otp-form novalidate>
+          {{ ui.otp_entry('login-otp') }}
+
+          <div class="otp-meta">
+            <span data-otp-status aria-live="polite"></span>
+            <button type="button" class="auth-btn auth-btn--quiet" data-resend disabled>
+              Resend code
+            </button>
+          </div>
+
+          <button type="submit" class="auth-btn auth-btn--primary auth-mt-2" data-submit>
+            <span class="auth-btn-label">Verify and sign in</span>
+          </button>
+        </form>
+      </section>
+
+      {# ------------------------------------------- finish OTP sign-up #}
+      <section class="auth-step" data-step="register-name" hidden>
+        <div class="auth-head">
+          <h2 class="auth-title">One last thing</h2>
+          <p class="auth-sub">Your <span data-echo-identifier-type>email</span> is verified. Tell us what to call you and your account is ready.</p>
+        </div>
+
+        <form class="auth-form" data-complete-form novalidate>
+          <div class="field">
+            <label class="field-label" for="reg-name">Your name</label>
+            <input class="field-input" id="reg-name" name="name" type="text"
+                   autocomplete="name" placeholder="Marco D'Souza"
+                   data-field-name required />
+          </div>
+
+          <div class="field">
+            <div class="field-label-row">
+              <label class="field-label" for="reg-password">Password</label>
+              <span class="field-hint">Optional</span>
+            </div>
+            <div class="field-with-action">
+              <input class="field-input" id="reg-password" name="password" type="password"
+                     autocomplete="new-password" data-field-password
+                     placeholder="Leave blank to sign in by code" />
+              <button type="button" class="field-action" data-toggle-password
+                      aria-label="Show password" aria-pressed="false">
+                <span data-icon-show>{{ ui.icon_eye(18) }}</span>
+                <span data-icon-hide hidden>{{ ui.icon_eye_off(18) }}</span>
+              </button>
+            </div>
+            <p class="field-hint">Add one if you'd rather not wait for a code each time. At least 8 characters.</p>
+          </div>
+
+          <button type="submit" class="auth-btn auth-btn--primary" data-submit>
+            <span class="auth-btn-label">Create my account</span>
+          </button>
+        </form>
+      </section>
+
+      {# ----------------------------------------------------------- MFA #}
+      <section class="auth-step" data-step="mfa" hidden>
+        <div class="auth-done-mark">{{ ui.icon_shield(24) }}</div>
+        <div class="auth-head">
+          <h2 class="auth-title">Two-factor code</h2>
+          <p class="auth-sub">Open your authenticator app and enter the current 6-digit code.</p>
+        </div>
+
+        <form data-mfa-form novalidate>
+          {{ ui.otp_entry('mfa') }}
+          <button type="submit" class="auth-btn auth-btn--primary auth-mt-2" data-submit>
+            <span class="auth-btn-label">Verify</span>
+          </button>
+        </form>
+      </section>
+
+      {# ------------------------------------------------ MFA enrollment #}
+      <section class="auth-step" data-step="mfa-enroll" hidden>
+        <div class="auth-done-mark">{{ ui.icon_shield(24) }}</div>
+        <div class="auth-head">
+          <h2 class="auth-title">Set up two-factor first</h2>
+          <p class="auth-sub">Your role requires it. Scan this in any authenticator app, then enter the code it shows.</p>
+        </div>
+
+        <div class="auth-summary" data-mfa-secret-box>
+          <div class="auth-summary-row">
+            <span class="auth-summary-key">Setup key</span>
+            <span class="auth-summary-value auth-value-key" data-mfa-secret></span>
+          </div>
+        </div>
+
+        <form data-mfa-confirm-form novalidate>
+          {{ ui.otp_entry('mfa-enroll') }}
+          <button type="submit" class="auth-btn auth-btn--primary auth-mt-2" data-submit>
+            <span class="auth-btn-label">Turn on two-factor</span>
+          </button>
+        </form>
+      </section>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  window.QUICKBITE_FIREBASE = {{ firebase_web_config_json | safe }};
+</script>
+{% if firebase_web_configured %}
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+{% endif %}
+<script src="{{ url_for('static', path='js/auth-core.js') }}"></script>
+<script src="{{ url_for('static', path='js/auth-login.js') }}"></script>
+{% endblock %}

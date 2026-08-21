@@ -36,6 +36,14 @@ celery_app.conf.update(
             "task": "app.workers.tasks.drain_projection_outbox",
             "schedule": 10.0,
         },
+        # REVIEW-03: the only path new Google reviews reach QuickBite without
+        # an Owner manually clicking "sync" in the admin panel. 30 minutes
+        # keeps REVIEW-02's "within 1 hour of sync" draft criterion reachable
+        # even for a review that lands right after a sweep just ran.
+        "review-03-sync-gmb-profiles": {
+            "task": "app.workers.tasks.sync_all_gmb_profiles",
+            "schedule": 1800.0,
+        },
     },
 )
 

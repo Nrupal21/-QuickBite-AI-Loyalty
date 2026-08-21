@@ -27,7 +27,7 @@ from app.db.models.branch import Branch
 from app.db.models.customer import Customer
 from app.db.models.loyalty import RewardProgram, RewardRedemption
 from app.db.models.user import User
-from app.schemas.loyalty import RewardProgramCreateRequest
+from app.schemas.loyalty import RewardProgramCreateRequest, RewardProgramUpdateRequest
 from app.services.loyalty_service import LoyaltyService
 
 BRANCH_ID = uuid.uuid4()
@@ -58,6 +58,9 @@ def make_reward_program(**overrides) -> RewardProgram:
         "reward_type": "free_item",
         "reward_value": "Coffee",
         "validity_days": 7,
+        # The column default (True) only applies on DB insert, never on plain
+        # Python construction — a test that needs it False overrides it.
+        "is_active": True,
     }
     defaults.update(overrides)
     program = RewardProgram(**defaults)
@@ -427,6 +430,115 @@ def test_reward_program_schema_rejects_invalid_stamps_required():
             reward_value="Coffee",
             validity_days=7,
         )
+
+
+# --- BRANCH-01: GET/PATCH /loyalty/reward-programs ----------------------
+
+
+def make_list_session(rows: list) -> MagicMock:
+    """`rows` is a list of (RewardProgram, branch_name) tuples — the shape
+    `select(RewardProgram, Branch.name).join(...)` returns from `.all()`."""
+    result = MagicMock()
+    result.all.return_value = rows
+    session = MagicMock()
+    session.execute = AsyncMock(return_value=result)
+    return session
+
+
+def make_update_session(program: RewardProgram | None, branch: Branch | None) -> MagicMock:
+    program_result = MagicMock()
+    program_result.scalar_one_or_none.return_value = program
+    branch_result = MagicMock()
+    branch_result.scalar_one_or_none.return_value = branch
+    session = MagicMock()
+    session.commit = AsyncMock()
+    session.execute = AsyncMock(side_effect=[program_result, branch_result])
+    return session
+
+
+@pytest.mark.asyncio
+async def test_list_reward_programs_includes_branch_name():
+    program = make_reward_program()
+    session = make_list_session([(program, "Bandra West")])
+
+    out = await LoyaltyService(session=session).list_reward_programs()
+
+    assert len(out) == 1
+    assert out[0].id == program.id
+    assert out[0].branch_name == "Bandra West"
+    assert out[0].is_active is True
+
+
+@pytest.mark.asyncio
+async def test_list_reward_programs_empty_returns_empty_list():
+    session = make_list_session([])
+
+    assert await LoyaltyService(session=session).list_reward_programs() == []
+
+
+@pytest.mark.asyncio
+async def test_update_reward_program_applies_only_given_fields():
+    program = make_reward_program(name="Old Name", stamps_required=5)
+    branch = make_branch()
+    session = make_update_session(program, branch)
+    owner = User(tenant_id=TENANT_ID, role_id=uuid.uuid4())
+    owner.id = uuid.uuid4()
+
+    response = await LoyaltyService(session=session).update_reward_program(
+        program.id, RewardProgramUpdateRequest(name="New Name"), owner
+    )
+
+    assert response.name == "New Name"
+    # stamps_required was never sent, so it must survive untouched.
+    assert response.stamps_required == 5
+    assert program.name == "New Name"
+    session.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_update_reward_program_is_active_false_pauses_it():
+    program = make_reward_program(is_active=True)
+    session = make_update_session(program, make_branch())
+    owner = User(tenant_id=TENANT_ID, role_id=uuid.uuid4())
+    owner.id = uuid.uuid4()
+
+    response = await LoyaltyService(session=session).update_reward_program(
+        program.id, RewardProgramUpdateRequest(is_active=False), owner
+    )
+
+    assert response.is_active is False
+
+
+@pytest.mark.asyncio
+async def test_update_reward_program_not_found_returns_404():
+    session = make_update_session(None, None)
+    owner = User(tenant_id=TENANT_ID, role_id=uuid.uuid4())
+    owner.id = uuid.uuid4()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await LoyaltyService(session=session).update_reward_program(
+            uuid.uuid4(), RewardProgramUpdateRequest(name="X"), owner
+        )
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail["error"]["code"] == "REWARD_PROGRAM_NOT_FOUND"
+
+
+@pytest.mark.asyncio
+async def test_update_reward_program_cross_tenant_returns_404():
+    """Same 404-for-both shape as team_service — RLS should already hide
+    this, this is the belt to that braces."""
+    other_tenant_program = make_reward_program(tenant_id=uuid.uuid4())
+    session = make_update_session(other_tenant_program, make_branch())
+    owner = User(tenant_id=TENANT_ID, role_id=uuid.uuid4())
+    owner.id = uuid.uuid4()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await LoyaltyService(session=session).update_reward_program(
+            other_tenant_program.id, RewardProgramUpdateRequest(name="X"), owner
+        )
+
+    assert exc_info.value.status_code == 404
 
 
 # --- LOYALTY-04: POST /loyalty/redeem/{code} ----------------------------

@@ -10,6 +10,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -46,3 +47,25 @@ class Customer(Base):
     tokens_valid_from: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class ReviewDraft(Base):
+    """One AI-drafted review a logged-in customer generated (migration 0013).
+
+    Powers the customer profile page's "reviews you've sent" list. Only
+    written when a customer session exists at draft time — most QR scans are
+    fully anonymous by design (REVIEW-01), so this is necessarily a partial
+    history, not every review the customer has ever drafted or posted.
+    """
+
+    __tablename__ = "review_drafts"
+    __table_args__ = {"schema": "customer"}
+
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.tenants.id"), index=True)
+    branch_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.branches.id"), index=True)
+    customer_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("customer.customers.id"), index=True
+    )
+    rating: Mapped[int] = mapped_column(Integer)
+    tags: Mapped[list] = mapped_column(JSONB, default=list)
+    draft_excerpt: Mapped[str] = mapped_column(String(280))

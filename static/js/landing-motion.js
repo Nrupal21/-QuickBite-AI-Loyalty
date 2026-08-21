@@ -10,16 +10,6 @@
 
   document.documentElement.classList.remove('no-js');
 
-  // ---- Sticky nav background on scroll -----------------------------------
-  var nav = document.querySelector('.nav');
-  if (nav) {
-    var onScrollNav = function () {
-      nav.classList.toggle('is-scrolled', window.scrollY > 12);
-    };
-    onScrollNav();
-    window.addEventListener('scroll', onScrollNav, { passive: true });
-  }
-
   // ---- Card spotlight — cursor-follow glow, hover-capable pointers only,
   // independent of GSAP (pure CSS transition + mousemove). Shared by the
   // hero mock card and every bento card so it reads as one motif. ---------

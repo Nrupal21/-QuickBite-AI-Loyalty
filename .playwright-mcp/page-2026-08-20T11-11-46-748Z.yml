@@ -1,0 +1,26 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=e3]:
+    - link "QuickBite" [ref=e5] [cursor=pointer]:
+      - /url: /
+    - generic [ref=e10]:
+      - navigation "Progress" [ref=e11]:
+        - list [ref=e12]:
+          - listitem [ref=e13]:
+            - generic [ref=e15]: Your contact
+          - listitem [ref=e16]:
+            - generic [ref=e18]: Verify it
+          - listitem [ref=e19]:
+            - generic [ref=e21]: Your account
+          - listitem [ref=e22]:
+            - generic [ref=e24]: Your business
+      - generic [ref=e75]:
+        - generic [ref=e79]:
+          - heading "You're all set" [level=1] [ref=e80]
+          - paragraph [ref=e81]: Your QuickBite account is ready. We sent a confirmation to newuser@marcospizzeria.in.
+        - generic [ref=e82]:
+          - link "Register your business" [ref=e83] [cursor=pointer]:
+            - /url: /onboarding
+          - link "Maybe later" [ref=e85] [cursor=pointer]:
+            - /url: /profile

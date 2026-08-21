@@ -1,0 +1,30 @@
+- generic [active] [ref=f14e1]:
+  - link "Skip to content" [ref=f14e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f14e3]:
+    - link "QuickBite" [ref=f14e5] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f14e10]:
+      - navigation "Progress" [ref=f14e11]:
+        - list [ref=f14e12]:
+          - listitem [ref=f14e13]:
+            - generic [ref=f14e15]: Your account
+          - listitem [ref=f14e16]:
+            - generic [ref=f14e18]: Your business
+          - listitem [ref=f14e19]:
+            - generic [ref=f14e21]: Second contact
+          - listitem [ref=f14e22]:
+            - generic [ref=f14e24]: What you run
+          - listitem [ref=f14e25]:
+            - generic [ref=f14e27]: Your plan
+          - listitem [ref=f14e28]:
+            - generic [ref=f14e30]: You're an owner
+      - generic [ref=f14e32]:
+        - generic [ref=f14e33]:
+          - heading "Sign in first" [level=2] [ref=f14e34]
+          - paragraph [ref=f14e35]: Registering a business needs an account. Sign in or create one, then come back to Join Us.
+        - generic [ref=f14e36]:
+          - link "Sign in" [ref=f14e37] [cursor=pointer]:
+            - /url: /login
+          - link "Create an account" [ref=f14e39] [cursor=pointer]:
+            - /url: /register

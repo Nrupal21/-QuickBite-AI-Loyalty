@@ -1,0 +1,69 @@
+- generic [active] [ref=f17e1]:
+  - link "Skip to content" [ref=f17e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f17e3]:
+    - generic [ref=f17e5]:
+      - link "QuickBite" [ref=f17e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f17e11]:
+        - link "Product" [ref=f17e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f17e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f17e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f17e15]:
+        - link "Join Us" [ref=f17e16] [cursor=pointer]:
+          - /url: /onboarding
+        - link "Your account" [ref=f17e17] [cursor=pointer]:
+          - /url: /profile
+  - main [ref=f17e21]
+  - contentinfo [ref=f17e24]:
+    - generic [ref=f17e25]:
+      - generic [ref=f17e26]:
+        - generic [ref=f17e27]:
+          - link "QuickBite" [ref=f17e28] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f17e33]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f17e34]:
+          - heading "Product" [level=4] [ref=f17e35]
+          - list [ref=f17e36]:
+            - listitem [ref=f17e37]:
+              - link "Features" [ref=f17e38] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f17e39]:
+              - link "How it works" [ref=f17e40] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f17e41]:
+              - link "Pricing" [ref=f17e42] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f17e43]:
+          - heading "Company" [level=4] [ref=f17e44]
+          - list [ref=f17e45]:
+            - listitem [ref=f17e46]:
+              - link "About" [ref=f17e47] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f17e48]:
+              - link "Careers" [ref=f17e49] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f17e50]:
+              - link "Contact" [ref=f17e51] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f17e52]:
+          - heading "Legal" [level=4] [ref=f17e53]
+          - list [ref=f17e54]:
+            - listitem [ref=f17e55]:
+              - link "Privacy" [ref=f17e56] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f17e57]:
+              - link "Terms" [ref=f17e58] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f17e59]:
+        - generic [ref=f17e60]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f17e61]:
+          - link "Email" [ref=f17e62] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f17e66] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f17e70] [cursor=pointer]:
+            - /url: "#"

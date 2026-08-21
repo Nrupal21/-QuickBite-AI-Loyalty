@@ -47,11 +47,15 @@ def verify_password_constant_time(password: str, hashed: str | None) -> bool:
     return matches if hashed is not None else False
 
 
-def create_access_token(user_id: uuid.UUID, tenant_id: uuid.UUID, role: str) -> str:
+def create_access_token(user_id: uuid.UUID, tenant_id: uuid.UUID | None, role: str) -> str:
+    """`tenant_id` is None for a standard user (role USER) — no restaurant
+    registered yet. The claim key is always present, valued `null` rather than
+    omitted, so every reader can do a plain `is None` check instead of also
+    handling a missing key."""
     now = datetime.now(timezone.utc)
     payload = {
         "sub": str(user_id),
-        "tenant_id": str(tenant_id),
+        "tenant_id": str(tenant_id) if tenant_id is not None else None,
         "role": role,
         "jti": str(uuid.uuid4()),
         "iat": now,
@@ -73,6 +77,15 @@ def generate_verification_token() -> str:
     return secrets.token_urlsafe(32)
 
 
+def generate_password_reset_token() -> str:
+    """Opaque single-use token for password-reset links (256-bit).
+
+    Same shape as generate_verification_token() — kept as a distinct function
+    so the two purposes can never be interchanged at a call site.
+    """
+    return secrets.token_urlsafe(32)
+
+
 def generate_mfa_session_token() -> str:
     """Opaque token issued after password check, exchanged for a JWT via TOTP."""
     return secrets.token_urlsafe(32)
@@ -83,6 +96,16 @@ def create_refresh_token() -> str:
     return secrets.token_urlsafe(48)
 
 
+def generate_qr_token() -> str:
+    """Fresh, unguessable value for `Branch.qr_code_token` (128-bit) — printed
+    on a receipt QR and posted back verbatim as `ScanRequest.qr_token` /
+    `ReviewGenerateRequest.branch_qr_token`. Regenerating a branch's token
+    (BRANCH-01) invalidates every receipt already printed with the old one,
+    same intent as generate_verification_token but its own function so the
+    two can never be interchanged at a call site."""
+    return secrets.token_urlsafe(16)
+
+
 _REDEMPTION_CODE_ALPHABET = string.ascii_uppercase + string.digits
 
 
@@ -90,6 +113,15 @@ def generate_redemption_code(length: int = 6) -> str:
     """Short, human-readable reward code (LOYALTY-04) — `secrets.choice`, never
     sequential or derived from the customer/reward id it belongs to."""
     return "".join(secrets.choice(_REDEMPTION_CODE_ALPHABET) for _ in range(length))
+
+
+def generate_otp_code() -> str:
+    """Cryptographically secure 6-digit code. The stdlib has no
+    `secrets.token_digits()` despite the name suggesting otherwise —
+    `secrets.choice` over digits is the correct equivalent, never
+    `random.randint`. Shared by every OTP flow (customer, staff phone
+    verification) so there is exactly one place this guarantee lives."""
+    return "".join(secrets.choice(string.digits) for _ in range(6))
 
 
 def verify_totp_code(secret: str, code: str) -> bool:

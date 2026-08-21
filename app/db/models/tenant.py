@@ -23,6 +23,13 @@ class Tenant(Base):
     plan_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("static.subscription_plans.id"), nullable=True
     )
+    # What kind of food business this is — chosen during "Join Us", before the
+    # plan, because the category is what decides which plans are offered.
+    # Nullable: every tenant created before categories existed has none, and a
+    # NULL here means "no category restriction" everywhere it is read.
+    category_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("static.business_categories.id"), nullable=True, index=True
+    )
     onboarding_state: Mapped[str] = mapped_column(String, default="registered")
     timezone: Mapped[str] = mapped_column(String, default="Asia/Kolkata")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)

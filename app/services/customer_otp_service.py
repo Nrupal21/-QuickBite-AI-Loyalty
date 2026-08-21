@@ -8,7 +8,6 @@ SHA-256(code) in Redis with a 300s TTL. Never stores the plaintext code.
 
 import json
 import secrets
-import string
 import uuid
 from datetime import datetime, timezone
 
@@ -21,6 +20,8 @@ from app.core import cache_service
 from app.core.config import settings
 from app.core.customer_security import create_customer_token
 from app.core.encryption import sha256_hex
+from app.core.security import generate_otp_code
+from app.db import rls
 from app.db.models.customer import Customer
 from app.schemas.customer_auth import (
     OTPNewUserResponse,
@@ -35,11 +36,6 @@ from app.services.identity_service import classify_identifier
 logger = structlog.get_logger(__name__)
 
 REGISTRATION_TOKEN_TTL_SECONDS = 900  # 15 minutes to complete the registration form
-
-
-def _generate_otp_code() -> str:
-    """Cryptographically secure 6-digit code — the stdlib has no token_digits()."""
-    return "".join(secrets.choice(string.digits) for _ in range(6))
 
 
 def _lookup_value(identifier: str, identifier_type: str) -> str:
@@ -89,6 +85,11 @@ async def request_otp(
             },
         )
 
+    # customer.customers is RLS-protected and this request has no authenticated
+    # principal yet — tenant_id came straight from the caller's own request
+    # body, which is exactly what _get_customer() below needs to scope its
+    # lookup to, so it's safe to bind right before that query runs.
+    await rls.set_tenant_context(session, request.tenant_id)
     customer = await _get_customer(session, request.tenant_id, identifier_hash, identifier_type)
     await cache_service.set(cooldown_key, "1", ttl=settings.CUSTOMER_OTP_RATE_LIMIT_SECONDS)
 
@@ -110,7 +111,7 @@ async def request_otp(
         )
         return OTPNewUserResponse(registration_token=token)
 
-    otp = _generate_otp_code()
+    otp = generate_otp_code()
     await cache_service.set(
         f"otp:{request.tenant_id}:{identifier_hash}",
         sha256_hex(otp),
@@ -132,6 +133,7 @@ async def verify_otp(request: OTPVerify, session: AsyncSession) -> tuple[OTPVeri
     identifier_type = classify_identifier(request.identifier)
     identifier_hash = sha256_hex(_lookup_value(request.identifier, identifier_type))
 
+    await rls.set_tenant_context(session, request.tenant_id)
     customer = await _get_customer(session, request.tenant_id, identifier_hash, identifier_type)
     if customer is None:
         raise _code_expired_error()

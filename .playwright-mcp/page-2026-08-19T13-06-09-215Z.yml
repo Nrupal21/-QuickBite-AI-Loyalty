@@ -1,0 +1,89 @@
+- generic [active] [ref=f22e1]:
+  - link "Skip to content" [ref=f22e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f22e3]:
+    - generic [ref=f22e5]:
+      - link "QuickBite" [ref=f22e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f22e11]:
+        - link "Log in" [ref=f22e12] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f22e13] [cursor=pointer]:
+          - /url: /#pricing
+  - main [ref=f22e14]:
+    - generic [ref=f22e15]:
+      - generic [ref=f22e16]:
+        - link "Close and return home" [ref=f22e17] [cursor=pointer]:
+          - /url: /
+        - generic [ref=f22e21]:
+          - heading "Create your account" [level=1] [ref=f22e22]
+          - paragraph [ref=f22e23]: Set up QuickBite in a few minutes — no credit card required. You can register your restaurant right after.
+        - generic [ref=f22e25]:
+          - generic [ref=f22e26]:
+            - generic [ref=f22e27]: Your name
+            - textbox "Your name" [ref=f22e28]:
+              - /placeholder: Nina Rao
+          - generic [ref=f22e29]:
+            - generic [ref=f22e30]: Email
+            - textbox "Email" [ref=f22e31]:
+              - /placeholder: you@example.com
+          - generic [ref=f22e32]:
+            - generic [ref=f22e33]: Password
+            - generic [ref=f22e34]:
+              - textbox "Password" [ref=f22e35]:
+                - /placeholder: At least 8 characters
+              - button "Show password" [ref=f22e36] [cursor=pointer]
+          - button "Create account" [ref=f22e41] [cursor=pointer]
+      - paragraph [ref=f22e43]:
+        - text: Already have an account?
+        - link "Log in" [ref=f22e44] [cursor=pointer]:
+          - /url: /login
+  - contentinfo [ref=f22e45]:
+    - generic [ref=f22e46]:
+      - generic [ref=f22e47]:
+        - generic [ref=f22e48]:
+          - link "QuickBite" [ref=f22e49] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f22e54]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f22e55]:
+          - heading "Product" [level=4] [ref=f22e56]
+          - list [ref=f22e57]:
+            - listitem [ref=f22e58]:
+              - link "Features" [ref=f22e59] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f22e60]:
+              - link "How it works" [ref=f22e61] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f22e62]:
+              - link "Pricing" [ref=f22e63] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f22e64]:
+          - heading "Company" [level=4] [ref=f22e65]
+          - list [ref=f22e66]:
+            - listitem [ref=f22e67]:
+              - link "About" [ref=f22e68] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f22e69]:
+              - link "Careers" [ref=f22e70] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f22e71]:
+              - link "Contact" [ref=f22e72] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f22e73]:
+          - heading "Legal" [level=4] [ref=f22e74]
+          - list [ref=f22e75]:
+            - listitem [ref=f22e76]:
+              - link "Privacy" [ref=f22e77] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f22e78]:
+              - link "Terms" [ref=f22e79] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f22e80]:
+        - generic [ref=f22e81]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f22e82]:
+          - link "Email" [ref=f22e83] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f22e87] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f22e91] [cursor=pointer]:
+            - /url: "#"

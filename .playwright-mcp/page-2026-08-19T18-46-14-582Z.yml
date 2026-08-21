@@ -1,0 +1,39 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=e3]:
+    - complementary "Sign-up progress" [ref=e4]:
+      - link "QuickBite" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - paragraph [ref=e10]: Sign in
+      - list [ref=e11]:
+        - listitem [ref=e12]:
+          - generic [ref=e16]:
+            - text: Who you are
+            - generic [ref=e17]: Email, phone, or username — one account for diners, owners, and staff.
+        - listitem [ref=e18]:
+          - generic [ref=e22]: Prove it
+        - listitem [ref=e23]:
+          - generic [ref=e27]: You're in
+      - paragraph
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - heading "Sign in to QuickBite" [level=1] [ref=e32]
+        - paragraph [ref=e33]: One account, however you got here — a diner collecting stamps, an owner running the place, or a team member on shift.
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]: Email or phone number
+          - textbox "Email or phone number" [ref=e37]:
+            - /placeholder: you@restaurant.in or +919876543210
+          - paragraph [ref=e38]: Phone numbers need the country code, like +91.
+        - button "Continue" [ref=e39] [cursor=pointer]
+      - paragraph [ref=e41]: Or continue with
+      - generic [ref=e42]:
+        - button "Google" [ref=e43] [cursor=pointer]
+        - button "Apple" [ref=e49] [cursor=pointer]
+        - button "GitHub" [ref=e53] [cursor=pointer]
+      - paragraph [ref=e56]:
+        - text: New here? Continuing creates your account — no separate sign-up form. Prefer a password?
+        - link "Register with one" [ref=e57] [cursor=pointer]:
+          - /url: /register
+        - text: .

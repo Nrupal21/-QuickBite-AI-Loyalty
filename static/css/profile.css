@@ -1,0 +1,661 @@
+/* QuickBite AI + Loyalty — /profile ("My profile").
+   ------------------------------------------------------------------------
+   Written fresh against the Stitch "QuickBite Auth Redesign" profile screens
+   (desktop 2560×2146, mobile 780×3120). Nothing here is carried over from the
+   earlier profile stylesheet.
+
+   WORLD — the auth stage's tokens, not a new palette: same obsidian ground
+   (--stage), same plates (--plate / --plate-raised), same hairlines, same
+   Hanken Grotesk from base.html. auth.css is linked ahead of this file, so
+   :root is already defined; only what this surface needs beyond a form page
+   is added here.
+
+   COLOUR — loyalty teal leads. Doc 4 reserves teal for stamps, rewards and
+   OTP, and this page is the diner's stamp record, so it is the one page where
+   teal is the primary accent rather than a highlight. --teal (#0D9488) is a
+   fill; --teal-lift (#2DD4BF) is the text-weight sibling used for the numbers
+   and any teal set on text. The account blue appears only in the owner/staff
+   variant, which is about a business, not a stamp card.
+
+   STRUCTURE — one shell, two columns above 900px: identity + stats + account
+   details on the left (sticky, it does not scroll away), stamps and reviews
+   on the right. Below 900px the same sections stack in that order. The page
+   carries no chrome of its own: the top bar and the dock are the shared
+   partials/nav.html, on this page as on every other.
+
+   MOTION — one authored moment: cards settle up as the fetched data lands,
+   staggered per row. Everything else is a state change. Off entirely under
+   prefers-reduced-motion. */
+
+.profile-page {
+  background: var(--stage);
+  color: var(--fg);
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+/* Author styles beat the UA stylesheet's `[hidden] { display: none }`, so a
+   `display:` set on any node this page toggles — the step sections, the detail
+   rows, the empty states — would render it anyway. landing.css carries the
+   same override for `.btn[hidden]`; this is the page-wide version. */
+.profile-page [hidden] {
+  display: none !important;
+}
+
+.profile-page :focus-visible {
+  outline: 2px solid var(--teal-lift);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+
+
+.profile-main {
+  padding: var(--space-4) var(--space-3) var(--space-6);
+}
+
+.profile-shell {
+  width: 100%;
+  max-width: 1040px;
+  margin-inline: auto;
+}
+
+.profile-card {
+  background: var(--plate-raised);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--plate-shadow);
+}
+
+.profile-card-title {
+  margin: 0 0 var(--space-2);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.profile-section-title {
+  margin: 0 0 var(--space-2);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.profile-name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* --------------------------------------------------------------- layout */
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .profile-layout {
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .profile-aside {
+    position: sticky;
+    top: calc(64px + var(--space-3));
+  }
+}
+
+.profile-aside,
+.profile-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.profile-content {
+  gap: var(--space-5);
+}
+
+.profile-section {
+  scroll-margin-top: calc(64px + var(--space-2));
+}
+
+/* ------------------------------------------------------------- identity */
+
+.profile-identity {
+  overflow: hidden;
+}
+
+.profile-identity-cover {
+  height: 88px;
+  background: linear-gradient(120deg, rgba(13, 148, 136, 0.28), rgba(45, 212, 191, 0.1));
+}
+
+.profile-identity--owner .profile-identity-cover {
+  background: linear-gradient(120deg, rgba(26, 86, 219, 0.3), rgba(138, 176, 247, 0.1));
+}
+
+.profile-identity-body {
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+/* Pulled up over the cover band, the way the design overlaps them. */
+.profile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin-top: -40px;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-full);
+  border: 4px solid var(--plate-raised);
+  background: var(--teal);
+  color: #fff;
+  font-size: 1.875rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.profile-avatar--owner {
+  background: var(--accent, #1a56db);
+}
+
+.profile-badge {
+  display: inline-block;
+  margin-top: 0.625rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.profile-badge--teal {
+  background: rgba(13, 148, 136, 0.14);
+  color: var(--teal-lift);
+}
+
+.profile-badge--blue {
+  background: rgba(26, 86, 219, 0.18);
+  color: var(--accent-lift);
+}
+
+/* ---------------------------------------------------------------- stats */
+
+.profile-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Below the two-column breakpoint the three tiles read as one row of numbers,
+   as in the mobile comp — stacked they would push the stamps section a full
+   screen down. From 900px they return to the aside's labelled column. */
+@media (max-width: 899px) {
+  .profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .profile-stat {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}
+
+.profile-stat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+.profile-stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--teal-lift);
+}
+
+.profile-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--teal-lift);
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-stat-label {
+  margin-top: 0.125rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+}
+
+/* ------------------------------------------------------ account details */
+
+.profile-details {
+  padding: var(--space-3);
+}
+
+.profile-detail-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.profile-detail dt {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-dim);
+}
+
+.profile-detail dd {
+  margin: 0.25rem 0 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.profile-flag {
+  display: inline-block;
+  margin-left: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+
+.profile-flag--ok {
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--success-lift);
+}
+
+.profile-flag--warn {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+}
+
+/* ------------------------------------------------------------ locations */
+
+.profile-location-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+@media (min-width: 640px) {
+  .profile-location-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.profile-location {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  transition: border-color 200ms var(--ease-exp), transform 200ms var(--ease-exp);
+}
+
+.profile-location:hover {
+  border-color: var(--hairline-strong);
+}
+
+.profile-location-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: var(--space-1);
+}
+
+.profile-location-pin {
+  display: inline-flex;
+  color: var(--teal-lift);
+  flex-shrink: 0;
+}
+
+.profile-location-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.profile-location-address {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+}
+
+.profile-location-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+.profile-location-count {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+
+.profile-location-count-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--teal-lift);
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-location-count-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+}
+
+.profile-location-last-visit {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--fg-dim);
+  text-align: right;
+}
+
+/* -------------------------------------------------------------- reviews */
+
+.profile-review-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.profile-review {
+  padding: var(--space-3);
+}
+
+.profile-review-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.profile-review-branch {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.profile-review-rating {
+  margin: 0;
+  display: inline-flex;
+  gap: 1px;
+  flex-shrink: 0;
+  color: #f59e0b;
+}
+
+.profile-star {
+  display: inline-flex;
+  color: rgba(255, 255, 255, 0.16);
+}
+
+.profile-star.is-filled {
+  color: #f59e0b;
+}
+
+.profile-review-excerpt {
+  margin: 0.75rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--fg-muted);
+}
+
+.profile-review-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+}
+
+.profile-review-tags {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.profile-tag {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--teal-lift);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.profile-review-date {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--fg-dim);
+  margin-left: auto;
+}
+
+/* --------------------------------------------------- owner CTA + sign out */
+
+.profile-cta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-3);
+}
+
+.profile-cta-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: rgba(26, 86, 219, 0.16);
+  color: var(--accent-lift);
+}
+
+.profile-cta-body {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.profile-cta-body h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.profile-cta-body p {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+}
+
+.profile-signout {
+  margin-top: var(--space-3);
+}
+
+/* ---------------------------------------------- empty / signed-out / alert */
+
+.profile-empty {
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px dashed var(--hairline-strong);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+.profile-signedout {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-4);
+}
+
+.profile-signedout-card {
+  max-width: 27rem;
+  padding: var(--space-4) var(--space-3);
+  text-align: center;
+}
+
+.profile-signedout-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-full);
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--teal-lift);
+}
+
+.profile-signedout-text {
+  margin: 0.75rem 0 var(--space-3);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.profile-signedout-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.profile-alert {
+  margin-bottom: var(--space-3);
+  padding: 0.875rem var(--space-2);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 0.875rem;
+}
+
+/* ------------------------------------------------------------- skeleton */
+
+.profile-skeleton-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+@media (min-width: 900px) {
+  .profile-skeleton-grid {
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+}
+
+.profile-skeleton-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.profile-skeleton-block {
+  height: 76px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--plate-raised) 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    var(--plate-raised) 100%
+  );
+  background-size: 200% 100%;
+  animation: profile-shimmer 1.4s ease-in-out infinite;
+}
+
+.profile-skeleton-block--tall {
+  height: 190px;
+}
+
+.profile-skeleton-block--wide {
+  height: 148px;
+}
+
+@keyframes profile-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+
+
+/* The one authored moment: each card settles up as the fetch resolves.
+   --settle-delay is set per card by auth-profile.js so rows stagger. */
+.profile-settle {
+  animation: profile-settle 420ms var(--ease-exp) both;
+  animation-delay: var(--settle-delay, 0ms);
+}
+
+@keyframes profile-settle {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-settle {
+    animation: none;
+  }
+
+  .profile-skeleton-block {
+    animation: none;
+  }
+
+  .profile-location {
+    transition: none;
+  }
+}

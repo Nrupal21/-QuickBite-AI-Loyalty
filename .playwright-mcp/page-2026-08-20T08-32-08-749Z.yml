@@ -1,0 +1,59 @@
+- generic [ref=f17e1]:
+  - link "Skip to content" [ref=f17e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f17e3]:
+    - link "QuickBite" [ref=f17e5] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f17e10]:
+      - navigation "Progress" [ref=f17e11]:
+        - list [ref=f17e12]:
+          - listitem [ref=f17e13]:
+            - generic [ref=f17e15]: Your account
+          - listitem [ref=f17e16]:
+            - generic [ref=f17e18]: Your business
+          - listitem [ref=f17e19]:
+            - generic [ref=f17e21]: Second contact
+          - listitem [ref=f17e22]:
+            - generic [ref=f17e24]: What you run
+          - listitem [ref=f17e25]:
+            - generic [ref=f17e27]: Your plan
+          - listitem [ref=f17e28]:
+            - generic [ref=f17e30]: You're an owner
+      - generic [ref=f17e59]:
+        - generic [ref=f17e60]:
+          - heading "What kind of business is it?" [level=2] [ref=f17e61]
+          - paragraph [ref=f17e62]: This sets which plans we show you next — a food truck and a five-outlet chain need very different things.
+        - group "Business category" [ref=f17e63]:
+          - button "Restaurant Dine-in tables, a full menu, a regular crowd" [ref=f17e64] [cursor=pointer]:
+            - generic [ref=f17e69]:
+              - generic [ref=f17e70]: Restaurant
+              - generic [ref=f17e71]: Dine-in tables, a full menu, a regular crowd
+          - button "Café Coffee, counter service, people who come back weekly" [ref=f17e72] [cursor=pointer]:
+            - generic [ref=f17e78]:
+              - generic [ref=f17e79]: Café
+              - generic [ref=f17e80]: Coffee, counter service, people who come back weekly
+          - button "Cloud Kitchen Delivery only — reviews are the whole storefront" [ref=f17e81] [cursor=pointer]:
+            - generic [ref=f17e88]:
+              - generic [ref=f17e89]: Cloud Kitchen
+              - generic [ref=f17e90]: Delivery only — reviews are the whole storefront
+          - button "Quick Service High volume, fast counter, several outlets" [ref=f17e91] [cursor=pointer]:
+            - generic [ref=f17e96]:
+              - generic [ref=f17e97]: Quick Service
+              - generic [ref=f17e98]: High volume, fast counter, several outlets
+          - button "Bakery & Sweets Daily regulars and festival rushes" [ref=f17e99] [cursor=pointer]:
+            - generic [ref=f17e106]:
+              - generic [ref=f17e107]: Bakery & Sweets
+              - generic [ref=f17e108]: Daily regulars and festival rushes
+          - button "Bar & Pub Evening trade, events, a loyal weekend list" [ref=f17e109] [cursor=pointer]:
+            - generic [ref=f17e113]:
+              - generic [ref=f17e114]: Bar & Pub
+              - generic [ref=f17e115]: Evening trade, events, a loyal weekend list
+          - button "Fine Dining Reputation is the reservation book" [ref=f17e116] [cursor=pointer]:
+            - generic [ref=f17e121]:
+              - generic [ref=f17e122]: Fine Dining
+              - generic [ref=f17e123]: Reputation is the reservation book
+          - button "Food Truck One counter, moving location, word of mouth" [active] [pressed] [ref=f17e124] [cursor=pointer]:
+            - generic [ref=f17e131]:
+              - generic [ref=f17e132]: Food Truck
+              - generic [ref=f17e133]: One counter, moving location, word of mouth
+        - button "Continue" [ref=f17e134] [cursor=pointer]

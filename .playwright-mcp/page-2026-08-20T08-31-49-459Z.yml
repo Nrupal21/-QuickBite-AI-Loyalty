@@ -1,0 +1,39 @@
+- generic [ref=f17e1]:
+  - link "Skip to content" [ref=f17e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f17e3]:
+    - link "QuickBite" [ref=f17e5] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f17e10]:
+      - navigation "Progress" [ref=f17e11]:
+        - list [ref=f17e12]:
+          - listitem [ref=f17e13]:
+            - generic [ref=f17e15]: Your account
+          - listitem [ref=f17e16]:
+            - generic [ref=f17e18]: Your business
+          - listitem [ref=f17e19]:
+            - generic [ref=f17e21]: Second contact
+          - listitem [ref=f17e22]:
+            - generic [ref=f17e24]: What you run
+          - listitem [ref=f17e25]:
+            - generic [ref=f17e27]: Your plan
+          - listitem [ref=f17e28]:
+            - generic [ref=f17e30]: You're an owner
+      - generic [ref=f17e39]:
+        - button "Change details" [ref=f17e40] [cursor=pointer]
+        - generic [ref=f17e43]:
+          - heading "Enter the code" [level=2] [ref=f17e44]
+          - paragraph [ref=f17e45]:
+            - text: Sent to
+            - strong [ref=f17e46]: "+919876543211"
+            - text: . It expires in five minutes.
+        - generic [ref=f17e47]:
+          - group "6-digit verification code" [ref=f17e48]:
+            - textbox "Digit 1 of 6" [active] [ref=f17e49]
+            - textbox "Digit 2 of 6" [ref=f17e50]
+            - textbox "Digit 3 of 6" [ref=f17e51]
+            - textbox "Digit 4 of 6" [ref=f17e52]
+            - textbox "Digit 5 of 6" [ref=f17e53]
+            - textbox "Digit 6 of 6" [ref=f17e54]
+          - button "Resend in 60s" [disabled] [ref=f17e56]
+          - button "Verify" [ref=f17e57] [cursor=pointer]

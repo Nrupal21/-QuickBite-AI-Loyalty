@@ -1,0 +1,9 @@
+{% extends "_layout.txt" %}
+
+{% block content -%}
+Use this code to sign in to your QuickBite account: {{ otp }}
+
+It expires in {{ expires_minutes }} minutes and can be used once.
+
+If you didn't try to sign in, someone may know your email address. No action is needed — but never share this code, including with someone claiming to be QuickBite staff.
+{%- endblock %}

@@ -8,6 +8,10 @@ provider sees it. prompt_guard then sanitises whatever survives.
 REVIEW-02 adds the approve/reject schemas for the response-approval
 workflow. `final_text` on approve is optional — a Manager approving the
 AI draft as-is sends nothing; one who edited it first sends the edited text.
+
+REVIEW-03 adds the GMB OAuth connect/disconnect schemas. `GmbProfileStatusOut`
+is deliberately thin (connection state + sync freshness, not tokens or raw
+Google ids) — it is what a dashboard reconnect banner needs, nothing more.
 """
 
 import uuid
@@ -96,5 +100,50 @@ class ReviewResponseOut(BaseModel):
     ai_model_used: str
     approved_by_user_id: uuid.UUID | None
     created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ReviewOut(BaseModel):
+    """One `customer_reviews` row for the dashboard's Reviews page, with its
+    `review_responses` row (if any) nested — a diner's review needs no
+    approval (it posted straight to Google), the AI-drafted *reply* is what
+    review_responses/approve/reject gate, so this is the one read the page
+    needs rather than two separate list calls."""
+
+    id: uuid.UUID
+    branch_id: uuid.UUID
+    branch_name: str
+    source: str  # google | yelp | internal
+    rating: int
+    reviewer_name: str | None
+    review_body: str | None
+    sentiment_score: float | None
+    reviewed_at: datetime
+    response: ReviewResponseOut | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class GmbConnectResponse(BaseModel):
+    """GET /gmb/connect — send the owner's browser here to start consent."""
+
+    authorize_url: str
+
+
+class GmbDisconnectRequest(BaseModel):
+    """POST /gmb/disconnect. Owner+ only (REVIEW-03)."""
+
+    branch_id: uuid.UUID
+
+
+class GmbProfileStatusOut(BaseModel):
+    """The connect/callback/disconnect response shape — a dashboard
+    reconnect banner keys off `is_connected` and `last_synced_at`."""
+
+    branch_id: uuid.UUID
+    is_connected: bool
+    last_synced_at: datetime | None
+    token_rotated_at: datetime | None
 
     model_config = {"from_attributes": True}

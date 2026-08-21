@@ -54,14 +54,18 @@
 
   // ---------- profile chip (same as dashboard.js) ----------
 
-  var initialsEl = document.querySelector('[data-user-initials]');
+  // Two [data-user-initials] nodes exist per page now (the sidebar/mobile
+  // trigger chip and the account sheet) — both get the same initial.
+  var initialsEls = document.querySelectorAll('[data-user-initials]');
   var roleLabelEl = document.querySelector('[data-user-role-label]');
   var roleBadgeEl = document.querySelector('[data-user-role-badge]');
   if (session.role) {
     var label = String(session.role).replace(/_/g, ' ');
     if (roleLabelEl) roleLabelEl.textContent = label.charAt(0) + label.slice(1).toLowerCase();
     if (roleBadgeEl) roleBadgeEl.textContent = label;
-    if (initialsEl) initialsEl.textContent = label.charAt(0);
+    initialsEls.forEach(function (el) {
+      el.textContent = label.charAt(0);
+    });
   }
 
   // ---------- rendering ----------

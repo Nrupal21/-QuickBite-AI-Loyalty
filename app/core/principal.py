@@ -50,7 +50,9 @@ class Principal:
     another tenant or subject after the resolver has vouched for it."""
 
     subject_type: SubjectType
-    tenant_id: uuid.UUID  # always from the DB row, never from a claim
+    # None for a standard user (role USER) with no restaurant registered yet.
+    # Always from the DB row, never from a claim.
+    tenant_id: uuid.UUID | None
     auth_provider: AuthProvider
     provider_subject: str  # `sub` — the local user id for LOCAL
     claims: Mapping[str, Any]  # verified claims, for audit and /auth/logout

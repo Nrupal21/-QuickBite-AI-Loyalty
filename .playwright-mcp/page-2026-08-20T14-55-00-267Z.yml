@@ -1,0 +1,138 @@
+- generic [active] [ref=f1e1]:
+  - link "Skip to content" [ref=f1e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f1e3]:
+    - link "QuickBite" [ref=f1e4] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f1e9]:
+      - link "Home" [ref=f1e10] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f1e11]: J
+  - main [ref=f1e12]:
+    - generic [ref=f1e13]:
+      - generic [ref=f1e14]:
+        - complementary [ref=f1e15]:
+          - generic [ref=f1e18]:
+            - generic [ref=f1e19]: J
+            - heading "Jordan Miller" [level=1] [ref=f1e20]
+            - generic [ref=f1e21]: Loyalty member
+          - generic [ref=f1e22]:
+            - generic [ref=f1e27]:
+              - generic [ref=f1e28]: "42"
+              - generic [ref=f1e29]: Lifetime stamps
+            - generic [ref=f1e35]:
+              - generic [ref=f1e36]: "8"
+              - generic [ref=f1e37]: Toward next reward
+            - generic [ref=f1e42]:
+              - generic [ref=f1e43]: "3"
+              - generic [ref=f1e44]: Locations visited
+          - generic [ref=f1e45]:
+            - heading "Account details" [level=2] [ref=f1e46]
+            - generic [ref=f1e47]:
+              - generic [ref=f1e48]:
+                - term [ref=f1e49]: Email
+                - definition [ref=f1e50]: jordan.m@example.com
+              - generic [ref=f1e51]:
+                - term [ref=f1e52]: Username
+                - definition [ref=f1e53]: jordan_bites
+              - generic [ref=f1e54]:
+                - term [ref=f1e55]: Favourite location
+                - definition [ref=f1e56]: Downtown QuickBite
+              - generic [ref=f1e57]:
+                - term [ref=f1e58]: Last visit
+                - definition [ref=f1e59]: 24 Oct 2023
+              - generic [ref=f1e60]:
+                - term [ref=f1e61]: Member since
+                - definition [ref=f1e62]: 11 Feb 2023
+        - generic [ref=f1e63]:
+          - generic [ref=f1e64]:
+            - heading "Stamps by location" [level=2] [ref=f1e65]
+            - generic [ref=f1e66]:
+              - article [ref=f1e67]:
+                - heading "Downtown QuickBite" [level=3] [ref=f1e72]
+                - paragraph [ref=f1e73]: 123 Main St, Metro Center
+                - generic [ref=f1e74]:
+                  - paragraph [ref=f1e75]:
+                    - generic [ref=f1e76]: "15"
+                    - generic [ref=f1e77]: Stamps
+                  - paragraph [ref=f1e78]: Last visited 24 Oct 2023
+              - article [ref=f1e79]:
+                - heading "Uptown Campus" [level=3] [ref=f1e84]
+                - paragraph [ref=f1e85]: 88 College Ave, University District
+                - generic [ref=f1e86]:
+                  - paragraph [ref=f1e87]:
+                    - generic [ref=f1e88]: "9"
+                    - generic [ref=f1e89]: Stamps
+                  - paragraph [ref=f1e90]: Last visited 12 Sept 2023
+              - article [ref=f1e91]:
+                - heading "Westside Bites" [level=3] [ref=f1e96]
+                - paragraph [ref=f1e97]: 456 Oak Ave
+                - generic [ref=f1e98]:
+                  - paragraph [ref=f1e99]:
+                    - generic [ref=f1e100]: "6"
+                    - generic [ref=f1e101]: Stamps
+                  - paragraph [ref=f1e102]: Last visited 2 Aug 2023
+          - generic [ref=f1e103]:
+            - heading "Reviews you've sent" [level=2] [ref=f1e104]
+            - generic [ref=f1e105]:
+              - article [ref=f1e106]:
+                - generic [ref=f1e107]:
+                  - heading "Downtown QuickBite" [level=3] [ref=f1e108]
+                  - paragraph [ref=f1e109]:
+                    - generic [ref=f1e110]: 5 out of 5 stars
+                - paragraph [ref=f1e126]: The new spicy chicken sandwich was incredible. Perfect amount of heat and the bun was perfectly toasted. Will definitely be coming back for this one.
+                - generic [ref=f1e127]:
+                  - paragraph [ref=f1e128]:
+                    - generic [ref=f1e129]: Fast service
+                    - generic [ref=f1e130]: Great vibe
+                  - paragraph [ref=f1e131]: 24 Oct 2023
+              - article [ref=f1e132]:
+                - generic [ref=f1e133]:
+                  - heading "Uptown Campus" [level=3] [ref=f1e134]
+                  - paragraph [ref=f1e135]:
+                    - generic [ref=f1e136]: 4 out of 5 stars
+                - paragraph [ref=f1e152]: Solid spot for a quick lunch between classes. The AI ordering system was a bit slow today, but the food quality is always consistent.
+                - generic [ref=f1e153]:
+                  - paragraph [ref=f1e154]:
+                    - generic [ref=f1e155]: Value
+                  - paragraph [ref=f1e156]: 12 Sept 2023
+      - generic [ref=f1e157]:
+        - complementary [ref=f1e158]:
+          - generic [ref=f1e161]:
+            - heading "Your account" [level=1] [ref=f1e163]
+            - generic [ref=f1e164]: Member
+          - generic [ref=f1e165]:
+            - heading "Account details" [level=2] [ref=f1e166]
+            - generic [ref=f1e167]:
+              - generic [ref=f1e168]:
+                - term [ref=f1e169]: Email
+                - definition [ref=f1e170]:
+                  - text: —
+                  - generic [ref=f1e171]: Verified
+                  - generic [ref=f1e172]: Unverified
+              - generic [ref=f1e173]:
+                - term [ref=f1e174]: Two-factor
+                - definition [ref=f1e175]: "Off"
+        - generic [ref=f1e177]:
+          - heading "Your restaurant" [level=2] [ref=f1e178]
+          - generic [ref=f1e179]:
+            - generic [ref=f1e186]:
+              - heading "Dashboard" [level=3] [ref=f1e187]
+              - paragraph [ref=f1e188]: Reviews, loyalty analytics and your team, all in one place.
+            - link "Open dashboard" [ref=f1e189] [cursor=pointer]:
+              - /url: /dashboard
+          - generic [ref=f1e190]:
+            - generic [ref=f1e195]:
+              - heading "No restaurant yet" [level=3] [ref=f1e196]
+              - paragraph [ref=f1e197]: Register your business to start collecting reviews and loyalty stamps.
+            - link "Join us" [ref=f1e198] [cursor=pointer]:
+              - /url: /onboarding
+          - button "Sign out" [ref=f1e200] [cursor=pointer]
+      - generic [ref=f1e202]:
+        - heading "You're signed out" [level=1] [ref=f1e207]
+        - paragraph [ref=f1e208]: Sign in to see your stamps, your rewards progress and the reviews you've sent.
+        - generic [ref=f1e209]:
+          - link "Sign in" [ref=f1e210] [cursor=pointer]:
+            - /url: /login
+          - link "Create an account" [ref=f1e211] [cursor=pointer]:
+            - /url: /register

@@ -193,14 +193,24 @@ async def _resolve_local(session: AsyncSession, token: str) -> Principal:
     # tampered tenant_id simply fails to find the user and 401s. Authorisation
     # still derives from `user.tenant_id` on the row below, per Principal's
     # invariant that tenant identity comes from the database and never a claim.
-    try:
-        claim_tenant_id = uuid.UUID(claims["tenant_id"])
-    except (KeyError, ValueError, TypeError) as exc:
-        raise _UNAUTHORIZED from exc
+    #
+    # A standard user's token carries `tenant_id: null` (role USER, no
+    # restaurant registered yet) — there is nothing to bind. The widened
+    # migration-0012 RLS policy on restaurant.users admits `tenant_id IS NULL`
+    # rows unconditionally, so the plain select(User) below still resolves
+    # exactly that user's own row with no context bound at all.
+    raw_claim_tenant_id = claims.get("tenant_id")
+    claim_tenant_id: uuid.UUID | None = None
+    if raw_claim_tenant_id is not None:
+        try:
+            claim_tenant_id = uuid.UUID(raw_claim_tenant_id)
+        except (ValueError, TypeError) as exc:
+            raise _UNAUTHORIZED from exc
 
-    # `true` = local to this transaction, matching the per-request session
-    # lifecycle in get_db() — never leaks tenant context across requests.
-    await rls.set_tenant_context(session, claim_tenant_id)
+    if claim_tenant_id is not None:
+        # `true` = local to this transaction, matching the per-request session
+        # lifecycle in get_db() — never leaks tenant context across requests.
+        await rls.set_tenant_context(session, claim_tenant_id)
 
     result = await session.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()

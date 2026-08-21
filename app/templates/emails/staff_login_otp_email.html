@@ -1,0 +1,10 @@
+{% extends "_layout.html" %}
+
+{% block title %}Your QuickBite sign-in code{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 16px 0;">Use this code to sign in to your QuickBite account:</p>
+<p style="margin:0 0 16px 0;font-size:32px;font-weight:700;letter-spacing:0.3em;color:#0b0b0d;">{{ otp }}</p>
+<p style="margin:0 0 16px 0;">It expires in {{ expires_minutes }} minutes and can be used once.</p>
+<p style="margin:0;font-size:13px;color:#64748b;">If you didn't try to sign in, someone may know your email address. No action is needed — but never share this code, including with someone claiming to be QuickBite staff.</p>
+{% endblock %}

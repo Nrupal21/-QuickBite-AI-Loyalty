@@ -28,6 +28,7 @@ from app.schemas.loyalty import (
     RedeemCodeResponse,
     RewardProgramCreateRequest,
     RewardProgramResponse,
+    RewardProgramUpdateRequest,
     ScanRequest,
     ScanResponse,
 )
@@ -70,6 +71,36 @@ async def create_reward_program(
     session: AsyncSession = Depends(get_db),
 ) -> RewardProgramResponse:
     return await LoyaltyService(session=session).create_reward_program(body, current_user)
+
+
+@router.get(
+    "/reward-programs", response_model=list[RewardProgramResponse], status_code=status.HTTP_200_OK
+)
+async def list_reward_programs(
+    current_user: User = Depends(require_role(RoleLevel.MANAGER)),
+    session: AsyncSession = Depends(get_db),
+) -> list[RewardProgramResponse]:
+    """Manager+ — same rank as GET /branches and GET /loyalty/analytics."""
+    return await LoyaltyService(session=session).list_reward_programs()
+
+
+@router.patch(
+    "/reward-programs/{program_id}",
+    response_model=RewardProgramResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def update_reward_program(
+    program_id: uuid.UUID,
+    body: RewardProgramUpdateRequest,
+    current_user: User = Depends(require_role(RoleLevel.OWNER)),
+    session: AsyncSession = Depends(get_db),
+) -> RewardProgramResponse:
+    """Owner+ — same rank as creating a program. `is_active: false` is how a
+    program is paused; there is no delete endpoint (see the schema's own
+    docstring)."""
+    return await LoyaltyService(session=session).update_reward_program(
+        program_id, body, current_user
+    )
 
 
 @router.post("/redeem/{code}", response_model=RedeemCodeResponse, status_code=status.HTTP_200_OK)

@@ -1,0 +1,81 @@
+- generic [active] [ref=f18e1]:
+  - link "Skip to content" [ref=f18e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f18e3]:
+    - generic [ref=f18e5]:
+      - link "QuickBite" [ref=f18e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f18e11]:
+        - link "Product" [ref=f18e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f18e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f18e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f18e15]:
+        - link "Join Us" [ref=f18e16] [cursor=pointer]:
+          - /url: /onboarding
+        - link "Your account" [ref=f18e17] [cursor=pointer]:
+          - /url: /profile
+  - main [ref=f18e21]:
+    - generic [ref=f18e23]:
+      - generic [ref=f18e24]:
+        - generic [ref=f18e25]: Almost there
+        - heading "Register your restaurant" [level=1] [ref=f18e26]
+        - paragraph [ref=f18e27]: Pick a plan — you can change it later from billing.
+      - generic [ref=f18e28]:
+        - paragraph [ref=f18e29]: We'll text your business's rewards and order alerts here. Add a phone number so we can verify it.
+        - generic [ref=f18e30]:
+          - generic [ref=f18e31]: Phone number
+          - textbox "Phone number" [ref=f18e32]:
+            - /placeholder: +1 555 000 1234
+        - button "Send code" [ref=f18e33] [cursor=pointer]
+  - contentinfo [ref=f18e35]:
+    - generic [ref=f18e36]:
+      - generic [ref=f18e37]:
+        - generic [ref=f18e38]:
+          - link "QuickBite" [ref=f18e39] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f18e44]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f18e45]:
+          - heading "Product" [level=4] [ref=f18e46]
+          - list [ref=f18e47]:
+            - listitem [ref=f18e48]:
+              - link "Features" [ref=f18e49] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f18e50]:
+              - link "How it works" [ref=f18e51] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f18e52]:
+              - link "Pricing" [ref=f18e53] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f18e54]:
+          - heading "Company" [level=4] [ref=f18e55]
+          - list [ref=f18e56]:
+            - listitem [ref=f18e57]:
+              - link "About" [ref=f18e58] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f18e59]:
+              - link "Careers" [ref=f18e60] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f18e61]:
+              - link "Contact" [ref=f18e62] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f18e63]:
+          - heading "Legal" [level=4] [ref=f18e64]
+          - list [ref=f18e65]:
+            - listitem [ref=f18e66]:
+              - link "Privacy" [ref=f18e67] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f18e68]:
+              - link "Terms" [ref=f18e69] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f18e70]:
+        - generic [ref=f18e71]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f18e72]:
+          - link "Email" [ref=f18e73] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f18e77] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f18e81] [cursor=pointer]:
+            - /url: "#"

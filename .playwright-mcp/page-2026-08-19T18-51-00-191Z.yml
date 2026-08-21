@@ -1,0 +1,44 @@
+- generic [active] [ref=f4e1]:
+  - link "Skip to content" [ref=f4e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f4e3]:
+    - complementary "Sign-up progress" [ref=f4e4]:
+      - link "QuickBite" [ref=f4e5] [cursor=pointer]:
+        - /url: /
+      - paragraph [ref=f4e10]: Join us
+      - list [ref=f4e11]:
+        - listitem [ref=f4e12]:
+          - generic [ref=f4e16]: Your account
+        - listitem [ref=f4e17]:
+          - generic [ref=f4e21]: Your business
+        - listitem [ref=f4e23]:
+          - generic [ref=f4e27]: Second contact
+        - listitem [ref=f4e28]:
+          - generic [ref=f4e32]: What you run
+        - listitem [ref=f4e33]:
+          - generic [ref=f4e37]:
+            - text: Your plan
+            - generic [ref=f4e151]: Start free. Change or cancel whenever.
+        - listitem [ref=f4e38]:
+          - generic [ref=f4e42]: You're an owner
+      - paragraph
+    - generic [ref=f4e179]:
+      - button "Change plan" [ref=f4e180] [cursor=pointer]
+      - generic [ref=f4e183]:
+        - heading "Register Marco's Pizzeria?" [level=2] [ref=f4e184]
+        - paragraph [ref=f4e185]: This creates your business, makes you its owner, and sends a confirmation to both your contacts.
+      - generic [ref=f4e186]:
+        - generic [ref=f4e187]:
+          - generic [ref=f4e188]: Business
+          - generic [ref=f4e189]: Marco's Pizzeria
+        - generic [ref=f4e190]:
+          - generic [ref=f4e191]: Category
+          - generic [ref=f4e192]: Food Truck
+        - generic [ref=f4e193]:
+          - generic [ref=f4e194]: Plan
+          - generic [ref=f4e195]: Starter · Free
+        - generic [ref=f4e196]:
+          - generic [ref=f4e197]: Contacts
+          - generic [ref=f4e198]: uitest.owner@quickbite-demo.in · +919876543210
+      - button "Register my business" [ref=f4e199] [cursor=pointer]
+      - paragraph [ref=f4e201]: Paid plans open checkout right after this. Nothing is charged until you complete it.

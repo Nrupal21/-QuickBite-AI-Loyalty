@@ -1,280 +1,697 @@
-/* QuickBite AI + Loyalty — Login screen styles
-   Extends the design language from landing.css (same :root tokens, same
-   nav/button classes) rather than starting a new system. Adds the teal
-   loyalty accent (#0D9488) for the customer OTP steps, per Doc 4's palette. */
+/* QuickBite AI + Loyalty — the auth stage.
+   ------------------------------------------------------------------------
+   One composition serving three pages: /login, /register, and the "Join Us"
+   business registration at /onboarding.
+
+   STRUCTURE — stage + centered stepper. A full-height obsidian stage carries
+   one form plate, centered. Above it, a horizontal segmented bar names the
+   whole journey from "who are you" to "which plan" — one bar per step, lit
+   solid for the current step, dimmed once passed, dark for what's ahead.
+   The bar sits above the plate on every viewport; there is no sidebar to
+   collapse. Six steps spread across three separate pages stop reading as six
+   disconnected screens.
+
+   WORLD — inherited from landing.css, not invented here. Same :root tokens,
+   same Hanken Grotesk, same single blue (#1A56DB) carrying every action, same
+   loyalty teal (#0D9488) reserved for the moments that are actually about
+   loyalty. This file adds only what a form surface needs that a marketing
+   page did not.
+
+   CONTRAST — the accent blue is a *fill* colour on this ground, never a text
+   colour: #1A56DB on #131318 is 2.2:1 and unreadable. --accent-lift is the
+   text-weight sibling used for links and the current step's caption, at 8:1.
+
+   MOTION — one authored moment: a step bar brightening as it completes and
+   the incoming plate settling into place. Everything else is a state change.
+   Fully disabled under prefers-reduced-motion. */
 
 :root {
+  /* Loyalty teal — Doc 4's locked role: stamps, rewards, OTP. Used here on
+     the code-entry step and nowhere else, so the colour keeps meaning
+     something. */
   --teal: #0d9488;
-  --teal-ink: #ffffff;
-  /* Dark-safe variants — the card sits on --hero-bg, so light-pink alert
-     colors tuned for a white page would look wrong here. */
+  --teal-lift: #2dd4bf;
+
+  /* The stage the plate sits on. */
+  --stage: #0b0b0d;
+  --plate: #131318;
+  --plate-raised: #191920;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.16);
+
+  --fg: #f5f5f7;
+  --fg-muted: #a1a1aa;
+  --fg-dim: #71717a;
+
+  /* Text-weight blue. --accent stays the fill. */
+  --accent-lift: #8ab0f7;
+  --accent-glow: rgba(26, 86, 219, 0.35);
+
   --danger: #fca5a5;
   --danger-bg: rgba(220, 38, 38, 0.12);
-  --danger-border: rgba(220, 38, 38, 0.35);
+  --danger-border: rgba(220, 38, 38, 0.38);
+  --success-lift: #4ade80;
+
+  --plate-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 24px 64px -20px rgba(0, 0, 0, 0.7);
+  --lift-shadow: 0 4px 8px rgba(0, 0, 0, 0.45), 0 32px 80px -24px rgba(0, 0, 0, 0.8);
+
+  --ease-exp: cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ---------------------------------------------------------------- page */
 
 .auth-page {
-  background: var(--hero-bg);
+  background: var(--stage);
+  color: var(--fg);
+  /* Browser surfaces we did not draw still carry the design. landing.css
+     themes selection and the scrollbar; a form page also has a caret. */
+  caret-color: var(--accent-lift);
 }
 
-.auth-main {
+.auth-page ::placeholder {
+  color: var(--fg-dim);
+  opacity: 1; /* Firefox dims placeholders again on top of the colour. */
+}
+
+.auth-page :focus-visible {
+  outline: 2px solid var(--accent-lift);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------- stage */
+
+.auth-stage {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  min-height: 100svh;
+  background: var(--stage);
+}
+
+/* -------------------------------------------------------------- topbar */
+
+.auth-topbar {
+  flex: none;
   display: flex;
   align-items: center;
-  justify-content: center;
-  /* Clears the shared fixed nav (~space-6 tall including its own padding) */
-  padding: calc(var(--space-6) + 1.5rem) var(--space-3) var(--space-6);
+  padding: var(--space-3) var(--space-4);
 }
 
-.auth-shell {
+@media (min-width: 640px) {
+  .auth-topbar {
+    padding: var(--space-4) var(--space-5) 0;
+  }
+}
+
+.auth-topbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.auth-topbar-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #fff;
+}
+
+/* --------------------------------------------------------- top stepper */
+
+/* A horizontal row of segments, one per step: a thin bar with its title
+   underneath, centered above the plate. Distance traveled reads as solid
+   color left-to-right, the same grammar as a download or upload progress
+   bar — nothing to learn. `data-rail-step` is what auth-core.js's step
+   machine restates as the plate advances; the server renders the first
+   state so the bar is correct before any script runs. */
+
+.auth-stepper {
   width: 100%;
-  max-width: 420px;
-  margin-inline: auto;
+  max-width: 27rem;
 }
 
-.auth-card {
-  position: relative;
-  background: var(--hero-bg-2);
-  color: var(--hero-fg);
-  border: 1px solid var(--hero-border);
+.auth-stepper--wide {
+  max-width: 46rem;
+}
+
+.auth-stepper-track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.625rem;
+}
+
+.auth-stepper-seg {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth-stepper-bar {
+  display: block;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--hairline-strong);
+  /* Passed and current steps both read as "behind the current position" —
+     the whole point of a progress bar — so both fill solid; only their
+     brightness tells them apart. */
+  transition: background-color 320ms var(--ease-exp), opacity 320ms var(--ease-exp);
+}
+
+.auth-stepper-seg[data-state='done'] .auth-stepper-bar {
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+.auth-stepper-seg[data-state='current'] .auth-stepper-bar {
+  background: var(--accent);
+  opacity: 1;
+}
+
+.auth-stepper-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--fg-dim);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 320ms var(--ease-exp);
+}
+
+.auth-stepper-seg[data-state='current'] .auth-stepper-title {
+  color: var(--fg);
+}
+
+.auth-stepper-seg[data-state='done'] .auth-stepper-title {
+  color: var(--fg-muted);
+}
+
+/* A title per segment stops fitting well past four or five steps on a
+   phone-width bar (Join Us carries six). Below 640px the per-segment titles
+   drop out and one caption under the whole bar names the current step
+   instead — the bars alone still show overall progress at a glance. */
+.auth-stepper-caption {
+  display: none;
+  margin: 0.625rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+@media (max-width: 639px) {
+  .auth-stepper-title {
+    display: none;
+  }
+
+  .auth-stepper-caption {
+    display: block;
+  }
+}
+
+/* ---------------------------------------------------------------- plate */
+
+.auth-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-3) var(--space-6);
+}
+
+@media (min-width: 640px) {
+  .auth-main {
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-5) var(--space-6);
+  }
+}
+
+.auth-plate {
+  width: 100%;
+  max-width: 27rem;
+}
+
+.auth-plate--wide {
+  max-width: 46rem;
+}
+
+.auth-step {
+  background: var(--plate);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-lg);
-  /* --shadow-lg was tuned for a white page and barely reads here — a darker,
-     wider shadow is what actually gives the card visible elevation. */
-  box-shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--plate-shadow);
   padding: var(--space-4);
 }
 
 @media (min-width: 480px) {
-  .auth-card {
+  .auth-step {
     padding: var(--space-5);
   }
-}
-
-.auth-back-btn,
-.auth-close-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--hero-border);
-  background: transparent;
-  color: var(--hero-muted);
-  cursor: pointer;
-  transition: border-color 200ms var(--ease-out), color 200ms var(--ease-out),
-    background-color 200ms var(--ease-out);
-}
-
-.auth-back-btn:hover,
-.auth-close-btn:hover {
-  color: var(--hero-fg);
-  border-color: var(--hero-fg);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.auth-back-btn {
-  margin-bottom: var(--space-2);
-}
-
-.auth-close-btn {
-  position: absolute;
-  top: var(--space-4);
-  right: var(--space-4);
-}
-
-@media (min-width: 480px) {
-  .auth-close-btn {
-    top: var(--space-5);
-    right: var(--space-5);
-  }
-}
-
-.auth-card-header {
-  margin-bottom: var(--space-3);
-}
-
-.auth-kicker {
-  display: inline-block;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--accent);
-  margin-bottom: 0.5rem;
-}
-
-.auth-title {
-  font-size: 1.5rem;
-  margin-bottom: 0.375rem;
-}
-
-.auth-sub {
-  color: var(--hero-muted);
-  font-size: 0.9375rem;
-  line-height: 1.5;
-}
-
-.auth-alert {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  background: var(--danger-bg);
-  border: 1px solid var(--danger-border);
-  color: var(--danger);
-  font-size: 0.875rem;
-  line-height: 1.4;
-  padding: 0.75rem 0.875rem;
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-3);
-}
-
-.auth-alert[hidden] {
-  display: none;
-}
-
-.auth-step {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
 }
 
 .auth-step[hidden] {
   display: none;
 }
 
-.auth-field {
+/* The authored moment: a plate arriving settles in from slightly below and
+   slightly blurred, as if focus catches up with it. Exponential ease-out from
+   an already-visible default, so a failed animation still shows the form. */
+@keyframes auth-plate-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+.auth-step[data-entering] {
+  animation: auth-plate-in 520ms var(--ease-exp) both;
+}
+
+.auth-head {
+  margin-bottom: var(--space-3);
+}
+
+.auth-title {
+  font-size: 1.625rem;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  text-wrap: balance;
+}
+
+.auth-sub {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.auth-sub strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------- alerts */
+
+.auth-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin-bottom: var(--space-3);
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.auth-alert[hidden] {
+  display: none;
+}
+
+.auth-alert svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+
+.auth-note {
+  margin: var(--space-2) 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--fg-dim);
+}
+
+/* --------------------------------------------------------------- fields */
+
+.auth-form {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.875rem;
+  gap: var(--space-2);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+}
+
+.field-label {
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--hero-fg);
+  color: var(--fg-muted);
 }
 
-.auth-field input {
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  font-weight: 400;
-  color: var(--hero-fg);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--hero-border);
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.field-input {
+  width: 100%;
+  padding: 0.8125rem 0.875rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  color: var(--fg);
+  background: var(--stage);
+  border: 1px solid var(--hairline-strong);
   border-radius: var(--radius-sm);
-  padding: 0.75rem 1rem;
-  min-height: 48px;
-  transition: border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out),
-    background-color 200ms var(--ease-out);
+  transition: border-color 180ms var(--ease-exp), box-shadow 180ms var(--ease-exp),
+    background-color 180ms var(--ease-exp);
 }
 
-.auth-field input:focus-visible {
+.field-input:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.field-input:focus {
   outline: none;
-  border-color: var(--hero-fg);
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+  border-color: var(--accent-lift);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  background: #0d0d11;
 }
 
-/* ---------- Password field with show/hide toggle ---------- */
+.field-input:disabled {
+  color: var(--fg-dim);
+  background: #0e0e12;
+  cursor: not-allowed;
+}
 
-.auth-field-input-wrap {
+.field-input[readonly] {
+  color: var(--fg-muted);
+  background: #0e0e12;
+}
+
+.field-input[aria-invalid='true'] {
+  border-color: var(--danger-border);
+}
+
+.field-with-action {
   position: relative;
 }
 
-.auth-field-input-wrap input {
-  width: 100%;
-  /* Room for the toggle button so typed text never runs under it */
-  padding-right: 2.75rem;
+.field-with-action .field-input {
+  padding-right: 3rem;
 }
 
-.auth-toggle-visibility {
+.field-action {
   position: absolute;
   top: 50%;
-  right: 0.5rem;
+  right: 0.375rem;
   transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  border: none;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--hero-muted);
+  color: var(--fg-dim);
   cursor: pointer;
-  transition: color 200ms var(--ease-out), background-color 200ms var(--ease-out);
+  transition: color 160ms var(--ease-exp), background-color 160ms var(--ease-exp);
 }
 
-.auth-toggle-visibility:hover {
-  color: var(--hero-fg);
+.field-action:hover {
+  color: var(--fg);
   background: rgba(255, 255, 255, 0.06);
 }
 
-.auth-toggle-visibility:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+.field-hint {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--fg-dim);
 }
 
-/* Pill-style password field (login's staff-password step) already reserves
-   its right edge for the circular submit button — the toggle sits just
-   inside that, so both the input's padding and the toggle's own offset
-   need the extra room instead of the defaults above. */
-.auth-pill-field.has-toggle input {
-  padding-right: 5.5rem;
+.field-hint--error {
+  color: var(--danger);
 }
 
-.auth-pill-field.has-toggle .auth-toggle-visibility {
-  right: 3.25rem;
-}
+/* -------------------------------------------------------------- buttons */
 
-[data-identify-form] {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.auth-oauth-row {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.oauth-btn {
-  flex: 1;
-  aspect-ratio: 1 / 1;
+.auth-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--hero-border);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--hero-fg);
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.875rem;
+  padding: 0.8125rem 1.25rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: border-color 200ms var(--ease-out), background-color 200ms var(--ease-out),
-    transform 150ms var(--ease-out);
+  transition: background-color 180ms var(--ease-exp), border-color 180ms var(--ease-exp),
+    color 180ms var(--ease-exp), transform 180ms var(--ease-exp);
 }
 
-.oauth-btn:hover {
-  border-color: var(--hero-fg);
-  background: rgba(255, 255, 255, 0.07);
-  transform: scale(1.05);
+.auth-btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
-.oauth-btn:active {
-  transform: scale(0.95);
-}
-
-.oauth-btn:disabled {
-  opacity: 0.6;
+.auth-btn:disabled {
   cursor: not-allowed;
-  transform: none;
+  opacity: 0.55;
 }
+
+.auth-btn--primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 20px -10px var(--accent-glow);
+}
+
+.auth-btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.auth-btn--ghost {
+  background: transparent;
+  border-color: var(--hairline-strong);
+  color: var(--fg);
+}
+
+.auth-btn--ghost:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.auth-btn--quiet {
+  width: auto;
+  min-height: 0;
+  padding: 0.25rem 0;
+  background: none;
+  border: 0;
+  color: var(--accent-lift);
+  font-size: 0.875rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.auth-btn--quiet:hover:not(:disabled) {
+  color: #a8c4fa;
+}
+
+.auth-btn--quiet:disabled {
+  color: var(--fg-dim);
+  text-decoration: none;
+}
+
+/* A busy button keeps its width so the plate does not reflow mid-request. */
+.auth-btn[data-busy] .auth-btn-label {
+  visibility: hidden;
+}
+
+.auth-btn[data-busy]::after {
+  content: '';
+  position: absolute;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: auth-spin 640ms linear infinite;
+}
+
+.auth-btn {
+  position: relative;
+}
+
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: var(--space-2);
+}
+
+.auth-actions--row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: var(--space-2);
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--fg-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: color 160ms var(--ease-exp);
+}
+
+.auth-back:hover {
+  color: var(--fg);
+}
+
+/* -------------------------------------------------- method switcher */
+
+.auth-methods {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.25rem;
+  margin-bottom: var(--space-3);
+  padding: 0.25rem;
+  background: var(--stage);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+}
+
+.auth-method {
+  padding: 0.5rem 0.5rem;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  background: transparent;
+  border: 0;
+  border-radius: calc(var(--radius-sm) - 3px);
+  cursor: pointer;
+  transition: background-color 200ms var(--ease-exp), color 200ms var(--ease-exp);
+}
+
+.auth-method:hover {
+  color: var(--fg);
+}
+
+.auth-method[aria-selected='true'] {
+  background: var(--plate-raised);
+  color: var(--fg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ------------------------------------------------------------ OTP entry */
+
+.otp-entry {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  margin: var(--space-2) 0;
+}
+
+.otp-digit {
+  width: 100%;
+  max-width: 3.25rem;
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  font: inherit;
+  /* Tabular figures: a 1 and a 7 must occupy the same box or the six cells
+     visibly jitter as the code is typed. */
+  font-variant-numeric: tabular-nums;
+  font-size: 1.375rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--fg);
+  background: var(--stage);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-sm);
+  transition: border-color 160ms var(--ease-exp), box-shadow 160ms var(--ease-exp);
+}
+
+.otp-digit:focus {
+  outline: none;
+  border-color: var(--teal-lift);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.22);
+}
+
+.otp-digit[data-filled] {
+  border-color: var(--teal);
+}
+
+@keyframes auth-shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-6px); }
+  40%, 60% { transform: translateX(6px); }
+}
+
+.otp-entry[data-error] {
+  animation: auth-shake 480ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.otp-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  font-size: 0.8125rem;
+  color: var(--fg-dim);
+}
+
+/* ---------------------------------------------------------- social row */
 
 .auth-divider {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  color: var(--hero-muted);
-  font-size: 0.6875rem;
+  gap: 0.875rem;
+  margin: var(--space-3) 0;
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  text-align: center;
+  color: var(--fg-dim);
 }
 
 .auth-divider::before,
@@ -282,216 +699,360 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--hero-border);
+  background: var(--hairline);
 }
 
-.auth-identity-chip {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--hero-border);
-  border-radius: var(--radius-full);
-  padding: 0.375rem 0.75rem;
-  font-size: 0.8125rem;
-  color: var(--hero-muted);
+.oauth-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.5rem;
 }
 
-/* ---------- Pill field: icon + input + circular submit ---------- */
-
-.auth-pill-field {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.auth-pill-icon {
-  position: absolute;
-  top: 50%;
-  left: 0.875rem;
-  transform: translateY(-50%);
-  display: inline-flex;
-  color: var(--hero-muted);
-  pointer-events: none;
-}
-
-.auth-pill-field input {
-  width: 100%;
-  height: 48px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--hero-border);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--hero-fg);
-  padding: 0 3rem 0 2.5rem;
-  font-size: 0.9375rem;
-  transition: border-color 200ms var(--ease-out), background-color 200ms var(--ease-out),
-    box-shadow 200ms var(--ease-out);
-}
-
-.auth-pill-field input::placeholder {
-  color: var(--hero-muted);
-}
-
-.auth-pill-field input:focus-visible {
-  outline: none;
-  border-color: var(--hero-fg);
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
-}
-
-.auth-pill-submit {
-  position: absolute;
-  top: 50%;
-  right: 0.25rem;
-  transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
+.oauth-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--hero-fg);
-  color: var(--hero-bg);
-  border: none;
-  cursor: pointer;
-  transition: transform 150ms var(--ease-out), opacity 150ms var(--ease-out);
-}
-
-.auth-pill-submit:hover {
-  transform: translateY(-50%) scale(0.96);
-}
-
-.auth-pill-submit:active {
-  transform: translateY(-50%) scale(0.9);
-}
-
-.auth-pill-submit:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: translateY(-50%);
-}
-
-.auth-link-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--accent);
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.625rem 0.875rem;
+  font: inherit;
   font-size: 0.875rem;
   font-weight: 600;
+  color: var(--fg);
+  background: var(--plate-raised);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  align-self: center;
+  transition: border-color 180ms var(--ease-exp), background-color 180ms var(--ease-exp);
 }
 
-.auth-link-btn:hover {
-  text-decoration: underline;
+.oauth-btn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: #1f1f27;
 }
 
-.auth-link-btn:disabled {
-  color: var(--hero-muted);
+.oauth-btn:disabled {
+  opacity: 0.45;
   cursor: not-allowed;
-  text-decoration: none;
 }
 
-.btn-teal {
-  background: var(--teal);
-  color: var(--teal-ink);
-  box-shadow: 0 1px 2px rgba(13, 148, 136, 0.25);
+.oauth-btn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
 }
 
-.btn-teal:hover {
-  background: #0b7d72;
+/* ------------------------------------------------------ category picker */
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.625rem;
+  margin: var(--space-2) 0;
 }
 
-.btn[disabled] {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none !important;
+.category-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.875rem;
+  text-align: left;
+  background: var(--stage);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 180ms var(--ease-exp), background-color 180ms var(--ease-exp),
+    transform 180ms var(--ease-exp);
 }
 
-/* ---------- OTP digit boxes ---------- */
+.category-option:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
 
-.otp-boxes {
+.category-option[aria-pressed='true'] {
+  border-color: var(--accent-lift);
+  background: rgba(26, 86, 219, 0.14);
+}
+
+.category-icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  background: var(--plate-raised);
+  color: var(--fg-muted);
+  transition: background-color 180ms var(--ease-exp), color 180ms var(--ease-exp);
+}
+
+.category-option[aria-pressed='true'] .category-icon {
+  background: var(--accent);
+  color: #fff;
+}
+
+.category-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.category-name {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.category-tagline {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--fg-dim);
+}
+
+/* ------------------------------------------------------------ plan list */
+
+.plan-list {
   display: flex;
-  gap: 0.5rem;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin: var(--space-2) 0;
 }
 
-.otp-box {
+.plan-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: start;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  max-width: 52px;
-  text-align: center;
-  font-size: 1.25rem;
+  padding: 1rem 1.125rem;
+  text-align: left;
+  background: var(--stage);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 180ms var(--ease-exp), background-color 180ms var(--ease-exp);
+}
+
+.plan-option:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.plan-option[aria-pressed='true'] {
+  border-color: var(--accent-lift);
+  background: rgba(26, 86, 219, 0.14);
+}
+
+.plan-name {
+  display: block;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.plan-limits {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--fg-muted);
+}
+
+.plan-price {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.plan-amount {
+  display: block;
+  font-size: 1.125rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--hero-fg);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--hero-border);
-  border-radius: var(--radius-sm);
-  transition: border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out),
-    transform 150ms var(--ease-out);
+  letter-spacing: -0.02em;
 }
 
-.otp-box:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+.plan-period {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--fg-dim);
 }
 
-.otp-boxes.is-teal .otp-box:focus-visible {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
-}
-
-.otp-box.is-filled {
-  transform: scale(1.04);
-}
-
-/* ---------- Secret / provisioning key ---------- */
-
-.auth-secret-box {
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 0.9375rem;
-  letter-spacing: 0.06em;
-  word-break: break-all;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px dashed var(--hero-border);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 0.875rem;
-  color: var(--hero-fg);
-}
-
-/* ---------- Success step ---------- */
-
-.auth-step-success {
-  align-items: center;
-  text-align: center;
-}
-
-.auth-success-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
+.plan-trial {
+  display: inline-block;
+  margin-top: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--teal-lift);
+  background: rgba(13, 148, 136, 0.16);
   border-radius: var(--radius-full);
-  background: rgba(5, 150, 105, 0.12);
-  color: var(--success);
 }
 
-.auth-footnote {
-  margin-top: var(--space-3);
-  text-align: center;
-  font-size: 0.8125rem;
-  color: var(--hero-muted);
-  line-height: 1.5;
+/* `display: inline-block` above beats the UA stylesheet's `[hidden] {
+   display: none }` (author styles win over UA styles regardless of
+   specificity) — the same trap `.nav-cta[hidden]` in landing.css documents.
+   Without this, a plan with no trial (trial_days === 0, e.g. Starter) would
+   render an empty pill: auth-onboarding.js sets `hidden` and never touches
+   textContent for that case. */
+.plan-trial[hidden] {
+  display: none;
 }
 
-.auth-footnote a {
-  color: var(--accent);
+/* ------------------------------------------------------------- summary */
+
+.auth-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin: var(--space-2) 0 var(--space-3);
+  padding: 0.875rem 1rem;
+  background: var(--stage);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+}
+
+.auth-summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+}
+
+.auth-summary-key {
+  color: var(--fg-dim);
+}
+
+.auth-summary-value {
   font-weight: 600;
+  text-align: right;
 }
 
-.auth-footnote a:hover {
+/* ----------------------------------------------------------- done state */
+
+.auth-done-mark {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: var(--space-2);
+  border-radius: 50%;
+  background: rgba(13, 148, 136, 0.16);
+  color: var(--teal-lift);
+}
+
+.auth-done-mark svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* -------------------------------------------------------------- loading */
+
+.auth-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.auth-skeleton {
+  height: 4.25rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    100deg,
+    var(--plate-raised) 30%,
+    #22222c 50%,
+    var(--plate-raised) 70%
+  );
+  background-size: 220% 100%;
+  animation: auth-sheen 1.4s linear infinite;
+}
+
+@keyframes auth-sheen {
+  to {
+    background-position: -220% 0;
+  }
+}
+
+.auth-empty {
+  padding: var(--space-3);
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--fg-muted);
+  background: var(--stage);
+  border: 1px dashed var(--hairline-strong);
+  border-radius: var(--radius-sm);
+}
+
+/* ------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-step[data-entering],
+  .otp-entry[data-error],
+  .auth-skeleton,
+  .auth-btn[data-busy]::after {
+    animation: none;
+  }
+
+  .auth-step[data-entering] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .auth-btn[data-busy]::after {
+    border-top-color: rgba(255, 255, 255, 0.35);
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ----------------------------------------------------------- utilities */
+
+/* A link inside body copy on this ground. Underlined, not colour-only: the
+   accent-lift blue is legible but colour alone is never the sole signal. */
+.auth-link {
+  color: var(--accent-lift);
   text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.auth-link:hover {
+  color: #a8c4fa;
+}
+
+.auth-mt-2 {
+  margin-top: var(--space-2);
+}
+
+/* A machine-readable value a human has to copy: a TOTP setup key, a
+   subdomain. Tabular figures so it cannot be misread, wrapping anywhere so a
+   long key never widens the plate. */
+.auth-value-key {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+
+.auth-empty code {
+  padding: 0.125rem 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--fg);
+  background: var(--plate-raised);
+  border-radius: 4px;
 }

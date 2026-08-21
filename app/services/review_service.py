@@ -29,6 +29,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core import prompt_guard
 from app.db import bootstrap, rls
 from app.db.models.branch import Branch
+from app.db.models.customer import Customer, ReviewDraft
 from app.db.models.tenant import Tenant
 from app.schemas.reputation import ReviewDraftResponse, ReviewGenerateRequest
 from app.services import ai_engine, usage_service
@@ -36,9 +37,14 @@ from app.services.ai_engine import AIProvidersUnavailable
 
 logger = structlog.get_logger(__name__)
 
+# Preview only — draft_excerpt truncates here, matching the DB column width
+# (migration 0013). The full draft is customer-authored free text the diner
+# may heavily edit or never post; there is no reason to retain all of it.
+_DRAFT_EXCERPT_LENGTH = 280
+
 
 async def generate_review_draft(
-    request: ReviewGenerateRequest, session: AsyncSession
+    request: ReviewGenerateRequest, session: AsyncSession, customer: Customer | None = None
 ) -> ReviewDraftResponse:
     branch = await _get_active_branch(session, request.branch_qr_token)
     tags = _sanitise_tags(request.tags, branch.tenant_id)
@@ -66,8 +72,31 @@ async def generate_review_draft(
 
     # Only a real generation costs money, so a cache hit must not be billed
     # twice for the same draft.
-    if not draft.cached:
+    needs_commit = not draft.cached
+    if needs_commit:
         await usage_service.increment_ai_usage(session, branch.tenant_id)
+
+    # A logged-in diner's own draft history for their profile page (migration
+    # 0013). Most scans are anonymous by design (REVIEW-01) — customer is only
+    # non-None when a session already existed, and only recorded when it
+    # belongs to *this* branch's tenant: a Customer row is siloed per tenant
+    # (one loyalty membership per restaurant), so a session from a different
+    # restaurant has nothing meaningful to attribute here.
+    if customer is not None and customer.tenant_id == branch.tenant_id:
+        session.add(
+            ReviewDraft(
+                id=uuid.uuid4(),
+                tenant_id=branch.tenant_id,
+                branch_id=branch.id,
+                customer_id=customer.id,
+                rating=request.rating,
+                tags=tags,
+                draft_excerpt=draft.text[:_DRAFT_EXCERPT_LENGTH],
+            )
+        )
+        needs_commit = True
+
+    if needs_commit:
         await session.commit()
 
     logger.info(
@@ -78,6 +107,7 @@ async def generate_review_draft(
         tag_count=len(tags),
         model=draft.model,
         cached=draft.cached,
+        customer_attributed=customer is not None,
     )
     return ReviewDraftResponse(
         draft=draft.text, model=draft.model, cached=draft.cached, tags=tags

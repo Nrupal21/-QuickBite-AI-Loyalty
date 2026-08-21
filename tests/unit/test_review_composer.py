@@ -20,7 +20,9 @@ from fastapi import HTTPException
 from pydantic import ValidationError
 
 from app.core.config import settings
+from app.core.encryption import encrypt_pii
 from app.db.models.branch import Branch
+from app.db.models.customer import Customer, ReviewDraft
 from app.schemas.reputation import ReviewGenerateRequest
 from app.services import ai_engine, review_service
 
@@ -344,6 +346,62 @@ async def test_usage_counter_incremented_on_a_successful_generation(mocker, no_c
 
     increment.assert_awaited_once()
     assert increment.await_args.args[1] == TENANT_ID
+
+
+def make_customer(tenant_id: uuid.UUID = TENANT_ID) -> Customer:
+    customer = Customer(
+        tenant_id=tenant_id,
+        phone_hash="hash",
+        encrypted_phone=encrypt_pii("+919876543210"),
+    )
+    customer.id = uuid.uuid4()
+    return customer
+
+
+@pytest.mark.asyncio
+async def test_signed_in_customer_gets_a_review_draft_row(mocker, no_cache):
+    """A logged-in diner's draft is recorded for their profile page's
+    "reviews you've sent" — see migration 0013 / customer_service.get_profile."""
+    mocker.patch("app.services.ai_engine._call_openai", AsyncMock(return_value=DRAFT))
+    customer = make_customer()
+    session = make_session()
+
+    await review_service.generate_review_draft(request(), session, customer)
+
+    added = [call.args[0] for call in session.add.call_args_list if isinstance(call.args[0], ReviewDraft)]
+    assert len(added) == 1
+    assert added[0].tenant_id == TENANT_ID
+    assert added[0].branch_id == BRANCH_ID
+    assert added[0].customer_id == customer.id
+    assert added[0].draft_excerpt == DRAFT
+
+
+@pytest.mark.asyncio
+async def test_anonymous_scan_records_no_review_draft(mocker, no_cache):
+    """The overwhelmingly common case (REVIEW-01: no auth required) — no
+    customer session means nothing to attribute the draft to."""
+    mocker.patch("app.services.ai_engine._call_openai", AsyncMock(return_value=DRAFT))
+    session = make_session()
+
+    await review_service.generate_review_draft(request(), session, None)
+
+    added = [call.args[0] for call in session.add.call_args_list if isinstance(call.args[0], ReviewDraft)]
+    assert added == []
+
+
+@pytest.mark.asyncio
+async def test_customer_from_a_different_tenant_is_not_attributed(mocker, no_cache):
+    """A Customer row is siloed per tenant (one loyalty membership per
+    restaurant) — a session from another restaurant has nothing meaningful
+    to attribute this draft to."""
+    mocker.patch("app.services.ai_engine._call_openai", AsyncMock(return_value=DRAFT))
+    other_tenant_customer = make_customer(tenant_id=uuid.uuid4())
+    session = make_session()
+
+    await review_service.generate_review_draft(request(), session, other_tenant_customer)
+
+    added = [call.args[0] for call in session.add.call_args_list if isinstance(call.args[0], ReviewDraft)]
+    assert added == []
 
 
 @pytest.mark.asyncio

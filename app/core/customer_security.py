@@ -38,17 +38,25 @@ def create_customer_token(customer_id: uuid.UUID, tenant_id: uuid.UUID, phone_ha
     return jwt.encode(payload, settings.CUSTOMER_SECRET_KEY, algorithm="HS256")
 
 
-def decode_customer_token(token: str) -> uuid.UUID | None:
-    """Verify a customer JWT and return the customer_id claim, or None if invalid."""
+def decode_customer_token(token: str) -> tuple[uuid.UUID, uuid.UUID] | None:
+    """Verify a customer JWT and return (customer_id, tenant_id), or None if invalid.
+
+    Both claims come back together because `customer.customers` is
+    RLS-protected: the caller needs `tenant_id` to bind RLS *before* it can
+    query for the row `customer_id` names, the same chicken-and-egg
+    `_resolve_local` solves for staff tokens by trusting the signed claim for
+    scoping only — authorization still comes from the DB row once it loads.
+    """
     try:
         payload = jwt.decode(token, settings.CUSTOMER_SECRET_KEY, algorithms=["HS256"])
     except jwt.InvalidTokenError:
         return None
     sub = payload.get("sub")
-    if sub is None:
+    tenant_id_claim = payload.get("tenant_id")
+    if sub is None or tenant_id_claim is None:
         return None
     try:
-        return uuid.UUID(sub)
+        return uuid.UUID(sub), uuid.UUID(tenant_id_claim)
     except ValueError:
         return None
 

@@ -1,0 +1,46 @@
+- generic [ref=f17e1]:
+  - link "Skip to content" [ref=f17e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f17e3]:
+    - link "QuickBite" [ref=f17e5] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f17e10]:
+      - navigation "Progress" [ref=f17e11]:
+        - list [ref=f17e12]:
+          - listitem [ref=f17e13]:
+            - generic [ref=f17e15]: Your account
+          - listitem [ref=f17e16]:
+            - generic [ref=f17e18]: Your business
+          - listitem [ref=f17e19]:
+            - generic [ref=f17e21]: Second contact
+          - listitem [ref=f17e22]:
+            - generic [ref=f17e24]: What you run
+          - listitem [ref=f17e25]:
+            - generic [ref=f17e27]: Your plan
+          - listitem [ref=f17e28]:
+            - generic [ref=f17e30]: You're an owner
+      - generic [ref=f17e136]:
+        - button "Change category" [ref=f17e137] [cursor=pointer]
+        - generic [ref=f17e140]:
+          - heading "Choose your plan" [level=2] [ref=f17e141]
+          - paragraph [ref=f17e142]:
+            - text: Plans for
+            - strong [ref=f17e143]: Food Truck
+            - text: . Start on the free tier and move up when the loyalty numbers make the case.
+        - group "Subscription plan" [ref=f17e144]:
+          - button "Starter 1 branch · 2 team members · 100 AI replies/mo Free forever" [active] [pressed] [ref=f17e145] [cursor=pointer]:
+            - generic [ref=f17e146]:
+              - generic [ref=f17e147]: Starter
+              - generic [ref=f17e148]: 1 branch · 2 team members · 100 AI replies/mo
+            - generic [ref=f17e149]:
+              - generic [ref=f17e150]: Free
+              - generic [ref=f17e151]: forever
+          - button "Pro 3 branches · 5 team members · 1000 AI replies/mo 14-day free trial ₹2,999 per month" [ref=f17e152] [cursor=pointer]:
+            - generic [ref=f17e153]:
+              - generic [ref=f17e154]: Pro
+              - generic [ref=f17e155]: 3 branches · 5 team members · 1000 AI replies/mo
+              - generic [ref=f17e156]: 14-day free trial
+            - generic [ref=f17e157]:
+              - generic [ref=f17e158]: ₹2,999
+              - generic [ref=f17e159]: per month
+        - button "Review and register" [ref=f17e160] [cursor=pointer]

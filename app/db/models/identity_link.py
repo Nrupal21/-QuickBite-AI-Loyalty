@@ -45,7 +45,12 @@ class IdentityLink(Base):
     # No ForeignKey: this points at restaurant.users OR customer.customers
     # depending on subject_type, and PostgreSQL has no polymorphic FK.
     local_id: Mapped[uuid.UUID] = mapped_column(index=True)
-    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.tenants.id"), index=True)
+    # Nullable for a standard user (role USER) who signed in with OAuth before
+    # registering a restaurant — same reasoning as User.tenant_id. A Customer
+    # link always carries a concrete tenant.
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("restaurant.tenants.id"), nullable=True, index=True
+    )
     linked_via: Mapped[str] = mapped_column(String)  # explicit | email | phone
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Unlinking sets this False rather than deleting, so the audit trail keeps

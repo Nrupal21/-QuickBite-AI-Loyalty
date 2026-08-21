@@ -1,0 +1,96 @@
+- generic [ref=f18e1]:
+  - link "Skip to content" [ref=f18e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f18e3]:
+    - generic [ref=f18e5]:
+      - link "QuickBite" [ref=f18e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f18e11]:
+        - link "Product" [ref=f18e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f18e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f18e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f18e15]:
+        - link "Log in" [ref=f18e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f18e17] [cursor=pointer]:
+          - /url: /#pricing
+  - main [ref=f18e18]:
+    - generic [ref=f18e19]:
+      - generic [ref=f18e20]:
+        - link "Close and return home" [ref=f18e21] [cursor=pointer]:
+          - /url: /
+        - button "Back" [ref=f18e25] [cursor=pointer]
+        - generic [ref=f18e28]:
+          - generic [ref=f18e29]: Sign in
+          - heading "Log in to QuickBite" [level=1] [ref=f18e30]
+          - paragraph [ref=f18e31]: Enter your email, phone, or username to continue.
+        - generic [ref=f18e32]:
+          - group "Continue with a social account" [ref=f18e33]:
+            - button "Continue with Google" [ref=f18e34] [cursor=pointer]
+            - button "Continue with Apple" [ref=f18e40] [cursor=pointer]
+            - button "Continue with Microsoft" [ref=f18e43] [cursor=pointer]
+            - button "Continue with GitHub" [ref=f18e49] [cursor=pointer]
+            - button "Continue with Twitter / X" [ref=f18e52] [cursor=pointer]
+          - generic [ref=f18e55]: or continue with email, phone, or username
+          - generic [ref=f18e58]:
+            - generic [ref=f18e59]: Email, phone, or username
+            - textbox "Email, phone, or username" [active] [ref=f18e60]:
+              - /placeholder: name@example.com
+            - button "Continue" [ref=f18e61] [cursor=pointer]
+      - paragraph [ref=f18e64]: Owners and staff sign in with a password. Customers sign in with a one-time code — no password to remember.
+      - paragraph [ref=f18e65]:
+        - text: New restaurant?
+        - link "Create an account" [ref=f18e66] [cursor=pointer]:
+          - /url: /register
+  - contentinfo [ref=f18e67]:
+    - generic [ref=f18e68]:
+      - generic [ref=f18e69]:
+        - generic [ref=f18e70]:
+          - link "QuickBite" [ref=f18e71] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f18e76]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f18e77]:
+          - heading "Product" [level=4] [ref=f18e78]
+          - list [ref=f18e79]:
+            - listitem [ref=f18e80]:
+              - link "Features" [ref=f18e81] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f18e82]:
+              - link "How it works" [ref=f18e83] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f18e84]:
+              - link "Pricing" [ref=f18e85] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f18e86]:
+          - heading "Company" [level=4] [ref=f18e87]
+          - list [ref=f18e88]:
+            - listitem [ref=f18e89]:
+              - link "About" [ref=f18e90] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f18e91]:
+              - link "Careers" [ref=f18e92] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f18e93]:
+              - link "Contact" [ref=f18e94] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f18e95]:
+          - heading "Legal" [level=4] [ref=f18e96]
+          - list [ref=f18e97]:
+            - listitem [ref=f18e98]:
+              - link "Privacy" [ref=f18e99] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f18e100]:
+              - link "Terms" [ref=f18e101] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f18e102]:
+        - generic [ref=f18e103]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f18e104]:
+          - link "Email" [ref=f18e105] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f18e109] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f18e113] [cursor=pointer]:
+            - /url: "#"

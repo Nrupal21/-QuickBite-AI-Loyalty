@@ -1,0 +1,50 @@
+- generic [active] [ref=f15e1]:
+  - link "Skip to content" [ref=f15e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f15e3]:
+    - generic [ref=f15e4]:
+      - link "QuickBite" [ref=f15e5] [cursor=pointer]:
+        - /url: /
+      - navigation "Sections" [ref=f15e10]:
+        - link "Product" [ref=f15e11] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f15e12] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f15e13] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f15e15]:
+        - link "Sign in" [ref=f15e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f15e17] [cursor=pointer]:
+          - /url: /register
+  - main [ref=f15e18]:
+    - generic [ref=f15e19]:
+      - navigation "Progress" [ref=f15e20]:
+        - list [ref=f15e21]:
+          - listitem [ref=f15e22]:
+            - generic [ref=f15e24]: Who you are
+          - listitem [ref=f15e25]:
+            - generic [ref=f15e27]: Prove it
+          - listitem [ref=f15e28]:
+            - generic [ref=f15e30]: You're in
+      - generic [ref=f15e32]:
+        - generic [ref=f15e33]:
+          - heading "Sign in to QuickBite" [level=1] [ref=f15e34]
+          - paragraph [ref=f15e35]: One account, however you got here — a diner collecting stamps, an owner running the place, or a team member on shift.
+        - generic [ref=f15e36]:
+          - generic [ref=f15e37]:
+            - generic [ref=f15e38]: Email or phone number
+            - textbox "Email or phone number" [ref=f15e39]:
+              - /placeholder: you@restaurant.in or +919876543210
+            - paragraph [ref=f15e40]: Phone numbers need the country code, like +91.
+          - button "Continue" [ref=f15e41] [cursor=pointer]
+        - paragraph [ref=f15e43]: Or continue with
+        - generic [ref=f15e44]:
+          - button "Google" [ref=f15e45] [cursor=pointer]
+          - button "Apple" [ref=f15e51] [cursor=pointer]
+          - button "GitHub" [ref=f15e55] [cursor=pointer]
+        - paragraph [ref=f15e58]:
+          - text: New here? Continuing creates your account — no separate sign-up form. Prefer a password?
+          - link "Register with one" [ref=f15e59] [cursor=pointer]:
+            - /url: /register
+          - text: .

@@ -1,0 +1,91 @@
+- generic [active] [ref=f7e1]:
+  - link "Skip to content" [ref=f7e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f7e3]:
+    - generic [ref=f7e5]:
+      - link "QuickBite" [ref=f7e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f7e11]:
+        - link "Product" [ref=f7e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f7e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f7e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f7e15]:
+        - link "Join Us" [ref=f7e16] [cursor=pointer]:
+          - /url: /onboarding
+        - link "Your account" [ref=f7e21] [cursor=pointer]:
+          - /url: /profile
+  - main [ref=f7e25]:
+    - generic [ref=f7e27]:
+      - generic [ref=f7e31]:
+        - generic [ref=f7e32]: O
+        - generic [ref=f7e33]: Tenant owner
+        - heading "nrupal" [level=1] [ref=f7e34]
+        - generic [ref=f7e35]: Email verified
+      - generic [ref=f7e39]:
+        - generic [ref=f7e40]:
+          - heading "Account details" [level=2] [ref=f7e41]
+          - generic [ref=f7e43]:
+            - generic [ref=f7e44]:
+              - generic [ref=f7e45]: Email
+              - generic [ref=f7e46]: owner@bombaybistro.in
+            - generic [ref=f7e47]:
+              - generic [ref=f7e48]: Username
+              - generic [ref=f7e49]: nrupal
+            - generic [ref=f7e50]:
+              - generic [ref=f7e51]: Two-factor authentication
+              - generic [ref=f7e52]: Required, not set up
+        - link "Go to dashboard" [ref=f7e54] [cursor=pointer]:
+          - /url: /dashboard
+        - button "Log out" [ref=f7e55] [cursor=pointer]
+  - contentinfo [ref=f7e56]:
+    - generic [ref=f7e57]:
+      - generic [ref=f7e58]:
+        - generic [ref=f7e59]:
+          - link "QuickBite" [ref=f7e60] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f7e65]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f7e66]:
+          - heading "Product" [level=4] [ref=f7e67]
+          - list [ref=f7e68]:
+            - listitem [ref=f7e69]:
+              - link "Features" [ref=f7e70] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f7e71]:
+              - link "How it works" [ref=f7e72] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f7e73]:
+              - link "Pricing" [ref=f7e74] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f7e75]:
+          - heading "Company" [level=4] [ref=f7e76]
+          - list [ref=f7e77]:
+            - listitem [ref=f7e78]:
+              - link "About" [ref=f7e79] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f7e80]:
+              - link "Careers" [ref=f7e81] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f7e82]:
+              - link "Contact" [ref=f7e83] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f7e84]:
+          - heading "Legal" [level=4] [ref=f7e85]
+          - list [ref=f7e86]:
+            - listitem [ref=f7e87]:
+              - link "Privacy" [ref=f7e88] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f7e89]:
+              - link "Terms" [ref=f7e90] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f7e91]:
+        - generic [ref=f7e92]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f7e93]:
+          - link "Email" [ref=f7e94] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f7e98] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f7e102] [cursor=pointer]:
+            - /url: "#"

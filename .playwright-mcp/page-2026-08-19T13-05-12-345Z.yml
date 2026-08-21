@@ -1,0 +1,85 @@
+- generic [active] [ref=f20e1]:
+  - link "Skip to content" [ref=f20e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f20e3]:
+    - generic [ref=f20e5]:
+      - link "QuickBite" [ref=f20e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f20e11]:
+        - link "Product" [ref=f20e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f20e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f20e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f20e15]:
+        - link "Dashboard" [ref=f20e16] [cursor=pointer]:
+          - /url: /dashboard
+        - link "Your account" [ref=f20e17] [cursor=pointer]:
+          - /url: /profile
+  - main [ref=f20e21]:
+    - generic [ref=f20e22]:
+      - generic [ref=f20e23]:
+        - link "Close and return home" [ref=f20e24] [cursor=pointer]:
+          - /url: /
+        - button "Back" [ref=f20e28] [cursor=pointer]
+        - generic [ref=f20e31]:
+          - heading "Welcome to QuickBite" [level=1] [ref=f20e32]
+          - paragraph [ref=f20e33]: Are you a customer, or an owner/staff member?
+        - generic [ref=f20e35]:
+          - button "I'm a customer" [ref=f20e36] [cursor=pointer]
+          - button "I'm an owner or staff member" [ref=f20e37] [cursor=pointer]
+      - paragraph [ref=f20e38]: Owners and staff sign in with a password. Customers sign in with a one-time code — no password to remember.
+      - paragraph [ref=f20e39]:
+        - text: New restaurant?
+        - link "Create an account" [ref=f20e40] [cursor=pointer]:
+          - /url: /register
+  - contentinfo [ref=f20e41]:
+    - generic [ref=f20e42]:
+      - generic [ref=f20e43]:
+        - generic [ref=f20e44]:
+          - link "QuickBite" [ref=f20e45] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f20e50]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f20e51]:
+          - heading "Product" [level=4] [ref=f20e52]
+          - list [ref=f20e53]:
+            - listitem [ref=f20e54]:
+              - link "Features" [ref=f20e55] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f20e56]:
+              - link "How it works" [ref=f20e57] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f20e58]:
+              - link "Pricing" [ref=f20e59] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f20e60]:
+          - heading "Company" [level=4] [ref=f20e61]
+          - list [ref=f20e62]:
+            - listitem [ref=f20e63]:
+              - link "About" [ref=f20e64] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f20e65]:
+              - link "Careers" [ref=f20e66] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f20e67]:
+              - link "Contact" [ref=f20e68] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f20e69]:
+          - heading "Legal" [level=4] [ref=f20e70]
+          - list [ref=f20e71]:
+            - listitem [ref=f20e72]:
+              - link "Privacy" [ref=f20e73] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f20e74]:
+              - link "Terms" [ref=f20e75] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f20e76]:
+        - generic [ref=f20e77]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f20e78]:
+          - link "Email" [ref=f20e79] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f20e83] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f20e87] [cursor=pointer]:
+            - /url: "#"

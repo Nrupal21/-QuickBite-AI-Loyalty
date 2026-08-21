@@ -1,0 +1,97 @@
+- generic [active] [ref=f13e1]:
+  - link "Skip to content" [ref=f13e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f13e3]:
+    - generic [ref=f13e5]:
+      - link "QuickBite" [ref=f13e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f13e11]:
+        - link "Product" [ref=f13e12] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=f13e13] [cursor=pointer]:
+          - /url: /#how-it-works
+        - link "Pricing" [ref=f13e14] [cursor=pointer]:
+          - /url: /#pricing
+      - generic [ref=f13e15]:
+        - link "Log in" [ref=f13e16] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f13e17] [cursor=pointer]:
+          - /url: /#pricing
+  - main [ref=f13e18]:
+    - generic [ref=f13e19]:
+      - generic [ref=f13e20]:
+        - link "Close and return home" [ref=f13e21] [cursor=pointer]:
+          - /url: /
+        - generic [ref=f13e25]:
+          - generic [ref=f13e26]: Get started
+          - heading "Create your account" [level=1] [ref=f13e27]
+          - paragraph [ref=f13e28]: Set up QuickBite in a few minutes — no credit card required. You can register your restaurant right after.
+        - generic [ref=f13e30]:
+          - generic [ref=f13e31]:
+            - generic [ref=f13e32]: Your name
+            - textbox "Your name" [ref=f13e33]:
+              - /placeholder: Nina Rao
+          - generic [ref=f13e34]:
+            - generic [ref=f13e35]: Email
+            - textbox "Email" [ref=f13e36]:
+              - /placeholder: you@example.com
+          - generic [ref=f13e37]:
+            - generic [ref=f13e38]: Password
+            - generic [ref=f13e39]:
+              - textbox "Password" [ref=f13e40]:
+                - /placeholder: At least 8 characters
+              - button "Show password" [ref=f13e41] [cursor=pointer]
+          - button "Create account" [ref=f13e46] [cursor=pointer]
+      - paragraph [ref=f13e48]:
+        - text: Already have an account?
+        - link "Log in" [ref=f13e49] [cursor=pointer]:
+          - /url: /login
+  - contentinfo [ref=f13e50]:
+    - generic [ref=f13e51]:
+      - generic [ref=f13e52]:
+        - generic [ref=f13e53]:
+          - link "QuickBite" [ref=f13e54] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f13e59]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f13e60]:
+          - heading "Product" [level=4] [ref=f13e61]
+          - list [ref=f13e62]:
+            - listitem [ref=f13e63]:
+              - link "Features" [ref=f13e64] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f13e65]:
+              - link "How it works" [ref=f13e66] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f13e67]:
+              - link "Pricing" [ref=f13e68] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f13e69]:
+          - heading "Company" [level=4] [ref=f13e70]
+          - list [ref=f13e71]:
+            - listitem [ref=f13e72]:
+              - link "About" [ref=f13e73] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f13e74]:
+              - link "Careers" [ref=f13e75] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f13e76]:
+              - link "Contact" [ref=f13e77] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f13e78]:
+          - heading "Legal" [level=4] [ref=f13e79]
+          - list [ref=f13e80]:
+            - listitem [ref=f13e81]:
+              - link "Privacy" [ref=f13e82] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f13e83]:
+              - link "Terms" [ref=f13e84] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f13e85]:
+        - generic [ref=f13e86]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f13e87]:
+          - link "Email" [ref=f13e88] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f13e92] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f13e96] [cursor=pointer]:
+            - /url: "#"

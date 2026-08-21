@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}My profile — QuickBite{% endblock %}
+{% block meta_description %}Your QuickBite profile — stamps collected at every location, the reviews you've sent, and your account details.{% endblock %}
+{% block body_class %}profile-page{% endblock %}
+
+{# The landing nav/footer belong to the marketing site. This surface carries
+   its own top bar (and, on a phone, its own bottom bar) the way the auth
+   pages do — two brand marks on one screen reads as two products. #}
+{% block footer %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/auth.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', path='css/profile.css') }}" />
+{% endblock %}
+
+{# ------------------------------------------------------------- icons #}
+{# Inline SVG, same as partials/nav.html. The design was drawn with Material
+   Symbols, but nothing else in this app loads an icon font and one page does
+   not justify the extra font request. #}
+
+{% macro icon_sparkle(size=15) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.4 3.6 1.9 5.1 5.5 5.5-3.6.4-5.1 1.9-5.5 5.5-.4-3.6-1.9-5.1-5.5-5.5C10.1 7.1 11.6 5.6 12 2Z"/><path d="M19.5 14c.2 1.7.9 2.4 2.6 2.6-1.7.2-2.4.9-2.6 2.6-.2-1.7-.9-2.4-2.6-2.6 1.7-.2 2.4-.9 2.6-2.6Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_stamp(size=20) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2.6 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9l6.1-.9L12 2.6Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_progress(size=20) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" aria-hidden="true"><circle cx="12" cy="12" r="8.25" opacity=".28"/><path d="M12 3.75a8.25 8.25 0 0 1 8.25 8.25" stroke-linecap="round"/></svg>
+{%- endmacro %}
+
+{% macro icon_pin(size=20) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5a6.5 6.5 0 0 0-6.5 6.5c0 4.7 5.6 11.3 5.9 11.6a.8.8 0 0 0 1.2 0c.3-.3 5.9-6.9 5.9-11.6A6.5 6.5 0 0 0 12 2.5Zm0 9a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_user(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 20.5a7.5 7.5 0 0 0-15 0"/><circle cx="12" cy="7.5" r="3.75"/></svg>
+{%- endmacro %}
+
+{% macro icon_home(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.75 10.5 12 3.75l8.25 6.75V20a.75.75 0 0 1-.75.75h-4.5v-6h-6v6h-4.5a.75.75 0 0 1-.75-.75v-9.5Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_review(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.25 14.25a2.25 2.25 0 0 1-2.25 2.25H8.25L3.75 20.25V5.25A2.25 2.25 0 0 1 6 3h12a2.25 2.25 0 0 1 2.25 2.25v9Z"/></svg>
+{%- endmacro %}
+
+{% macro icon_grid(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
+{%- endmacro %}
+
+{% macro icon_storefront(size=18) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v9.5h16V10"/><path d="M3 6.5 4.6 3.5h14.8L21 6.5a2.75 2.75 0 0 1-5 1.6 2.75 2.75 0 0 1-4 0 2.75 2.75 0 0 1-4 0 2.75 2.75 0 0 1-5-1.6Z"/></svg>
+{%- endmacro %}
+
+{% block content %}
+<!--
+  SEED profile-01 · surface: /profile
+  WORLD    The auth stage's obsidian ground and tokens. Loyalty teal leads
+           here because this page IS the loyalty record; the account blue
+           appears only on the owner/staff variant, which is about a business
+           rather than a stamp card.
+  VIEWPORT Two columns above 900px — who you are on the left, sticky; what
+           you've done on the right. One column below that, same sections
+           stacked. Navigation is the shared bar + dock (partials/nav.html),
+           not a second set of chrome owned by this page.
+  PATH     One URL, two accounts. A diner sees stamps and reviews; an owner
+           sees the account and a way into the dashboard. Neither is told the
+           other exists.
+  MOMENT   Cards settle up as the fetch resolves, staggered by row.
+  RISK     Every number arrives from a fetch, so first paint is a skeleton,
+           never a zero that later jumps to the real figure.
+-->
+
+<main id="main-content" class="profile-main">
+  <div class="profile-shell">
+
+    <div class="profile-alert" role="alert" data-auth-alert hidden></div>
+
+    {# ------------------------------------------------------- loading #}
+    <section class="profile-skeleton" data-step="loading" aria-busy="true">
+      <span class="visually-hidden">Loading your profile…</span>
+      <div class="profile-skeleton-grid">
+        <div class="profile-skeleton-col">
+          <div class="profile-skeleton-block profile-skeleton-block--tall"></div>
+          <div class="profile-skeleton-block"></div>
+          <div class="profile-skeleton-block"></div>
+        </div>
+        <div class="profile-skeleton-col">
+          <div class="profile-skeleton-block profile-skeleton-block--wide"></div>
+          <div class="profile-skeleton-block profile-skeleton-block--wide"></div>
+        </div>
+      </div>
+    </section>
+
+    {# ------------------------------------------ diner / loyalty member #}
+    <section class="profile-layout" data-step="customer" hidden>
+
+      <aside class="profile-aside">
+        {# Identity plate — cover band, avatar overlapping it, name, tier. #}
+        <div class="profile-card profile-identity">
+          <div class="profile-identity-cover" aria-hidden="true"></div>
+          <div class="profile-identity-body">
+            <div class="profile-avatar" data-customer-avatar aria-hidden="true"></div>
+            <h1 class="profile-name" data-customer-name>Welcome back</h1>
+            <span class="profile-badge profile-badge--teal">Loyalty member</span>
+          </div>
+        </div>
+
+        {# Stat tiles — the three numbers this page exists to show. #}
+        <div class="profile-stats">
+          <div class="profile-card profile-stat">
+            <span class="profile-stat-icon" aria-hidden="true">{{ icon_stamp(20) }}</span>
+            <div>
+              <div class="profile-stat-value" data-customer-stat-total-stamps>0</div>
+              <div class="profile-stat-label">Lifetime stamps</div>
+            </div>
+          </div>
+          <div class="profile-card profile-stat">
+            <span class="profile-stat-icon" aria-hidden="true">{{ icon_progress(20) }}</span>
+            <div>
+              <div class="profile-stat-value" data-customer-stat-current-progress>0</div>
+              <div class="profile-stat-label">Toward next reward</div>
+            </div>
+          </div>
+          <div class="profile-card profile-stat">
+            <span class="profile-stat-icon" aria-hidden="true">{{ icon_pin(20) }}</span>
+            <div>
+              <div class="profile-stat-value" data-customer-stat-location-count>0</div>
+              <div class="profile-stat-label">Locations visited</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-card profile-details">
+          <h2 class="profile-card-title">Account details</h2>
+          <dl class="profile-detail-list">
+            <div class="profile-detail" data-customer-email-row hidden>
+              <dt>Email</dt>
+              <dd data-customer-email></dd>
+            </div>
+            <div class="profile-detail" data-customer-username-row hidden>
+              <dt>Username</dt>
+              <dd data-customer-username></dd>
+            </div>
+            <div class="profile-detail" data-customer-favorite-row hidden>
+              <dt>Favourite location</dt>
+              <dd data-customer-favorite></dd>
+            </div>
+            <div class="profile-detail" data-customer-last-visit-row hidden>
+              <dt>Last visit</dt>
+              <dd data-customer-last-visit></dd>
+            </div>
+            <div class="profile-detail">
+              <dt>Member since</dt>
+              <dd data-customer-member-since>—</dd>
+            </div>
+          </dl>
+        </div>
+      </aside>
+
+      <div class="profile-content">
+        <section class="profile-section" id="stamps">
+          <h2 class="profile-section-title">Stamps by location</h2>
+          <div class="profile-location-grid" data-customer-locations-list></div>
+          <p class="profile-empty" data-customer-locations-empty hidden>
+            No stamps yet. Scan the QR code on your receipt and your first one lands here.
+          </p>
+        </section>
+
+        <section class="profile-section" id="reviews">
+          <h2 class="profile-section-title">Reviews you've sent</h2>
+          <div class="profile-review-list" data-customer-reviews-list></div>
+          <p class="profile-empty" data-customer-reviews-empty hidden>
+            Nothing sent yet. Reviews you draft while signed in show up here.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    {# ------------------------------------------------- owner / staff #}
+    <section class="profile-layout" data-step="owner" hidden>
+      <aside class="profile-aside">
+        <div class="profile-card profile-identity profile-identity--owner">
+          <div class="profile-identity-cover" aria-hidden="true"></div>
+          <div class="profile-identity-body">
+            <div class="profile-avatar profile-avatar--owner" data-profile-avatar aria-hidden="true"></div>
+            <h1 class="profile-name" data-profile-identifier>Your account</h1>
+            <span class="profile-badge profile-badge--blue" data-profile-role-badge>Member</span>
+          </div>
+        </div>
+
+        <div class="profile-card profile-details">
+          <h2 class="profile-card-title">Account details</h2>
+          <dl class="profile-detail-list">
+            <div class="profile-detail">
+              <dt>Email</dt>
+              <dd>
+                <span data-profile-email>—</span>
+                <span class="profile-flag profile-flag--ok" data-profile-verified-ok hidden>Verified</span>
+                <span class="profile-flag profile-flag--warn" data-profile-verified-warn hidden>Unverified</span>
+              </dd>
+            </div>
+            <div class="profile-detail" data-profile-username-row hidden>
+              <dt>Username</dt>
+              <dd data-profile-username></dd>
+            </div>
+            <div class="profile-detail">
+              <dt>Two-factor</dt>
+              <dd data-profile-mfa>Off</dd>
+            </div>
+          </dl>
+        </div>
+      </aside>
+
+      <div class="profile-content">
+        <section class="profile-section">
+          <h2 class="profile-section-title">Your restaurant</h2>
+
+          <div class="profile-card profile-cta" data-profile-has-restaurant hidden>
+            <span class="profile-cta-icon" aria-hidden="true">{{ icon_grid(18) }}</span>
+            <div class="profile-cta-body">
+              <h3>Dashboard</h3>
+              <p>Reviews, loyalty analytics and your team, all in one place.</p>
+            </div>
+            <a class="btn btn-primary" href="/dashboard">Open dashboard</a>
+          </div>
+
+          <div class="profile-card profile-cta" data-profile-no-restaurant hidden>
+            <span class="profile-cta-icon" aria-hidden="true">{{ icon_storefront(18) }}</span>
+            <div class="profile-cta-body">
+              <h3>No restaurant yet</h3>
+              <p>Register your business to start collecting reviews and loyalty stamps.</p>
+            </div>
+            <a class="btn btn-primary" href="/onboarding">Join us</a>
+          </div>
+
+          <div class="profile-signout">
+            <button type="button" class="btn btn-ghost-light" data-logout-btn>Sign out</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    {# ------------------------------------------------------ signed out #}
+    <section class="profile-signedout" data-step="signed-out" hidden>
+      <div class="profile-card profile-signedout-card">
+        <span class="profile-signedout-icon" aria-hidden="true">{{ icon_user(24) }}</span>
+        <h1 class="profile-name">You're signed out</h1>
+        <p class="profile-signedout-text">
+          Sign in to see your stamps, your rewards progress and the reviews you've sent.
+        </p>
+        <div class="profile-signedout-actions">
+          <a class="btn btn-primary" href="/login">Sign in</a>
+          <a class="btn btn-ghost-light" href="/register">Create an account</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+
+{# ---------------------------------------------------------- templates #}
+
+<template id="customer-location-template">
+  <article class="profile-card profile-location">
+    <div class="profile-location-head">
+      <span class="profile-location-pin" aria-hidden="true">{{ icon_pin(18) }}</span>
+      <h3 class="profile-location-name"></h3>
+    </div>
+    <p class="profile-location-address"></p>
+    <div class="profile-location-foot">
+      <p class="profile-location-count">
+        <span class="profile-location-count-value"></span>
+        <span class="profile-location-count-label">Stamps</span>
+      </p>
+      <p class="profile-location-last-visit"></p>
+    </div>
+  </article>
+</template>
+
+<template id="customer-review-template">
+  <article class="profile-card profile-review">
+    <div class="profile-review-head">
+      <h3 class="profile-review-branch"></h3>
+      <p class="profile-review-rating"></p>
+    </div>
+    <p class="profile-review-excerpt"></p>
+    <div class="profile-review-foot">
+      <p class="profile-review-tags"></p>
+      <p class="profile-review-date"></p>
+    </div>
+  </article>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', path='js/auth-profile.js') }}" defer></script>
+{% endblock %}

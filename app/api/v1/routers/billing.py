@@ -8,6 +8,8 @@ equivalent): Razorpay computes the signature over the exact bytes it sent, so
 signature verification must happen first or not at all.
 """
 
+import uuid
+
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,6 +24,7 @@ from app.db.models.user import User
 from app.schemas.billing import (
     CheckoutRequest,
     CheckoutResponse,
+    PlanOut,
     SubscriptionStatusResponse,
     WebhookAckResponse,
 )
@@ -29,6 +32,25 @@ from app.services.billing_service import BillingService
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 webhook_router = APIRouter(tags=["billing"])
+
+
+@router.get("/plans", response_model=list[PlanOut])
+@limiter.limit("30/minute")
+async def list_plans(
+    request: Request,
+    category_id: uuid.UUID | None = None,
+    session: AsyncSession = Depends(get_db),
+) -> list[PlanOut]:
+    """Public — the registration/onboarding screens need plan names, prices,
+    and ids before the caller has any session (register-restaurant needs a
+    real plan_id).
+
+    `category_id` is the business category "Join Us" just collected: pricing
+    is shown per category, so a food truck is never offered the unlimited-
+    branch Enterprise plan. Omitting it returns every active plan, which is
+    what the public pricing page on the landing site wants.
+    """
+    return await BillingService(session=session).list_active_plans(category_id)
 
 
 @router.get("/subscription", response_model=SubscriptionStatusResponse)

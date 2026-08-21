@@ -24,7 +24,12 @@ TOKEN = "reg-token-abc"
 def make_session(execute_results: list) -> MagicMock:
     session = MagicMock()
     session.commit = AsyncMock()
-    results = []
+    # First call is always register()'s rls.set_tenant_context(), whose
+    # return value nothing reads — a throwaway result absorbs it so the real
+    # query results below line up with the calls that actually inspect them.
+    # Harmless for the early-exit (missing phone) tests too, since an unused
+    # side_effect entry doesn't count as a call for assert_not_awaited().
+    results = [MagicMock()]
     for value in execute_results:
         result = MagicMock()
         result.scalar_one_or_none.return_value = value
@@ -75,6 +80,34 @@ async def test_register_phone_identifier_creates_customer_and_issues_token(mocke
     assert customers[0].whatsapp_opt_in is True
     assert customers[0].encrypted_name.startswith("v1:")
     cache_delete.assert_awaited_once_with(f"pending_customer_reg:{TOKEN}")
+
+
+@pytest.mark.asyncio
+async def test_register_name_and_phone_identifier_only_succeeds_with_defaults(mocker):
+    """Simplified customer-register form: name is the only field the user
+    types when the identify step's identifier was already a phone number —
+    no username, no explicit whatsapp_opt_in. Confirms the minimal-fields
+    contract this form relies on still resolves to sane defaults."""
+    session = make_session([None])  # no existing customer with this phone_hash
+    mocker.patch(
+        "app.services.customer_service.cache_service.get",
+        AsyncMock(return_value=pending_payload(PHONE, "phone")),
+    )
+    mocker.patch("app.services.customer_service.cache_service.delete", AsyncMock())
+    mocker.patch("app.services.customer_service.create_customer_token", return_value="customer-jwt-xyz")
+
+    response, token = await customer_service.register(
+        CustomerRegister(registration_token=TOKEN, name="Priya"), session
+    )
+
+    assert response.status == "registered"
+    assert token == "customer-jwt-xyz"
+    customers = added_instances(session, Customer)
+    assert len(customers) == 1
+    assert customers[0].phone_hash == sha256_hex(PHONE)
+    assert customers[0].username_hash is None
+    assert customers[0].email_hash is None
+    assert customers[0].whatsapp_opt_in is False
 
 
 @pytest.mark.asyncio

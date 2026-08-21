@@ -14,8 +14,10 @@ around `response_service` for the same reason `drain_projection_outbox` is
 thin around `projection_service`.
 
 `sync_gmb_tenant` is ADMIN-01: triggered by the Super Admin panel's
-`POST /admin/tenants/{id}/sync-gmb`. It only stamps `last_synced_at` today —
-the real inbound review pull is REVIEW-03 and does not exist yet.
+`POST /admin/tenants/{id}/sync-gmb`. `sync_all_gmb_profiles` is REVIEW-03's
+own periodic sweep, scheduled via Celery beat — both are thin wrappers
+around `review_sync_service`, same shape as `drain_projection_outbox`
+around `projection_service`.
 """
 
 import asyncio
@@ -80,39 +82,42 @@ def sync_gmb_tenant(self, tenant_id: str) -> int:
     """Sync every connected GMB profile for one tenant. Triggered by
     `POST /admin/tenants/{id}/sync-gmb` (ADMIN-01).
 
-    This only stamps `last_synced_at` — pulling reviews from the Google My
-    Business API is REVIEW-03 scope and does not exist yet
-    (TODO(REVIEW-03): replace the stamp below with an actual GMB pull).
-    Runs its own session scoped to the one tenant it was given via
-    `rls.tenant_context`, the same pattern `drain_projection_outbox` uses —
-    ADMIN-01's endpoint never needs cross-tenant BYPASSRLS for this task.
+    Runs its own session scoped to the one tenant it was given, the same
+    pattern `drain_projection_outbox` uses — ADMIN-01's endpoint never needs
+    cross-tenant BYPASSRLS for this task. The actual pull lives in
+    `review_sync_service.sync_tenant`.
     """
     import uuid  # noqa: PLC0415
-    from datetime import UTC, datetime  # noqa: PLC0415
 
-    from sqlalchemy import select  # noqa: PLC0415
-
-    from app.db import rls  # noqa: PLC0415
     from app.db.base import async_session_factory  # noqa: PLC0415
-    from app.db.models.reputation import GMBProfile  # noqa: PLC0415
+    from app.services import review_sync_service  # noqa: PLC0415
 
     async def _run() -> int:
-        tid = uuid.UUID(tenant_id)
-        async with async_session_factory() as session, rls.tenant_context(session, tid):
-            result = await session.execute(
-                select(GMBProfile).where(
-                    GMBProfile.tenant_id == tid, GMBProfile.is_connected.is_(True)
-                )
-            )
-            profiles = result.scalars().all()
-            for profile in profiles:
-                profile.last_synced_at = datetime.now(UTC)
-            await session.commit()
-            return len(profiles)
+        async with async_session_factory() as session:
+            return await review_sync_service.sync_tenant(session, uuid.UUID(tenant_id))
 
-    synced = asyncio.run(_run())
-    logger.info("admin.gmb_sync.done", tenant_id=tenant_id, profiles_synced=synced)
-    return synced
+    stored = asyncio.run(_run())
+    logger.info("admin.gmb_sync.done", tenant_id=tenant_id, reviews_stored=stored)
+    return stored
+
+
+@celery_app.task(bind=True, max_retries=3)
+def sync_all_gmb_profiles(self) -> int:
+    """Periodic sweep: pull new reviews for every connected GMB profile,
+    across every tenant. Scheduled via `celery_app.conf.beat_schedule`
+    (REVIEW-03) — this is what keeps `sync_gmb_tenant` from being the only
+    way reviews ever arrive; that one stays admin/manual-trigger only.
+    """
+    from app.db.base import async_session_factory  # noqa: PLC0415
+    from app.services import review_sync_service  # noqa: PLC0415
+
+    async def _run() -> int:
+        async with async_session_factory() as session:
+            return await review_sync_service.sync_all_connected(session)
+
+    stored = asyncio.run(_run())
+    logger.info("gmb.sync.sweep_task_done", reviews_stored=stored)
+    return stored
 
 
 @celery_app.task(bind=True, max_retries=3)

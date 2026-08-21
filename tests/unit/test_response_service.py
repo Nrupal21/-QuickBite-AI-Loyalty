@@ -58,6 +58,18 @@ def _mock_broadcast(mocker):
     mocker.patch("app.services.response_service.broadcast.publish_event", AsyncMock())
 
 
+@pytest.fixture(autouse=True)
+def _ai_reply_feature_enabled(mocker):
+    """generate_pending_response_drafts() gates each tenant on the
+    ai_review_replies plan feature before drafting — stubbed on here so the
+    batch-drafting tests below can describe their own session.execute
+    side_effect list without also accounting for that plan lookup, same
+    rationale as no_tenant_context above."""
+    mocker.patch(
+        "app.services.response_service.tenant_has_feature", AsyncMock(return_value=True)
+    )
+
+
 def make_user(user_id: uuid.UUID | None = None) -> User:
     user = User(
         tenant_id=TENANT_ID,
@@ -87,6 +99,10 @@ def make_response(**overrides) -> ReviewResponse:
     defaults.update(overrides)
     response = ReviewResponse(**defaults)
     response.id = RESPONSE_ID
+    # created_at is server_default=func.now() (app/db/base.py) — never
+    # populated on plain Python construction, only on an actual DB round
+    # trip. ReviewResponseOut.model_validate() needs it non-None.
+    response.created_at = datetime.now(timezone.utc)
     return response
 
 
@@ -132,6 +148,52 @@ def make_session(execute_results: list) -> MagicMock:
         results.append(result)
     session.execute = AsyncMock(side_effect=results)
     return session
+
+
+def make_list_session(rows: list) -> MagicMock:
+    """`rows` is a list of (CustomerReview, branch_name, ReviewResponse | None)
+    tuples — the shape `list_reviews`'s three-way join returns from `.all()`."""
+    result = MagicMock()
+    result.all.return_value = rows
+    session = MagicMock()
+    session.execute = AsyncMock(return_value=result)
+    return session
+
+
+# --- list -------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_list_reviews_includes_branch_name_and_no_response():
+    review = make_review()
+    session = make_list_session([(review, "Bandra West", None)])
+
+    out = await response_service.list_reviews(session)
+
+    assert len(out) == 1
+    assert out[0].id == review.id
+    assert out[0].branch_name == "Bandra West"
+    assert out[0].response is None
+
+
+@pytest.mark.asyncio
+async def test_list_reviews_nests_a_pending_response():
+    review = make_review()
+    response = make_response(review_id=review.id)
+    session = make_list_session([(review, "Bandra West", response)])
+
+    out = await response_service.list_reviews(session)
+
+    assert out[0].response is not None
+    assert out[0].response.approval_state == "pending"
+    assert out[0].response.ai_draft == response.ai_draft
+
+
+@pytest.mark.asyncio
+async def test_list_reviews_empty_returns_empty_list():
+    session = make_list_session([])
+
+    assert await response_service.list_reviews(session) == []
 
 
 # --- approve --------------------------------------------------------------

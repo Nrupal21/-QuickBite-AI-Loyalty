@@ -1,0 +1,170 @@
+- generic [active] [ref=f5e1]:
+  - link "Skip to content" [ref=f5e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation "Primary" [ref=f5e3]:
+    - generic [ref=f5e5]:
+      - link "QuickBite" [ref=f5e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f5e11]:
+        - link "Sign in" [ref=f5e12] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=f5e13] [cursor=pointer]:
+          - /url: /register
+  - main [ref=f5e14]:
+    - generic [ref=f5e16]:
+      - complementary [ref=f5e17]:
+        - generic [ref=f5e20]:
+          - generic [ref=f5e21]: J
+          - generic [ref=f5e22]:
+            - generic [ref=f5e23]: Loyalty member
+            - heading "Jordan Miller" [level=1] [ref=f5e24]
+          - button "Edit Profile" [disabled] [ref=f5e26]
+        - generic [ref=f5e27]:
+          - generic [ref=f5e29]:
+            - generic [ref=f5e30]: "42"
+            - generic [ref=f5e31]: Lifetime Stamps
+          - generic [ref=f5e33]:
+            - generic [ref=f5e34]: "8"
+            - generic [ref=f5e35]: Toward Next Reward
+          - generic [ref=f5e37]:
+            - generic [ref=f5e38]: "3"
+            - generic [ref=f5e39]: Locations Visited
+        - generic [ref=f5e40]:
+          - heading "Account Details" [level=3] [ref=f5e41]
+          - generic [ref=f5e42]:
+            - generic [ref=f5e43]:
+              - generic [ref=f5e44]: Email
+              - generic [ref=f5e45]: jordan.m@example.com
+            - generic [ref=f5e46]:
+              - generic [ref=f5e47]: Username
+              - generic [ref=f5e48]: jordan_bites
+            - generic [ref=f5e49]:
+              - generic [ref=f5e50]: Member since
+              - generic [ref=f5e51]: 14 Jan 2023
+            - generic [ref=f5e52]:
+              - generic [ref=f5e53]: Favorite location
+              - generic [ref=f5e54]: Downtown QuickBite
+            - generic [ref=f5e55]:
+              - generic [ref=f5e56]: Last visit
+              - generic [ref=f5e57]: 24 Oct 2023
+      - generic [ref=f5e58]:
+        - region [ref=f5e59]:
+          - heading "Stamps by Location" [level=2] [ref=f5e60]
+          - generic [ref=f5e61]:
+            - article [ref=f5e62]:
+              - generic [ref=f5e63]:
+                - generic [ref=f5e64]: location_on
+                - heading "Downtown QuickBite" [level=4] [ref=f5e66]
+              - paragraph [ref=f5e67]: 123 Main St, Metro Center
+              - generic [ref=f5e68]:
+                - paragraph [ref=f5e69]:
+                  - generic [ref=f5e70]: "15"
+                  - generic [ref=f5e71]: stamps
+                - paragraph [ref=f5e72]: Last visited 24 Oct 2023
+            - article [ref=f5e73]:
+              - generic [ref=f5e74]:
+                - generic [ref=f5e75]: location_on
+                - heading "Uptown Campus" [level=4] [ref=f5e77]
+              - paragraph [ref=f5e78]: 88 College Ave, University District
+              - generic [ref=f5e79]:
+                - paragraph [ref=f5e80]:
+                  - generic [ref=f5e81]: "9"
+                  - generic [ref=f5e82]: stamps
+                - paragraph [ref=f5e83]: Last visited 12 Sept 2023
+            - article [ref=f5e84]:
+              - generic [ref=f5e85]:
+                - generic [ref=f5e86]: location_on
+                - heading "Westside Bites" [level=4] [ref=f5e88]
+              - paragraph [ref=f5e89]: 456 Oak Ave
+              - generic [ref=f5e90]:
+                - paragraph [ref=f5e91]:
+                  - generic [ref=f5e92]: "8"
+                  - generic [ref=f5e93]: stamps
+                - paragraph [ref=f5e94]: Last visited 2 Aug 2023
+        - region [ref=f5e95]:
+          - heading "Reviews You've Sent" [level=2] [ref=f5e96]
+          - generic [ref=f5e97]:
+            - article [ref=f5e98]:
+              - generic [ref=f5e99]:
+                - heading "Downtown QuickBite" [level=4] [ref=f5e100]
+                - generic [ref=f5e101]: 5 out of 5 stars
+              - paragraph [ref=f5e120]: The new spicy chicken sandwich was incredible. Perfect amount of heat and the bun was perfectly toasted. Will definitely be coming back for this one.
+              - generic [ref=f5e121]:
+                - generic [ref=f5e122]:
+                  - generic [ref=f5e123]: Fast service
+                  - generic [ref=f5e124]: Great vibe
+                - paragraph [ref=f5e125]: 24 Oct 2023
+            - article [ref=f5e126]:
+              - generic [ref=f5e127]:
+                - heading "Uptown Campus" [level=4] [ref=f5e128]
+                - generic [ref=f5e129]: 4 out of 5 stars
+              - paragraph [ref=f5e148]: Solid spot for a quick lunch between classes. The AI ordering system was a bit slow today, but the food quality is always consistent.
+              - generic [ref=f5e149]:
+                - generic [ref=f5e150]: Value
+                - paragraph [ref=f5e152]: 12 Sept 2023
+  - navigation "Mobile navigation" [ref=f5e153]:
+    - link "home Home" [ref=f5e154] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f5e155]: home
+      - generic [ref=f5e156]: Home
+    - link "manufacturing Rewards" [ref=f5e157] [cursor=pointer]:
+      - /url: /rewards
+      - generic [ref=f5e158]: manufacturing
+      - generic [ref=f5e159]: Rewards
+    - link "rate_review Reviews" [ref=f5e160] [cursor=pointer]:
+      - /url: /reviews
+      - generic [ref=f5e161]: rate_review
+      - generic [ref=f5e162]: Reviews
+    - link "person Profile" [ref=f5e163] [cursor=pointer]:
+      - /url: /profile
+      - generic [ref=f5e164]: person
+      - generic [ref=f5e165]: Profile
+  - contentinfo [ref=f5e166]:
+    - generic [ref=f5e167]:
+      - generic [ref=f5e168]:
+        - generic [ref=f5e169]:
+          - link "QuickBite" [ref=f5e170] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=f5e175]: AI reviews and loyalty rewards from a single receipt QR code — built for independent restaurants and small chains.
+        - generic [ref=f5e176]:
+          - heading "Product" [level=4] [ref=f5e177]
+          - list [ref=f5e178]:
+            - listitem [ref=f5e179]:
+              - link "Features" [ref=f5e180] [cursor=pointer]:
+                - /url: /#features
+            - listitem [ref=f5e181]:
+              - link "How it works" [ref=f5e182] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=f5e183]:
+              - link "Pricing" [ref=f5e184] [cursor=pointer]:
+                - /url: /#pricing
+        - generic [ref=f5e185]:
+          - heading "Company" [level=4] [ref=f5e186]
+          - list [ref=f5e187]:
+            - listitem [ref=f5e188]:
+              - link "About" [ref=f5e189] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f5e190]:
+              - link "Careers" [ref=f5e191] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f5e192]:
+              - link "Contact" [ref=f5e193] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=f5e194]:
+          - heading "Legal" [level=4] [ref=f5e195]
+          - list [ref=f5e196]:
+            - listitem [ref=f5e197]:
+              - link "Privacy" [ref=f5e198] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f5e199]:
+              - link "Terms" [ref=f5e200] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=f5e201]:
+        - generic [ref=f5e202]: © 2026 QuickBite. All rights reserved.
+        - generic [ref=f5e203]:
+          - link "Email" [ref=f5e204] [cursor=pointer]:
+            - /url: "#"
+          - link "Website" [ref=f5e208] [cursor=pointer]:
+            - /url: "#"
+          - link "X (Twitter)" [ref=f5e212] [cursor=pointer]:
+            - /url: "#"

@@ -20,14 +20,29 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.dependencies.subscription import tenant_has_feature
 from app.core import broadcast, cache_service
 from app.db import rls
+from app.db.models.branch import Branch
 from app.db.models.reputation import CustomerReview, GMBProfile, ReviewResponse
 from app.db.models.tenant import Tenant
 from app.db.models.user import User
+from app.schemas.reputation import ReviewOut, ReviewResponseOut
 from app.services import ai_engine, gmb_service
 from app.services.ai_engine import AIProvidersUnavailable
 from app.services.gmb_service import GMBNotConnected, GMBTokenExpired
+
+# Bounds the dashboard's Reviews page to the most recent activity, same
+# reasoning as BATCH_SIZE below — a full-history feed wants pagination this
+# first version doesn't build yet, not an unbounded query.
+REVIEW_LIST_LIMIT = 100
+
+# Plan-tier gate for owner-facing AI review-reply drafting/approval — see
+# check_subscription_tier("ai_review_replies") on the approve/reject routes
+# and its use below for the unauthenticated hourly batch drafter. Distinct
+# from the "ai_responses_pm" quota (SubscriptionPlan.feature_limits), which
+# tracks monthly consumption, not whether the feature is available at all.
+AI_REPLY_FEATURE = "ai_review_replies"
 
 # TTL for the "already posted" Redis flag in post_approved_response_to_gmb —
 # long enough to outlive Celery's max_retries=3 backoff window many times over.
@@ -38,6 +53,35 @@ logger = structlog.get_logger(__name__)
 # Hourly batch caps how many un-answered reviews it drafts in one run, so a
 # sync backlog cannot turn the beat task into an unbounded, budget-draining run.
 BATCH_SIZE = 50
+
+
+async def list_reviews(session: AsyncSession) -> list[ReviewOut]:
+    """The dashboard's Reviews page: every synced review, newest first, with
+    its AI-drafted reply (if any) nested — see ReviewOut's own docstring for
+    why this is one query rather than two. RLS already scopes both tables to
+    the caller's tenant (bound by require_role before this runs)."""
+    result = await session.execute(
+        select(CustomerReview, Branch.name, ReviewResponse)
+        .join(Branch, Branch.id == CustomerReview.branch_id)
+        .outerjoin(ReviewResponse, ReviewResponse.review_id == CustomerReview.id)
+        .order_by(CustomerReview.reviewed_at.desc())
+        .limit(REVIEW_LIST_LIMIT)
+    )
+    return [
+        ReviewOut(
+            id=review.id,
+            branch_id=review.branch_id,
+            branch_name=branch_name,
+            source=review.source,
+            rating=review.rating,
+            reviewer_name=review.reviewer_name,
+            review_body=review.review_body,
+            sentiment_score=review.sentiment_score,
+            reviewed_at=review.reviewed_at,
+            response=ReviewResponseOut.model_validate(response) if response else None,
+        )
+        for review, branch_name, response in result.all()
+    ]
 
 
 async def _get_response_for_update(session: AsyncSession, review_response_id: uuid.UUID) -> ReviewResponse:
@@ -179,6 +223,9 @@ async def generate_pending_response_drafts(session: AsyncSession) -> int:
 
 
 async def _draft_for_tenant(session: AsyncSession, tenant_id: uuid.UUID, *, limit: int) -> int:
+    if not await tenant_has_feature(session, tenant_id, AI_REPLY_FEATURE):
+        return 0
+
     result = await session.execute(
         select(CustomerReview)
         .outerjoin(ReviewResponse, ReviewResponse.review_id == CustomerReview.id)
