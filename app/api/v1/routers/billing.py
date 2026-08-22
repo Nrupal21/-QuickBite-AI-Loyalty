@@ -14,9 +14,10 @@ from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.dependencies.auth import get_current_user
+from app.api.v1.dependencies.auth import get_current_user, require_role
 from app.core import razorpay_signature
 from app.core.config import settings
+from app.core.rbac import RoleLevel
 from app.core.rate_limiter import limiter
 from app.db.base import get_db
 from app.db.models.tenant import Tenant
@@ -68,7 +69,12 @@ async def get_subscription(
 async def create_checkout(
     request: Request,
     payload: CheckoutRequest,
-    current_user: User = Depends(get_current_user),
+    # Doc 3: only an Owner (or Super Admin, which require_role admits at any
+    # lower min_level per its "at least this senior" contract) may change a
+    # tenant's subscription. Previously plain get_current_user — any Manager
+    # or Staff account could call this directly, regardless of what the
+    # dashboard UI chose to render.
+    current_user: User = Depends(require_role(RoleLevel.OWNER)),
     session: AsyncSession = Depends(get_db),
 ) -> CheckoutResponse:
     tenant_result = await session.execute(
