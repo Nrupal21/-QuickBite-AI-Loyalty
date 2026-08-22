@@ -71,3 +71,6 @@ quickai-f73f0-firebase-adminsdk-fbsvc-332d7c4ffc.json
 serviceAccountKey.json
 *-service-account.json
 .claude/skills/gstack/
+
+# Git worktrees (subagent-driven-development isolated workspaces)
+.worktrees/
