@@ -70,3 +70,4 @@ quickai-f73f0-firebase-adminsdk-fbsvc-332d7c4ffc.json
 *firebase-adminsdk*.json
 serviceAccountKey.json
 *-service-account.json
+.claude/skills/gstack/
