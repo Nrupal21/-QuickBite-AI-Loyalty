@@ -44,6 +44,10 @@ from app.db.models.user import Role, User
 
 logger = structlog.get_logger(__name__)
 
+# Throttles the Redis-outage warning in get_current_user() below to at most
+# once every 60s, so a sustained outage doesn't flood logs on every request.
+_last_api_usage_warning_at: datetime | None = None
+
 _UNAUTHORIZED = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail={
@@ -342,7 +346,16 @@ async def get_current_user(
                 f"api_calls:{principal.user.tenant_id}:{day}", ttl=8 * 86400
             )
         except Exception:  # noqa: BLE001 — analytics counter, never fatal to the request
-            logger.warning("admin.api_usage_counter_failed", tenant_id=str(principal.user.tenant_id))
+            global _last_api_usage_warning_at
+            now_ts = datetime.now(timezone.utc)
+            if (
+                _last_api_usage_warning_at is None
+                or (now_ts - _last_api_usage_warning_at).total_seconds() >= 60
+            ):
+                logger.warning(
+                    "admin.api_usage_counter_failed", tenant_id=str(principal.user.tenant_id)
+                )
+                _last_api_usage_warning_at = now_ts
 
     return principal.user
 
