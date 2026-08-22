@@ -22,6 +22,7 @@ from app.schemas.admin import (
     ForceLogoutResponse,
     GmbSyncResponse,
     HealthMetricsResponse,
+    SessionListResponse,
     SubscriptionOverrideRequest,
     SubscriptionOverrideResponse,
     TenantListResponse,
@@ -73,6 +74,16 @@ async def list_audit_logs(
     session: AsyncSession = Depends(get_db),
 ) -> AuditLogListResponse:
     return await AdminService(session=session).list_audit_logs(filters)
+
+
+@router.get("/sessions", response_model=SessionListResponse, status_code=status.HTTP_200_OK)
+async def list_sessions(
+    tenant_id: uuid.UUID | None = None,
+    user_id: uuid.UUID | None = None,
+    current_user: User = Depends(require_role(RoleLevel.SUPER_ADMIN)),
+    session: AsyncSession = Depends(get_db),
+) -> SessionListResponse:
+    return await AdminService(session=session).list_sessions(tenant_id, user_id)
 
 
 @router.post(

@@ -27,6 +27,7 @@ from app.db.models.audit import AuditLog
 from app.db.models.subscription import Subscription
 from app.db.models.tenant import Tenant
 from app.db.models.user import User
+from app.db.models.user import Session as UserSession
 from app.schemas.admin import AuditLogFilters, SubscriptionOverrideRequest
 from app.services.admin_service import AdminService
 
@@ -294,6 +295,22 @@ def make_subscription(**overrides) -> Subscription:
     return sub
 
 
+def make_user_session(**overrides) -> UserSession:
+    defaults = {
+        "user_id": uuid.uuid4(),
+        "tenant_id": OTHER_TENANT_ID,
+        "refresh_token_hash": "irrelevant",
+        "ip_address_hash": "irrelevant-hash",
+        "user_agent": "Mozilla/5.0",
+        "expires_at": datetime(2026, 12, 31, tzinfo=timezone.utc),
+        "revoked": False,
+    }
+    defaults.update(overrides)
+    row = UserSession(**defaults)
+    row.id = uuid.uuid4()
+    return row
+
+
 # --- override_subscription --------------------------------------------------
 
 
@@ -373,3 +390,30 @@ async def test_health_metrics_aggregates_all_six_figures(mocker):
     assert response.signups_last_7d == 4
     assert response.past_due_subscriptions == 2
     assert response.queue_depth == 7
+
+
+# --- list_sessions ------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_list_sessions_returns_every_session_cross_tenant():
+    rows = [make_user_session(), make_user_session(tenant_id=ADMIN_TENANT_ID)]
+    session = make_session([rows])
+
+    response = await AdminService(session=session).list_sessions(tenant_id=None, user_id=None)
+
+    assert len(response.sessions) == 2
+
+
+@pytest.mark.asyncio
+async def test_list_sessions_filters_by_tenant():
+    rows = [make_user_session(tenant_id=OTHER_TENANT_ID)]
+    session = make_session([rows])
+
+    response = await AdminService(session=session).list_sessions(
+        tenant_id=OTHER_TENANT_ID, user_id=None
+    )
+
+    assert len(response.sessions) == 1
+    query = session.execute.await_args.args[0]
+    assert "sessions.tenant_id" in str(query.whereclause)

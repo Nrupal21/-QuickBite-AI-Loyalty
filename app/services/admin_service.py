@@ -34,6 +34,7 @@ from app.db.models.audit import AuditLog
 from app.db.models.subscription import Subscription
 from app.db.models.tenant import Tenant
 from app.db.models.user import User
+from app.db.models.user import Session as UserSession
 from app.schemas.admin import (
     AuditLogEntry,
     AuditLogFilters,
@@ -41,6 +42,8 @@ from app.schemas.admin import (
     ForceLogoutResponse,
     GmbSyncResponse,
     HealthMetricsResponse,
+    SessionListResponse,
+    SessionSummary,
     SubscriptionOverrideRequest,
     SubscriptionOverrideResponse,
     TenantListResponse,
@@ -155,6 +158,34 @@ class AdminService:
                     created_at=entry.created_at,
                 )
                 for entry in entries
+            ]
+        )
+
+    async def list_sessions(
+        self, tenant_id: uuid.UUID | None, user_id: uuid.UUID | None
+    ) -> SessionListResponse:
+        async with rls.admin_bypass_context(self.session):
+            query = select(UserSession)
+            if tenant_id is not None:
+                query = query.where(UserSession.tenant_id == tenant_id)
+            if user_id is not None:
+                query = query.where(UserSession.user_id == user_id)
+            query = query.order_by(UserSession.expires_at.desc())
+            result = await self.session.execute(query)
+            rows = result.scalars().all()
+
+        return SessionListResponse(
+            sessions=[
+                SessionSummary(
+                    session_id=row.id,
+                    user_id=row.user_id,
+                    tenant_id=row.tenant_id,
+                    ip_address_hash=row.ip_address_hash,
+                    user_agent=row.user_agent,
+                    expires_at=row.expires_at,
+                    revoked=row.revoked,
+                )
+                for row in rows
             ]
         )
 
