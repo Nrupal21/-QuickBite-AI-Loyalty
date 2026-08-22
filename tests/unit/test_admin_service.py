@@ -24,6 +24,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.db.models.audit import AuditLog
+from app.db.models.loyalty import StampLog
 from app.db.models.subscription import Subscription
 from app.db.models.tenant import Tenant
 from app.db.models.user import Session as UserSession
@@ -39,6 +40,7 @@ def make_result(value):
     result = MagicMock()
     result.scalar_one_or_none.return_value = value
     result.scalars.return_value.all.return_value = value if isinstance(value, list) else []
+    result.all.return_value = value if isinstance(value, list) else []
     return result
 
 
@@ -446,3 +448,39 @@ async def test_get_api_usage_treats_missing_key_as_zero(mocker):
     response = await AdminService(session=session).get_api_usage(OTHER_TENANT_ID)
 
     assert all(day.request_count == 0 and day.rate_limited_count == 0 for day in response.days)
+
+
+def make_stamp_log(**overrides) -> StampLog:
+    defaults = {
+        "tenant_id": OTHER_TENANT_ID,
+        "branch_id": uuid.uuid4(),
+        "gps_latitude_at_scan": 12.9,
+        "gps_longitude_at_scan": 77.6,
+        "distance_from_branch_m": 500.0,
+        "is_fraudulent": True,
+    }
+    defaults.update(overrides)
+    row = StampLog(**defaults)
+    row.id = uuid.uuid4()
+    row.scanned_at = datetime.now(timezone.utc)
+    return row
+
+
+# --- get_security_flags -------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_security_flags_aggregates_all_three_lists():
+    locked_user = make_target_user(failed_login_count=5, locked_until=datetime(2027, 1, 1, tzinfo=timezone.utc))
+    fraud_row = make_stamp_log()
+    cluster_row = MagicMock(tenant_id=OTHER_TENANT_ID, count=4)
+    session = make_session([[locked_user], [fraud_row], [cluster_row]])
+
+    response = await AdminService(session=session).get_security_flags()
+
+    assert len(response.locked_accounts) == 1
+    assert response.locked_accounts[0].failed_login_count == 5
+    assert len(response.fraud_flags) == 1
+    assert response.fraud_flags[0].stamp_log_id == fraud_row.id
+    assert len(response.force_logout_clusters) == 1
+    assert response.force_logout_clusters[0].count == 4

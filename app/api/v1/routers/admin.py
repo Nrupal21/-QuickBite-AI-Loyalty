@@ -23,6 +23,7 @@ from app.schemas.admin import (
     ForceLogoutResponse,
     GmbSyncResponse,
     HealthMetricsResponse,
+    SecurityFlagsResponse,
     SessionListResponse,
     SubscriptionOverrideRequest,
     SubscriptionOverrideResponse,
@@ -147,3 +148,13 @@ async def get_api_usage(
     session: AsyncSession = Depends(get_db),
 ) -> ApiUsageResponse:
     return await AdminService(session=session).get_api_usage(tenant_id)
+
+
+@router.get(
+    "/security-flags", response_model=SecurityFlagsResponse, status_code=status.HTTP_200_OK
+)
+async def get_security_flags(
+    current_user: User = Depends(require_role(RoleLevel.SUPER_ADMIN)),
+    session: AsyncSession = Depends(get_db),
+) -> SecurityFlagsResponse:
+    return await AdminService(session=session).get_security_flags()

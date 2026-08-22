@@ -31,6 +31,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core import cache_service
 from app.db import rls
 from app.db.models.audit import AuditLog
+from app.db.models.loyalty import StampLog
 from app.db.models.subscription import Subscription
 from app.db.models.tenant import Tenant
 from app.db.models.user import Session as UserSession
@@ -41,9 +42,13 @@ from app.schemas.admin import (
     AuditLogEntry,
     AuditLogFilters,
     AuditLogListResponse,
+    ForceLogoutCluster,
     ForceLogoutResponse,
+    FraudFlag,
     GmbSyncResponse,
     HealthMetricsResponse,
+    LockedAccountFlag,
+    SecurityFlagsResponse,
     SessionListResponse,
     SessionSummary,
     SubscriptionOverrideRequest,
@@ -348,3 +353,53 @@ class AdminService:
             )
         days.reverse()  # oldest first, matching the Sentiment Trend chart convention
         return ApiUsageResponse(tenant_id=tenant_id, days=days)
+
+    async def get_security_flags(self) -> SecurityFlagsResponse:
+        async with rls.admin_bypass_context(self.session):
+            locked_result = await self.session.execute(
+                select(User).where(
+                    (User.failed_login_count > 0) | (User.locked_until.is_not(None))
+                )
+            )
+            locked_users = locked_result.scalars().all()
+
+            week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+            fraud_result = await self.session.execute(
+                select(StampLog)
+                .where(StampLog.is_fraudulent.is_(True), StampLog.scanned_at >= week_ago)
+                .order_by(StampLog.scanned_at.desc())
+                .limit(50)
+            )
+            fraud_rows = fraud_result.scalars().all()
+
+            cluster_result = await self.session.execute(
+                select(AuditLog.tenant_id, func.count().label("count"))
+                .where(AuditLog.action == "admin.force_logout", AuditLog.created_at >= week_ago)
+                .group_by(AuditLog.tenant_id)
+                .having(func.count() >= 3)
+            )
+            clusters = cluster_result.all()
+
+        return SecurityFlagsResponse(
+            locked_accounts=[
+                LockedAccountFlag(
+                    user_id=u.id,
+                    tenant_id=u.tenant_id,
+                    failed_login_count=u.failed_login_count,
+                    locked_until=u.locked_until,
+                )
+                for u in locked_users
+            ],
+            fraud_flags=[
+                FraudFlag(
+                    stamp_log_id=row.id,
+                    tenant_id=row.tenant_id,
+                    branch_id=row.branch_id,
+                    scanned_at=row.scanned_at,
+                )
+                for row in fraud_rows
+            ],
+            force_logout_clusters=[
+                ForceLogoutCluster(tenant_id=row.tenant_id, count=row.count) for row in clusters
+            ],
+        )
