@@ -36,6 +36,8 @@ from app.db.models.tenant import Tenant
 from app.db.models.user import Session as UserSession
 from app.db.models.user import User
 from app.schemas.admin import (
+    ApiUsageDay,
+    ApiUsageResponse,
     AuditLogEntry,
     AuditLogFilters,
     AuditLogListResponse,
@@ -328,3 +330,21 @@ class AdminService:
             past_due_subscriptions=past_due_result.scalar_one_or_none() or 0,
             queue_depth=await cache_service.queue_depth(),
         )
+
+    async def get_api_usage(self, tenant_id: uuid.UUID) -> ApiUsageResponse:
+        today = datetime.now(timezone.utc).date()
+        days: list[ApiUsageDay] = []
+        for offset in range(7):
+            day = today - timedelta(days=offset)
+            day_str = day.strftime("%Y%m%d")
+            calls_raw = await cache_service.get(f"api_calls:{tenant_id}:{day_str}")
+            trips_raw = await cache_service.get(f"api_429:{tenant_id}:{day_str}")
+            days.append(
+                ApiUsageDay(
+                    date=day.isoformat(),
+                    request_count=int(calls_raw) if calls_raw is not None else 0,
+                    rate_limited_count=int(trips_raw) if trips_raw is not None else 0,
+                )
+            )
+        days.reverse()  # oldest first, matching the Sentiment Trend chart convention
+        return ApiUsageResponse(tenant_id=tenant_id, days=days)

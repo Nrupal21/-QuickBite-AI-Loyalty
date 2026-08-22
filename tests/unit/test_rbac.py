@@ -206,6 +206,45 @@ async def test_missing_authorization_header_returns_401():
     assert exc_info.value.status_code == 401
 
 
+@pytest.mark.asyncio
+async def test_get_current_user_increments_api_call_counter(mocker):
+    mocker.patch(
+        "app.api.v1.dependencies.auth.cache_service.exists", AsyncMock(return_value=False)
+    )
+    incr = mocker.patch(
+        "app.api.v1.dependencies.auth.cache_service.incr", AsyncMock(return_value=1)
+    )
+    user = make_user()
+    token = create_access_token(user.id, TENANT_ID, "OWNER")
+    session = make_session([None, user, True])
+
+    await get_current_user(make_request(token), session)
+
+    incr.assert_awaited_once()
+    key = incr.await_args.args[0]
+    assert key.startswith(f"api_calls:{TENANT_ID}:")
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_survives_redis_outage_during_counting(mocker):
+    """A Redis hiccup on the analytics counter must never fail the actual
+    request — it's a nice-to-have, not a correctness dependency."""
+    mocker.patch(
+        "app.api.v1.dependencies.auth.cache_service.exists", AsyncMock(return_value=False)
+    )
+    mocker.patch(
+        "app.api.v1.dependencies.auth.cache_service.incr",
+        AsyncMock(side_effect=ConnectionError("redis down")),
+    )
+    user = make_user()
+    token = create_access_token(user.id, TENANT_ID, "OWNER")
+    session = make_session([None, user, True])
+
+    returned = await get_current_user(make_request(token), session)
+
+    assert returned is user
+
+
 # --- require_role -------------------------------------------------------
 
 

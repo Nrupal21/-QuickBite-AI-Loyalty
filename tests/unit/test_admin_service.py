@@ -417,3 +417,32 @@ async def test_list_sessions_filters_by_tenant():
     assert len(response.sessions) == 1
     query = session.execute.await_args.args[0]
     assert "sessions.tenant_id" in str(query.whereclause)
+
+
+# --- get_api_usage -------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_get_api_usage_reads_seven_days_of_both_counters(mocker):
+    calls = mocker.patch(
+        "app.services.admin_service.cache_service.get",
+        AsyncMock(side_effect=lambda key: "42" if "api_calls" in key else "3"),
+    )
+    session = make_session([])
+
+    response = await AdminService(session=session).get_api_usage(OTHER_TENANT_ID)
+
+    assert len(response.days) == 7
+    assert all(day.request_count == 42 for day in response.days)
+    assert all(day.rate_limited_count == 3 for day in response.days)
+    assert calls.await_count == 14  # 7 days x 2 counters
+
+
+@pytest.mark.asyncio
+async def test_get_api_usage_treats_missing_key_as_zero(mocker):
+    mocker.patch("app.services.admin_service.cache_service.get", AsyncMock(return_value=None))
+    session = make_session([])
+
+    response = await AdminService(session=session).get_api_usage(OTHER_TENANT_ID)
+
+    assert all(day.request_count == 0 and day.rate_limited_count == 0 for day in response.days)

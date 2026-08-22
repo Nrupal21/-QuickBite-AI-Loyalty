@@ -17,6 +17,7 @@ from app.core.rbac import RoleLevel
 from app.db.base import get_db
 from app.db.models.user import User
 from app.schemas.admin import (
+    ApiUsageResponse,
     AuditLogFilters,
     AuditLogListResponse,
     ForceLogoutResponse,
@@ -135,3 +136,14 @@ async def override_tenant_subscription(
     return await AdminService(session=session).override_subscription(
         tenant_id, payload, current_user
     )
+
+
+@router.get(
+    "/api-usage", response_model=ApiUsageResponse, status_code=status.HTTP_200_OK
+)
+async def get_api_usage(
+    tenant_id: uuid.UUID,
+    current_user: User = Depends(require_role(RoleLevel.SUPER_ADMIN)),
+    session: AsyncSession = Depends(get_db),
+) -> ApiUsageResponse:
+    return await AdminService(session=session).get_api_usage(tenant_id)

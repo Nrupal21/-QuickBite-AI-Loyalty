@@ -329,6 +329,21 @@ async def get_current_user(
         # A customer token is a valid credential for the wrong surface. 403,
         # not 401: re-authenticating would not help.
         raise _STAFF_REQUIRED
+
+    # ADMIN-01 user/API monitors: best-effort request-volume counter, keyed
+    # by tenant. Every authenticated staff/owner request funnels through
+    # here, so this is the one place that instruments all of them without
+    # touching 40+ individual route signatures. A Redis failure here must
+    # never fail the request it's merely counting.
+    if principal.user.tenant_id is not None:
+        try:
+            day = datetime.now(timezone.utc).strftime("%Y%m%d")
+            await cache_service.incr(
+                f"api_calls:{principal.user.tenant_id}:{day}", ttl=8 * 86400
+            )
+        except Exception:  # noqa: BLE001 — analytics counter, never fatal to the request
+            logger.warning("admin.api_usage_counter_failed", tenant_id=str(principal.user.tenant_id))
+
     return principal.user
 
 
