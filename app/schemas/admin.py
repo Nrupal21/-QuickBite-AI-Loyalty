@@ -58,3 +58,89 @@ class AuditLogFilters(BaseModel):
 class GmbSyncResponse(BaseModel):
     status: Literal["sync_queued"]
     tenant_id: uuid.UUID
+
+
+class TenantStatusUpdateRequest(BaseModel):
+    is_active: bool
+
+
+class TenantStatusUpdateResponse(BaseModel):
+    tenant_id: uuid.UUID
+    is_active: bool
+
+
+class SubscriptionOverrideRequest(BaseModel):
+    """All fields but `reason` are optional — only supplied fields change.
+    `reason` is required on every call so a plan comp always has a stated
+    justification in the audit trail, never a silent change."""
+
+    plan_id: uuid.UUID | None = None
+    status: Literal["trialing", "active", "past_due", "canceled", "paused"] | None = None
+    trial_ends_at: datetime | None = None
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class SubscriptionOverrideResponse(BaseModel):
+    tenant_id: uuid.UUID
+    plan_id: uuid.UUID | None
+    status: str
+    trial_ends_at: datetime | None
+
+
+class HealthMetricsResponse(BaseModel):
+    active_tenants: int
+    suspended_tenants: int
+    signups_last_24h: int
+    signups_last_7d: int
+    past_due_subscriptions: int
+    queue_depth: int
+
+
+class SessionSummary(BaseModel):
+    session_id: uuid.UUID
+    user_id: uuid.UUID
+    tenant_id: uuid.UUID | None
+    ip_address_hash: str
+    user_agent: str
+    expires_at: datetime
+    revoked: bool
+
+
+class SessionListResponse(BaseModel):
+    sessions: list[SessionSummary]
+
+
+class ApiUsageDay(BaseModel):
+    date: str  # YYYY-MM-DD
+    request_count: int
+    rate_limited_count: int
+
+
+class ApiUsageResponse(BaseModel):
+    tenant_id: uuid.UUID
+    days: list[ApiUsageDay]
+
+
+class LockedAccountFlag(BaseModel):
+    user_id: uuid.UUID
+    tenant_id: uuid.UUID | None
+    failed_login_count: int
+    locked_until: datetime | None
+
+
+class FraudFlag(BaseModel):
+    stamp_log_id: uuid.UUID
+    tenant_id: uuid.UUID | None
+    branch_id: uuid.UUID | None
+    scanned_at: datetime
+
+
+class ForceLogoutCluster(BaseModel):
+    tenant_id: uuid.UUID | None
+    count: int
+
+
+class SecurityFlagsResponse(BaseModel):
+    locked_accounts: list[LockedAccountFlag]
+    fraud_flags: list[FraudFlag]
+    force_logout_clusters: list[ForceLogoutCluster]
