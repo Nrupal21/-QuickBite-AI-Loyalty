@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Audit Logs — Super Admin</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<!-- Tailwind CSS (STITCH-07: generated screen ships with its own Tailwind
+     config carrying the exact Doc 4 hex palette as brand-* tokens — this
+     page intentionally does not extend base.html/landing.css, since it is
+     an app shell with its own sidebar nav, not a marketing page.) -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                "colors": {
+                    "primary-container": "#1a56db",
+                    "on-primary-container": "#d4dcff",
+                    "surface": "#faf8ff",
+                    "surface-container-low": "#f3f3fe",
+                    "surface-container": "#ededf8",
+                    "surface-container-high": "#e7e7f3",
+                    "surface-variant": "#e2e1ed",
+                    "surface-bright": "#faf8ff",
+                    "on-surface": "#191b23",
+                    "on-surface-variant": "#434654",
+                    "outline-variant": "#c3c5d7",
+                    "brand-primary": "#1A56DB",
+                    "brand-loyalty-teal": "#0D9488",
+                    "brand-accent-orange": "#FF6B35",
+                    "brand-success": "#059669",
+                    "brand-danger": "#DC2626",
+                    "brand-warning": "#D97706",
+                    "brand-ink": "#1E2A3A",
+                    "brand-muted": "#64748B",
+                    "brand-bg": "#F8FAFC"
+                },
+                "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                "fontFamily": {
+                    "headline": ["Hanken Grotesk", "sans-serif"],
+                    "body": ["Hanken Grotesk", "sans-serif"]
+                }
+            }
+        }
+    }
+</script>
+<style>
+    body { background-color: theme('colors.brand-bg'); color: theme('colors.brand-ink'); font-family: 'Hanken Grotesk', sans-serif; }
+</style>
+<!-- Liquid-glass dashboard system, shared with dashboard/loyalty_analytics.html
+     — see the file header there for the direction contract. This is a
+     self-contained app shell: it does NOT include partials/nav.html. That
+     bar is the public marketing/customer nav (guest "Sign in / Get started"
+     CTA, the receipt-scan dock) and does not belong on an authenticated
+     staff/owner surface — this shell owns its own sidebar, mobile tab bar,
+     and account identity below instead. -->
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard.css') }}" />
+</head>
+<body class="qb-dash bg-brand-bg font-body min-h-screen text-brand-ink overflow-x-hidden flex">
+<div class="qb-dash-mesh" aria-hidden="true"></div>
+
+<nav class="qb-glass qb-glass--sidebar fixed left-0 top-0 h-screen w-[240px] z-50 hidden min-[900px]:flex flex-col justify-between py-6">
+  <div>
+    <div class="px-6 mb-8">
+      <h1 class="text-xl font-headline font-black text-primary-container flex items-center gap-2">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shield_person</span>
+        QuickBite
+      </h1>
+      <p class="text-xs text-brand-muted mt-1 font-medium">Super Admin</p>
+    </div>
+    <div class="flex flex-col gap-1 font-body text-sm">
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/admin">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors" style="font-variation-settings: 'FILL' 1;">apartment</span>
+        Tenants
+      </a>
+      <a class="flex items-center gap-3 bg-primary-container text-on-primary-container font-bold rounded-lg px-4 py-3 mx-2" href="/admin/audit-logs" aria-current="page">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+        Audit Logs
+      </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/admin/monitors">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">monitor_heart</span>
+        Monitors
+      </a>
+    </div>
+  </div>
+  <div class="px-4">
+    <button type="button" class="qb-account-trigger pt-4 border-t border-outline-variant/60 flex items-center gap-3 px-2 py-2"
+            data-account-trigger aria-haspopup="true" aria-expanded="false" aria-controls="more-sheet">
+      <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-sm" data-user-initials aria-hidden="true">SA</div>
+      <p class="text-sm font-bold text-brand-ink" data-account-sheet-role>Super Admin</p>
+    </button>
+  </div>
+</nav>
+
+<nav class="qb-glass qb-mobile-tabbar min-[900px]:hidden" aria-label="Super Admin">
+  <a class="qb-tab" href="/admin">
+    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">apartment</span>
+    Tenants
+  </a>
+  <a class="qb-tab" href="/admin/audit-logs" aria-current="page">
+    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">receipt_long</span>
+    Audit Logs
+  </a>
+  <button type="button" class="qb-tab" data-account-trigger aria-haspopup="true" aria-expanded="false" aria-controls="more-sheet">
+    <span class="material-symbols-outlined" aria-hidden="true">more_horiz</span>
+    More
+  </button>
+</nav>
+
+<div class="qb-account-scrim min-[900px]:hidden" data-account-scrim hidden></div>
+<div class="qb-glass qb-account-sheet" id="more-sheet" role="dialog" aria-label="Account" hidden>
+  <div class="min-[900px]:hidden">
+    <a class="qb-more-nav-item" href="/admin/monitors">
+      <span class="material-symbols-outlined" aria-hidden="true">monitor_heart</span>
+      Monitors
+    </a>
+    <div class="qb-more-divider"></div>
+  </div>
+  <div class="qb-account-sheet-head">
+    <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-sm" aria-hidden="true">SA</div>
+    <p class="text-sm font-bold text-brand-ink">Super Admin</p>
+  </div>
+  <button type="button" class="qb-account-signout" data-account-signout>
+    <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+    Sign out
+  </button>
+</div>
+
+<main class="min-[900px]:ml-[240px] flex-1 min-h-screen">
+  <header class="qb-glass sticky top-0 right-0 z-40 border-x-0 border-t-0 rounded-none flex justify-between items-center w-full px-5 min-[900px]:px-8 h-16">
+    <h2 class="font-body font-bold text-brand-ink tracking-tight text-xl">Audit Logs</h2>
+  </header>
+
+  <div class="p-5 min-[900px]:p-8 pb-28 min-[900px]:pb-8 max-w-7xl mx-auto space-y-6">
+    <div id="admin-error" class="hidden bg-brand-danger/10 text-brand-danger text-sm font-medium px-4 py-3 rounded-lg" role="alert"></div>
+
+    <form class="qb-glass p-4 flex flex-wrap gap-3 items-end" data-filter-form>
+      <div class="qb-invite-field">
+        <label class="qb-invite-label">Action</label>
+        <input class="qb-invite-input" name="action" placeholder="admin.force_logout" />
+      </div>
+      <div class="qb-invite-field">
+        <label class="qb-invite-label">Tenant ID</label>
+        <input class="qb-invite-input" name="tenant_id" placeholder="uuid" />
+      </div>
+      <div class="qb-invite-field">
+        <label class="qb-invite-label">From</label>
+        <input class="qb-invite-input" name="date_from" type="date" />
+      </div>
+      <div class="qb-invite-field">
+        <label class="qb-invite-label">To</label>
+        <input class="qb-invite-input" name="date_to" type="date" />
+      </div>
+      <button type="submit" class="qb-invite-submit">Filter</button>
+    </form>
+
+    <div class="qb-glass overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs font-bold uppercase tracking-wide text-brand-muted border-b border-outline-variant/20">
+            <th class="px-5 py-3">When</th>
+            <th class="px-5 py-3">Action</th>
+            <th class="px-5 py-3">Resource</th>
+            <th class="px-5 py-3">Tenant</th>
+          </tr>
+        </thead>
+        <tbody data-log-rows></tbody>
+      </table>
+      <div class="qb-empty hidden" data-log-empty>
+        <span class="qb-empty-icon material-symbols-outlined" aria-hidden="true">receipt_long</span>
+        <p class="text-sm font-semibold text-brand-ink">No matching audit log entries</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="{{ url_for('static', path='js/admin-shell.js') }}" defer></script>
+<script src="{{ url_for('static', path='js/admin-audit-logs.js') }}" defer></script>
+</body>
+</html>
