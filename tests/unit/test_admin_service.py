@@ -24,9 +24,10 @@ import pytest
 from fastapi import HTTPException
 
 from app.db.models.audit import AuditLog
+from app.db.models.subscription import Subscription
 from app.db.models.tenant import Tenant
 from app.db.models.user import User
-from app.schemas.admin import AuditLogFilters
+from app.schemas.admin import AuditLogFilters, SubscriptionOverrideRequest
 from app.services.admin_service import AdminService
 
 ADMIN_TENANT_ID = uuid.uuid4()
@@ -277,3 +278,71 @@ async def test_set_tenant_status_unknown_tenant_returns_404():
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail["error"]["code"] == "TENANT_NOT_FOUND"
+
+
+def make_subscription(**overrides) -> Subscription:
+    defaults = {
+        "tenant_id": OTHER_TENANT_ID,
+        "plan_id": uuid.uuid4(),
+        "status": "active",
+        "provider": "razorpay",
+        "current_period_end": datetime(2026, 12, 31, tzinfo=timezone.utc),
+    }
+    defaults.update(overrides)
+    sub = Subscription(**defaults)
+    sub.id = uuid.uuid4()
+    return sub
+
+
+# --- override_subscription --------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_override_subscription_updates_status_and_audit_logs_reason():
+    admin = make_admin()
+    sub = make_subscription(status="active")
+    session = make_session([sub])
+    payload = SubscriptionOverrideRequest(status="canceled", reason="Customer requested via support ticket #4821")
+
+    response = await AdminService(session=session).override_subscription(
+        OTHER_TENANT_ID, payload, admin
+    )
+
+    assert response.status == "canceled"
+    assert sub.status == "canceled"
+    entry = added(session, AuditLog)[-1]
+    assert entry.action == "admin.subscription_overridden"
+    assert entry.event_metadata["reason"] == "Customer requested via support ticket #4821"
+    assert entry.event_metadata["status"] == "canceled"
+
+
+@pytest.mark.asyncio
+async def test_override_subscription_updates_plan_and_trial_end():
+    admin = make_admin()
+    sub = make_subscription()
+    new_plan_id = uuid.uuid4()
+    trial_end = datetime(2026, 9, 1, tzinfo=timezone.utc)
+    session = make_session([sub])
+    payload = SubscriptionOverrideRequest(
+        plan_id=new_plan_id, trial_ends_at=trial_end, reason="Comped for beta partner"
+    )
+
+    response = await AdminService(session=session).override_subscription(
+        OTHER_TENANT_ID, payload, admin
+    )
+
+    assert response.plan_id == new_plan_id
+    assert sub.plan_id == new_plan_id
+    assert sub.trial_ends_at == trial_end
+
+
+@pytest.mark.asyncio
+async def test_override_subscription_no_subscription_returns_404():
+    admin = make_admin()
+    session = make_session([None])
+    payload = SubscriptionOverrideRequest(status="active", reason="test")
+
+    with pytest.raises(HTTPException) as exc_info:
+        await AdminService(session=session).override_subscription(uuid.uuid4(), payload, admin)
+
+    assert exc_info.value.status_code == 404

@@ -29,6 +29,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import rls
 from app.db.models.audit import AuditLog
+from app.db.models.subscription import Subscription
 from app.db.models.tenant import Tenant
 from app.db.models.user import User
 from app.schemas.admin import (
@@ -37,6 +38,8 @@ from app.schemas.admin import (
     AuditLogListResponse,
     ForceLogoutResponse,
     GmbSyncResponse,
+    SubscriptionOverrideRequest,
+    SubscriptionOverrideResponse,
     TenantListResponse,
     TenantStatusUpdateResponse,
     TenantSummary,
@@ -53,6 +56,16 @@ _USER_NOT_FOUND = HTTPException(
 _TENANT_NOT_FOUND = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND,
     detail={"error": {"code": "TENANT_NOT_FOUND", "message": "No such tenant."}},
+)
+
+_SUBSCRIPTION_NOT_FOUND = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail={
+        "error": {
+            "code": "SUBSCRIPTION_NOT_FOUND",
+            "message": "This tenant has no subscription to override.",
+        }
+    },
 )
 
 
@@ -199,3 +212,52 @@ class AdminService:
             is_active=is_active,
         )
         return TenantStatusUpdateResponse(tenant_id=tenant.id, is_active=is_active)
+
+    async def override_subscription(
+        self, tenant_id: uuid.UUID, payload: SubscriptionOverrideRequest, admin: User
+    ) -> SubscriptionOverrideResponse:
+        async with rls.admin_bypass_context(self.session):
+            result = await self.session.execute(
+                select(Subscription).where(Subscription.tenant_id == tenant_id)
+            )
+            sub = result.scalar_one_or_none()
+            if sub is None:
+                raise _SUBSCRIPTION_NOT_FOUND
+
+            if payload.plan_id is not None:
+                sub.plan_id = payload.plan_id
+            if payload.status is not None:
+                sub.status = payload.status
+            if payload.trial_ends_at is not None:
+                sub.trial_ends_at = payload.trial_ends_at
+
+            self.session.add(
+                AuditLog(
+                    tenant_id=None,
+                    user_id=admin.id,
+                    action="admin.subscription_overridden",
+                    resource_type="tenant",
+                    resource_id=tenant_id,
+                    event_metadata={
+                        "plan_id": str(payload.plan_id) if payload.plan_id else None,
+                        "status": payload.status,
+                        "trial_ends_at": payload.trial_ends_at.isoformat()
+                        if payload.trial_ends_at
+                        else None,
+                        "reason": payload.reason,
+                    },
+                )
+            )
+            await self.session.commit()
+
+        logger.info(
+            "admin.subscription_overridden",
+            admin_id=str(admin.id),
+            tenant_id=str(tenant_id),
+        )
+        return SubscriptionOverrideResponse(
+            tenant_id=tenant_id,
+            plan_id=sub.plan_id,
+            status=sub.status,
+            trial_ends_at=sub.trial_ends_at,
+        )

@@ -21,6 +21,8 @@ from app.schemas.admin import (
     AuditLogListResponse,
     ForceLogoutResponse,
     GmbSyncResponse,
+    SubscriptionOverrideRequest,
+    SubscriptionOverrideResponse,
     TenantListResponse,
     TenantStatusUpdateRequest,
     TenantStatusUpdateResponse,
@@ -92,4 +94,22 @@ async def update_tenant_status(
 ) -> TenantStatusUpdateResponse:
     return await AdminService(session=session).set_tenant_status(
         tenant_id, payload.is_active, current_user
+    )
+
+
+@router.patch(
+    "/tenants/{tenant_id}/subscription",
+    response_model=SubscriptionOverrideResponse,
+    status_code=status.HTTP_200_OK,
+)
+@limiter.limit("30/hour")
+async def override_tenant_subscription(
+    request: Request,
+    tenant_id: uuid.UUID,
+    payload: SubscriptionOverrideRequest,
+    current_user: User = Depends(require_role(RoleLevel.SUPER_ADMIN)),
+    session: AsyncSession = Depends(get_db),
+) -> SubscriptionOverrideResponse:
+    return await AdminService(session=session).override_subscription(
+        tenant_id, payload, current_user
     )
