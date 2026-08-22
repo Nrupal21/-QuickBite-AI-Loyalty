@@ -38,6 +38,8 @@ from app.schemas.admin import (
     ForceLogoutResponse,
     GmbSyncResponse,
     TenantListResponse,
+    TenantStatusUpdateRequest,  # noqa: F401 — imported for type-hint completeness, matching this file's style of importing every schema it touches; the route unpacks the payload before calling this service.
+    TenantStatusUpdateResponse,
     TenantSummary,
 )
 from app.services.auth_service import AuthService
@@ -168,3 +170,33 @@ class AdminService:
             "admin.gmb_sync.triggered", admin_id=str(admin.id), tenant_id=str(tenant_id)
         )
         return GmbSyncResponse(status="sync_queued", tenant_id=tenant_id)
+
+    async def set_tenant_status(
+        self, tenant_id: uuid.UUID, is_active: bool, admin: User
+    ) -> TenantStatusUpdateResponse:
+        result = await self.session.execute(select(Tenant).where(Tenant.id == tenant_id))
+        tenant = result.scalar_one_or_none()
+        if tenant is None:
+            raise _TENANT_NOT_FOUND
+
+        tenant.is_active = is_active
+
+        self.session.add(
+            AuditLog(
+                tenant_id=None,
+                user_id=admin.id,
+                action="admin.tenant_suspended" if not is_active else "admin.tenant_reactivated",
+                resource_type="tenant",
+                resource_id=tenant.id,
+                event_metadata=None,
+            )
+        )
+        await self.session.commit()
+
+        logger.info(
+            "admin.tenant_status_changed",
+            admin_id=str(admin.id),
+            tenant_id=str(tenant.id),
+            is_active=is_active,
+        )
+        return TenantStatusUpdateResponse(tenant_id=tenant.id, is_active=is_active)

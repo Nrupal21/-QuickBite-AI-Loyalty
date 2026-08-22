@@ -39,6 +39,7 @@ from app.core.security import decode_access_token
 from app.db import rls
 from app.db.base import get_db
 from app.db.models.customer import Customer
+from app.db.models.tenant import Tenant
 from app.db.models.user import Role, User
 
 logger = structlog.get_logger(__name__)
@@ -59,6 +60,16 @@ _ACCOUNT_DEACTIVATED = HTTPException(
         "error": {
             "code": "ACCOUNT_DEACTIVATED",
             "message": "This account has been deactivated. Contact your restaurant owner.",
+        }
+    },
+)
+
+_TENANT_SUSPENDED = HTTPException(
+    status_code=status.HTTP_403_FORBIDDEN,
+    detail={
+        "error": {
+            "code": "TENANT_SUSPENDED",
+            "message": "This restaurant's account has been suspended. Contact support.",
         }
     },
 )
@@ -222,6 +233,13 @@ async def _resolve_local(session: AsyncSession, token: str) -> Principal:
     # on every request closes that window immediately (AUTH-04 team removal).
     if not user.is_active:
         raise _ACCOUNT_DEACTIVATED
+
+    if user.tenant_id is not None:
+        tenant_result = await session.execute(
+            select(Tenant.is_active).where(Tenant.id == user.tenant_id)
+        )
+        if tenant_result.scalar_one_or_none() is False:
+            raise _TENANT_SUSPENDED
 
     _assert_not_globally_revoked(user, claims)
 

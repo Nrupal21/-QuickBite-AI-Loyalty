@@ -22,6 +22,8 @@ from app.schemas.admin import (
     ForceLogoutResponse,
     GmbSyncResponse,
     TenantListResponse,
+    TenantStatusUpdateRequest,
+    TenantStatusUpdateResponse,
 )
 from app.services.admin_service import AdminService
 
@@ -73,3 +75,21 @@ async def sync_gmb(
     session: AsyncSession = Depends(get_db),
 ) -> GmbSyncResponse:
     return await AdminService(session=session).trigger_gmb_sync(tenant_id, current_user)
+
+
+@router.patch(
+    "/tenants/{tenant_id}/status",
+    response_model=TenantStatusUpdateResponse,
+    status_code=status.HTTP_200_OK,
+)
+@limiter.limit("30/hour")
+async def update_tenant_status(
+    request: Request,
+    tenant_id: uuid.UUID,
+    payload: TenantStatusUpdateRequest,
+    current_user: User = Depends(require_role(RoleLevel.SUPER_ADMIN)),
+    session: AsyncSession = Depends(get_db),
+) -> TenantStatusUpdateResponse:
+    return await AdminService(session=session).set_tenant_status(
+        tenant_id, payload.is_active, current_user
+    )

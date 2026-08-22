@@ -36,6 +36,7 @@ from app.db import bootstrap, rls
 from app.db.models.audit import AuditLog
 from app.db.models.customer import Customer
 from app.db.models.identity_link import IdentityLink
+from app.db.models.tenant import Tenant
 from app.db.models.user import User
 
 logger = structlog.get_logger(__name__)
@@ -211,6 +212,21 @@ async def _principal_from_link(
                     }
                 },
             )
+        if user.tenant_id is not None:
+            tenant_result = await session.execute(
+                select(Tenant.is_active).where(Tenant.id == user.tenant_id)
+            )
+            if tenant_result.scalar_one_or_none() is False:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "error": {
+                            "code": "TENANT_SUSPENDED",
+                            "message": "This restaurant's account has been suspended. "
+                            "Contact support.",
+                        }
+                    },
+                )
         return Principal(
             subject_type=SubjectType.USER,
             tenant_id=user.tenant_id,

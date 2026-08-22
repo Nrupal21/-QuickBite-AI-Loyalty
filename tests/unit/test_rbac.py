@@ -144,7 +144,7 @@ async def test_sets_app_tenant_id_on_the_db_session(mocker):
     )
     user = make_user()
     token = create_access_token(user.id, TENANT_ID, "OWNER")
-    session = make_session([None, user])
+    session = make_session([None, user, True])
 
     returned = await get_current_user(make_request(token), session)
 
@@ -157,6 +157,26 @@ async def test_sets_app_tenant_id_on_the_db_session(mocker):
     assert set_config_call.args[1] == {"tenant_id": str(TENANT_ID)}
     # `true` = transaction-local, so tenant context never leaks across requests.
     assert "true" in str(set_config_call.args[0])
+
+
+@pytest.mark.asyncio
+async def test_suspended_tenant_returns_403_even_with_valid_token(mocker):
+    """A suspended tenant's already-issued, still-unexpired JWT must stop
+    working immediately — suspension is enforced here, not only hidden in
+    the admin UI."""
+    mocker.patch(
+        "app.api.v1.dependencies.auth.cache_service.exists", AsyncMock(return_value=False)
+    )
+    user = make_user()
+    token = create_access_token(user.id, TENANT_ID, "OWNER")
+    # set_config, select(User), select(Tenant.is_active) — in that order.
+    session = make_session([None, user, False])
+
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user(make_request(token), session)
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail["error"]["code"] == "TENANT_SUSPENDED"
 
 
 @pytest.mark.asyncio

@@ -226,3 +226,54 @@ async def test_trigger_gmb_sync_unknown_tenant_returns_404(mocker):
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail["error"]["code"] == "TENANT_NOT_FOUND"
+
+
+# --- set_tenant_status -------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_suspend_tenant_flips_is_active_and_audit_logs():
+    admin = make_admin()
+    tenant = make_tenant(is_active=True)
+    session = make_session([tenant])
+
+    response = await AdminService(session=session).set_tenant_status(
+        tenant.id, is_active=False, admin=admin
+    )
+
+    assert response.is_active is False
+    assert tenant.is_active is False
+    entry = added(session, AuditLog)[-1]
+    assert entry.action == "admin.tenant_suspended"
+    assert entry.resource_type == "tenant"
+    assert entry.resource_id == tenant.id
+    assert entry.tenant_id is None
+
+
+@pytest.mark.asyncio
+async def test_reactivate_tenant_audit_logs_the_right_action():
+    admin = make_admin()
+    tenant = make_tenant(is_active=False)
+    session = make_session([tenant])
+
+    response = await AdminService(session=session).set_tenant_status(
+        tenant.id, is_active=True, admin=admin
+    )
+
+    assert response.is_active is True
+    entry = added(session, AuditLog)[-1]
+    assert entry.action == "admin.tenant_reactivated"
+
+
+@pytest.mark.asyncio
+async def test_set_tenant_status_unknown_tenant_returns_404():
+    admin = make_admin()
+    session = make_session([None])
+
+    with pytest.raises(HTTPException) as exc_info:
+        await AdminService(session=session).set_tenant_status(
+            uuid.uuid4(), is_active=False, admin=admin
+        )
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail["error"]["code"] == "TENANT_NOT_FOUND"

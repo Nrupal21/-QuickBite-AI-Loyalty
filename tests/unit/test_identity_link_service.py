@@ -129,7 +129,7 @@ async def test_resolve_returns_principal_for_active_user_link():
     link = make_link(subject_type=SubjectType.USER.value)
     user = make_user()
     link.local_id = user.id
-    session = make_session([link, user])
+    session = make_session([link, user, True])
 
     principal = await svc.resolve(
         make_request(), session, AuthProvider.SUPABASE, "sub-123", {"iat": 1}
