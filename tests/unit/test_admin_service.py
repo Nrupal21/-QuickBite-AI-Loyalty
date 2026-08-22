@@ -301,6 +301,7 @@ def make_subscription(**overrides) -> Subscription:
 async def test_override_subscription_updates_status_and_audit_logs_reason():
     admin = make_admin()
     sub = make_subscription(status="active")
+    original_plan_id = sub.plan_id
     session = make_session([sub])
     payload = SubscriptionOverrideRequest(status="canceled", reason="Customer requested via support ticket #4821")
 
@@ -310,6 +311,7 @@ async def test_override_subscription_updates_status_and_audit_logs_reason():
 
     assert response.status == "canceled"
     assert sub.status == "canceled"
+    assert sub.plan_id == original_plan_id
     entry = added(session, AuditLog)[-1]
     assert entry.action == "admin.subscription_overridden"
     assert entry.event_metadata["reason"] == "Customer requested via support ticket #4821"
@@ -320,6 +322,7 @@ async def test_override_subscription_updates_status_and_audit_logs_reason():
 async def test_override_subscription_updates_plan_and_trial_end():
     admin = make_admin()
     sub = make_subscription()
+    original_status = sub.status
     new_plan_id = uuid.uuid4()
     trial_end = datetime(2026, 9, 1, tzinfo=timezone.utc)
     session = make_session([sub])
@@ -334,6 +337,7 @@ async def test_override_subscription_updates_plan_and_trial_end():
     assert response.plan_id == new_plan_id
     assert sub.plan_id == new_plan_id
     assert sub.trial_ends_at == trial_end
+    assert sub.status == original_status
 
 
 @pytest.mark.asyncio
