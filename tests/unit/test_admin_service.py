@@ -26,8 +26,8 @@ from fastapi import HTTPException
 from app.db.models.audit import AuditLog
 from app.db.models.subscription import Subscription
 from app.db.models.tenant import Tenant
-from app.db.models.user import User
 from app.db.models.user import Session as UserSession
+from app.db.models.user import User
 from app.schemas.admin import AuditLogFilters, SubscriptionOverrideRequest
 from app.services.admin_service import AdminService
 
