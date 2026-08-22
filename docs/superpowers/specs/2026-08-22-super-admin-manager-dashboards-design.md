@@ -145,30 +145,38 @@ per-page-script convention — `dashboard.js`, `loyalty-analytics.js`, etc.)
 plus a shared `admin-shell.js` mirroring `dashboard-shell.js`'s structure
 (same session-read pattern, same account-sheet, different nav item list).
 
-## Sub-project B — Manager-Scoped Dashboard (frontend-only)
+## Sub-project B — Manager-Scoped Dashboard
 
-No backend change — RBAC already correctly scopes billing/team-invite/
-GMB-connect to Owner (`require_role(RoleLevel.OWNER)` in `team.py`/
-`billing.py`), so a Manager's *requests* already 403 server-side. This is
-purely presentational: read `role` off the same `quickbite_staff_session`
-object `dashboard-shell.js` already parses (populated from `GET /auth/me` at
-login), and when `role === 'MANAGER'`, apply a `disabled` state (not
-`display:none`) to Owner-only controls, plus a small "Owner only" affordance
-(title attribute or inline glass tooltip — match existing tooltip patterns if
-any exist in `dashboard.css`, otherwise a plain `title=` attribute is
-sufficient for v1).
+**Revised after checking the live code** (this replaced an earlier version
+of this section that assumed nothing existed yet): `settings.js` already
+hides the team-invite and add-branch panels from Manager/Staff
+(`MANAGE_TEAM_ROLES = { SUPER_ADMIN: true, OWNER: true }`,
+`invitePanel.hidden = !canManageTeam`), and `google-profile.js` already
+hides the connect/disconnect buttons the same way
+(`CONNECT_ROLES = { SUPER_ADMIN: true, OWNER: true }`). Both are existing,
+working code — left untouched. Per the "keep existing hide pattern"
+decision, the *only* real gap is `billing.js`, which has no gating at all
+today, and — more importantly — `POST /billing/checkout`
+(`app/api/v1/routers/billing.py:64`) currently depends on plain
+`get_current_user`, not `require_role(RoleLevel.OWNER)`: **any Manager or
+Staff account can call it directly today**, regardless of what the UI
+shows. That is a genuine authorization gap, not a missing frontend nicety,
+so this sub-project is backend + frontend, small:
 
-Touch points (verify each still matches current markup during
-implementation, since `settings.js`/`settings.html` currently carry
-unrelated in-flight branch-management work per git status):
-- `dashboard/settings.html` + `settings.js` — team invite/remove buttons.
-- `dashboard/billing.html` + `billing.js` — plan-change/checkout actions.
-- `dashboard/google_profile.html` — GMB connect/disconnect actions.
+1. **Backend**: add `require_role(RoleLevel.OWNER)` to `create_checkout` in
+   `billing.py`, matching how `team.py`/`google` GMB routes already gate
+   their Owner-only actions. One-line dependency change, needs its own
+   403-for-Manager test.
+2. **Frontend**: `billing.js` gains a `CAN_CHECKOUT = { SUPER_ADMIN: true,
+   OWNER: true }` constant and gates the `data-choose-plan` button the same
+   way `google-profile.js` gates `data-gmb-connect`/`data-gmb-disconnect` —
+   render no button (not a disabled one) for Manager/Staff, consistent with
+   the two other pages.
 
-Add one shared helper to `dashboard-shell.js` (e.g. `applyRoleGating()`)
-that queries `[data-owner-only]` elements and disables them when the session
-role isn't `OWNER`/`SUPER_ADMIN` — a declarative attribute the three pages'
-markup opts into, rather than three copies of the same role check.
+No new shared helper, no `data-owner-only` attribute — three independent,
+tiny, page-local role checks is the pattern this codebase has already
+chosen twice; a fourth copy is more consistent than introducing a different
+abstraction for the last page.
 
 ## Testing
 
@@ -217,16 +225,27 @@ markup opts into, rather than three copies of the same role check.
 - `static/js/admin-shell.js`, `admin-tenants.js`, `admin-audit-logs.js`, `admin-monitors.js`
 - `app/api/v1/routers/pages.py` — 4 new page routes
 
-**Frontend (modified, Manager gating only):**
-- `static/js/dashboard-shell.js` — `applyRoleGating()` helper
-- `app/templates/dashboard/settings.html`, `dashboard/billing.html`, `dashboard/google_profile.html` — `data-owner-only` attributes
-- `static/js/settings.js`, `static/js/billing.js` — wire the new helper (coordinate with the unrelated in-flight branch-management changes already in these files per git status — additive, not a rewrite)
+**Frontend/Backend (Sub-project B, Manager gating):**
+- `app/api/v1/routers/billing.py` — `create_checkout` gains `require_role(RoleLevel.OWNER)`
+- `static/js/billing.js` — `CAN_CHECKOUT` gate on `data-choose-plan`, mirroring `google-profile.js`
+- `tests/integration/test_billing_routes.py` (or wherever billing route tests live) — new 403-for-Manager case
 
-## Open questions for the implementation plan (not blocking spec approval)
+## Resolved during planning (were open questions at spec-approval time)
 
-- Exact `billing_service.py` access pattern for the `payment` schema, to
-  mirror in the subscription-override method.
-- Whether `Base` already carries `created_at` (needed for "signups in last
-  24h/7d" on `Tenant`) — confirm before writing the health-metrics query.
-- Existing tooltip/`title` convention in `dashboard.css`, if any, for the
-  "Owner only" affordance.
+- **`payment` schema access**: `quickbite_admin_bypass` (migration 0010) was
+  only ever granted `USAGE ON SCHEMA restaurant` — it has **no** grant on
+  `payment` at all (confirmed against migration 0002, which grants the
+  `payment` schema only to `app_payment_rw`). BYPASSRLS bypasses row
+  security, not table grants (migration 0007's own docstring makes this
+  point). The subscription-override method therefore needs a new migration,
+  following migration 0015's exact precedent (which added a
+  previously-missing grant to the same role after the fact), granting
+  `quickbite_admin_bypass` `USAGE ON SCHEMA payment` +
+  `SELECT, UPDATE ON payment.subscriptions`.
+- **`created_at` on Tenant**: yes — `app/db/base.py`'s `Base` gives every
+  model `created_at`/`updated_at` for free. `Tenant.created_at` needs no new
+  column. `restaurant.tenants` is also not RLS-protected (migration 0009),
+  so the signup-rate query needs no bypass context at all — only the
+  past-due-subscription count (reading `payment.subscriptions`) does.
+- **Tooltip convention**: none exists in `dashboard.css`. Moot now — Sub-project
+  B settled on the existing hide pattern, not disabled-with-tooltip.
