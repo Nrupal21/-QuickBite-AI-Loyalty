@@ -141,6 +141,26 @@ async def test_resolve_returns_principal_for_active_user_link():
 
 
 @pytest.mark.asyncio
+async def test_resolve_rejects_suspended_tenant_behind_a_valid_link():
+    """Mirrors test_rbac.py's test_suspended_tenant_returns_403_even_with_valid_token
+    for the external (Supabase/Firebase) auth path — a suspended tenant's
+    already-issued external token must stop working immediately too."""
+    link = make_link(subject_type=SubjectType.USER.value)
+    user = make_user()
+    link.local_id = user.id
+    # get_link, select(User), select(Tenant.is_active) — in that order.
+    session = make_session([link, user, False])
+
+    with pytest.raises(HTTPException) as exc_info:
+        await svc.resolve(
+            make_request(), session, AuthProvider.SUPABASE, "sub-123", {"iat": 1}
+        )
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail["error"]["code"] == "TENANT_SUSPENDED"
+
+
+@pytest.mark.asyncio
 async def test_resolve_rejects_inactive_link():
     link = make_link(is_active=False)
     session = make_session([link])

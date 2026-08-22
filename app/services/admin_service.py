@@ -38,7 +38,6 @@ from app.schemas.admin import (
     ForceLogoutResponse,
     GmbSyncResponse,
     TenantListResponse,
-    TenantStatusUpdateRequest,  # noqa: F401 — imported for type-hint completeness, matching this file's style of importing every schema it touches; the route unpacks the payload before calling this service.
     TenantStatusUpdateResponse,
     TenantSummary,
 )
