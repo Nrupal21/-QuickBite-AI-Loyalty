@@ -350,3 +350,26 @@ async def test_override_subscription_no_subscription_returns_404():
         await AdminService(session=session).override_subscription(uuid.uuid4(), payload, admin)
 
     assert exc_info.value.status_code == 404
+
+
+# --- get_health_metrics ------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_health_metrics_aggregates_all_six_figures(mocker):
+    admin = make_admin()
+    mocker.patch(
+        "app.services.admin_service.cache_service.queue_depth", AsyncMock(return_value=7)
+    )
+    # Query order: active_tenants count, suspended_tenants count,
+    # signups_24h count, signups_7d count, past_due_subscriptions count.
+    session = make_session([12, 3, 1, 4, 2])
+
+    response = await AdminService(session=session).get_health_metrics()
+
+    assert response.active_tenants == 12
+    assert response.suspended_tenants == 3
+    assert response.signups_last_24h == 1
+    assert response.signups_last_7d == 4
+    assert response.past_due_subscriptions == 2
+    assert response.queue_depth == 7

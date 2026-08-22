@@ -21,12 +21,14 @@ via `resource_id` instead.
 """
 
 import uuid
+from datetime import datetime, timedelta, timezone
 
 import structlog
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import cache_service
 from app.db import rls
 from app.db.models.audit import AuditLog
 from app.db.models.subscription import Subscription
@@ -38,6 +40,7 @@ from app.schemas.admin import (
     AuditLogListResponse,
     ForceLogoutResponse,
     GmbSyncResponse,
+    HealthMetricsResponse,
     SubscriptionOverrideRequest,
     SubscriptionOverrideResponse,
     TenantListResponse,
@@ -260,4 +263,37 @@ class AdminService:
             plan_id=sub.plan_id,
             status=sub.status,
             trial_ends_at=sub.trial_ends_at,
+        )
+
+    async def get_health_metrics(self) -> HealthMetricsResponse:
+        now = datetime.now(timezone.utc)
+        day_ago = now - timedelta(hours=24)
+        week_ago = now - timedelta(days=7)
+
+        active_result = await self.session.execute(
+            select(func.count()).select_from(Tenant).where(Tenant.is_active.is_(True))
+        )
+        suspended_result = await self.session.execute(
+            select(func.count()).select_from(Tenant).where(Tenant.is_active.is_(False))
+        )
+        signups_24h_result = await self.session.execute(
+            select(func.count()).select_from(Tenant).where(Tenant.created_at >= day_ago)
+        )
+        signups_7d_result = await self.session.execute(
+            select(func.count()).select_from(Tenant).where(Tenant.created_at >= week_ago)
+        )
+        # payment.subscriptions is RLS-protected and only quickbite_admin_bypass
+        # (Task 1's grant) can read it cross-tenant.
+        async with rls.admin_bypass_context(self.session):
+            past_due_result = await self.session.execute(
+                select(func.count()).select_from(Subscription).where(Subscription.status == "past_due")
+            )
+
+        return HealthMetricsResponse(
+            active_tenants=active_result.scalar_one_or_none() or 0,
+            suspended_tenants=suspended_result.scalar_one_or_none() or 0,
+            signups_last_24h=signups_24h_result.scalar_one_or_none() or 0,
+            signups_last_7d=signups_7d_result.scalar_one_or_none() or 0,
+            past_due_subscriptions=past_due_result.scalar_one_or_none() or 0,
+            queue_depth=await cache_service.queue_depth(),
         )

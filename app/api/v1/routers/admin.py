@@ -21,6 +21,7 @@ from app.schemas.admin import (
     AuditLogListResponse,
     ForceLogoutResponse,
     GmbSyncResponse,
+    HealthMetricsResponse,
     SubscriptionOverrideRequest,
     SubscriptionOverrideResponse,
     TenantListResponse,
@@ -38,6 +39,16 @@ async def list_tenants(
     session: AsyncSession = Depends(get_db),
 ) -> TenantListResponse:
     return await AdminService(session=session).list_tenants()
+
+
+@router.get(
+    "/health-metrics", response_model=HealthMetricsResponse, status_code=status.HTTP_200_OK
+)
+async def get_health_metrics(
+    current_user: User = Depends(require_role(RoleLevel.SUPER_ADMIN)),
+    session: AsyncSession = Depends(get_db),
+) -> HealthMetricsResponse:
+    return await AdminService(session=session).get_health_metrics()
 
 
 @router.post(

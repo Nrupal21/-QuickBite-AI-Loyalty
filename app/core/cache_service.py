@@ -45,3 +45,11 @@ async def incr(key: str, ttl: int | None = None) -> int:
 
 async def exists(key: str) -> bool:
     return bool(await _client.exists(key))
+
+
+async def queue_depth(queue_name: str = "celery") -> int:
+    """Pending-task count for a Celery Redis-transport queue — LLEN on the
+    queue's own list key, which is how Celery's default Redis transport
+    stores an undelivered task. `celery_app.py` sets no custom queue name,
+    so "celery" is the one queue this app ever uses."""
+    return await _client.llen(queue_name)
