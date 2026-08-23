@@ -204,3 +204,25 @@ async def reviews_page(request: Request) -> HTMLResponse:
     workflow (REVIEW-02). Same no-server-side-auth-check shell as every
     other dashboard page."""
     return templates.TemplateResponse(request, "dashboard/reviews.html")
+
+
+@router.get("/admin", response_class=HTMLResponse)
+async def admin_tenants_page(request: Request) -> HTMLResponse:
+    """Super Admin tenants shell (ADMIN-01). Same no-server-side-auth-check
+    convention as every /dashboard/* page: admin-shell.js reads GET
+    /auth/me-equivalent (the sessionStorage role) and redirects to
+    /dashboard if the caller isn't SUPER_ADMIN. Every real mutation is
+    still enforced by require_role(SUPER_ADMIN) server-side regardless."""
+    return templates.TemplateResponse(request, "admin/index.html")
+
+
+@router.get("/admin/audit-logs", response_class=HTMLResponse)
+async def admin_audit_logs_page(request: Request) -> HTMLResponse:
+    """Same shell convention as admin_tenants_page above."""
+    return templates.TemplateResponse(request, "admin/audit_logs.html")
+
+
+@router.get("/admin/monitors", response_class=HTMLResponse)
+async def admin_monitors_page(request: Request) -> HTMLResponse:
+    """Same shell convention as admin_tenants_page above."""
+    return templates.TemplateResponse(request, "admin/monitors.html")
