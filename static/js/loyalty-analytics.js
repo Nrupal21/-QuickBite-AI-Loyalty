@@ -70,13 +70,17 @@
 
   // ---------- rendering ----------
 
+  function setMetric(el, text) {
+    if (!el) return;
+    el.classList.remove('qb-skel');
+    el.removeAttribute('data-metric-loading');
+    el.textContent = text;
+  }
+
   function renderMetrics(data) {
-    var stampsEl = document.querySelector('[data-metric="total_stamps_month"]');
-    var customersEl = document.querySelector('[data-metric="active_customers"]');
-    var rateEl = document.querySelector('[data-metric="redemption_rate"]');
-    if (stampsEl) stampsEl.textContent = data.total_stamps_month;
-    if (customersEl) customersEl.textContent = data.active_loyalty_customers;
-    if (rateEl) rateEl.textContent = Math.round(data.redemption_rate * 100) + '%';
+    setMetric(document.querySelector('[data-metric="total_stamps_month"]'), data.total_stamps_month);
+    setMetric(document.querySelector('[data-metric="active_customers"]'), data.active_loyalty_customers);
+    setMetric(document.querySelector('[data-metric="redemption_rate"]'), Math.round(data.redemption_rate * 100) + '%');
   }
 
   function renderHeatmap(heatmap) {
