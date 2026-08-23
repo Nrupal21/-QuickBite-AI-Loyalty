@@ -372,10 +372,19 @@ class AdminService:
             )
             fraud_rows = fraud_result.scalars().all()
 
+            # force_logout_user always writes tenant_id=None for these events
+            # (see this module's docstring) — the actually-affected tenant is
+            # stashed in event_metadata["target_tenant_id"] instead, so the
+            # cluster-detection query must group on that, not the column.
             cluster_result = await self.session.execute(
-                select(AuditLog.tenant_id, func.count().label("count"))
+                select(
+                    AuditLog.event_metadata["target_tenant_id"].astext.label(
+                        "target_tenant_id"
+                    ),
+                    func.count().label("count"),
+                )
                 .where(AuditLog.action == "admin.force_logout", AuditLog.created_at >= week_ago)
-                .group_by(AuditLog.tenant_id)
+                .group_by(AuditLog.event_metadata["target_tenant_id"].astext)
                 .having(func.count() >= 3)
             )
             clusters = cluster_result.all()
@@ -400,6 +409,12 @@ class AdminService:
                 for row in fraud_rows
             ],
             force_logout_clusters=[
-                ForceLogoutCluster(tenant_id=row.tenant_id, count=row.count) for row in clusters
+                ForceLogoutCluster(
+                    tenant_id=uuid.UUID(row.target_tenant_id)
+                    if row.target_tenant_id
+                    else None,
+                    count=row.count,
+                )
+                for row in clusters
             ],
         )

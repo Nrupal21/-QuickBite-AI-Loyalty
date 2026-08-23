@@ -68,19 +68,45 @@
 
     var sessionRows = document.querySelector('[data-session-rows]');
 
+    function buildCell(className, text) {
+      var td = document.createElement('td');
+      td.className = className;
+      td.textContent = text;
+      return td;
+    }
+
     function renderSessions(sessions) {
-      sessionRows.innerHTML = sessions.map(function (s) {
-        return '<tr class="border-b border-outline-variant/10">' +
-          '<td class="px-5 py-3 font-mono text-xs">' + s.user_id + '</td>' +
-          '<td class="px-5 py-3 font-mono text-xs">' + (s.tenant_id || '—') + '</td>' +
-          '<td class="px-5 py-3 text-brand-muted text-xs">' + s.user_agent + '</td>' +
-          '<td class="px-5 py-3 text-brand-muted text-xs">' + new Date(s.expires_at).toLocaleString() + '</td>' +
-          '<td class="px-5 py-3">' +
-          (s.revoked
-            ? '<span class="text-xs text-brand-muted">Revoked</span>'
-            : '<button type="button" class="qb-program-action" data-force-logout="' + s.user_id + '">Force logout</button>') +
-          '</td></tr>';
-      }).join('');
+      sessionRows.innerHTML = '';
+      sessions.forEach(function (s) {
+        var tr = document.createElement('tr');
+        tr.className = 'border-b border-outline-variant/10';
+
+        tr.appendChild(buildCell('px-5 py-3 font-mono text-xs', s.user_id));
+        tr.appendChild(buildCell('px-5 py-3 font-mono text-xs', s.tenant_id || '—'));
+        tr.appendChild(buildCell('px-5 py-3 text-brand-muted text-xs', s.user_agent));
+        tr.appendChild(
+          buildCell('px-5 py-3 text-brand-muted text-xs', new Date(s.expires_at).toLocaleString())
+        );
+
+        var actionCell = document.createElement('td');
+        actionCell.className = 'px-5 py-3';
+        if (s.revoked) {
+          var revokedSpan = document.createElement('span');
+          revokedSpan.className = 'text-xs text-brand-muted';
+          revokedSpan.textContent = 'Revoked';
+          actionCell.appendChild(revokedSpan);
+        } else {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'qb-program-action';
+          btn.dataset.forceLogout = s.user_id;
+          btn.textContent = 'Force logout';
+          actionCell.appendChild(btn);
+        }
+        tr.appendChild(actionCell);
+
+        sessionRows.appendChild(tr);
+      });
     }
 
     function loadSessions(userId) {

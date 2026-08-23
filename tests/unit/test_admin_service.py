@@ -376,7 +376,6 @@ async def test_override_subscription_no_subscription_returns_404():
 
 @pytest.mark.asyncio
 async def test_health_metrics_aggregates_all_six_figures(mocker):
-    admin = make_admin()
     mocker.patch(
         "app.services.admin_service.cache_service.queue_depth", AsyncMock(return_value=7)
     )
@@ -473,7 +472,12 @@ def make_stamp_log(**overrides) -> StampLog:
 async def test_security_flags_aggregates_all_three_lists():
     locked_user = make_target_user(failed_login_count=5, locked_until=datetime(2027, 1, 1, tzinfo=timezone.utc))
     fraud_row = make_stamp_log()
-    cluster_row = MagicMock(tenant_id=OTHER_TENANT_ID, count=4)
+    # force_logout_user always writes tenant_id=None (platform-admin event) and
+    # stashes the affected tenant in event_metadata["target_tenant_id"] instead
+    # — the real query now groups on that JSONB field, so the mocked row must
+    # match its shape (a string, not a UUID) or a regression to grouping on
+    # the tenant_id column would slip past this test undetected.
+    cluster_row = MagicMock(target_tenant_id=str(OTHER_TENANT_ID), count=4)
     session = make_session([[locked_user], [fraud_row], [cluster_row]])
 
     response = await AdminService(session=session).get_security_flags()
@@ -483,4 +487,5 @@ async def test_security_flags_aggregates_all_three_lists():
     assert len(response.fraud_flags) == 1
     assert response.fraud_flags[0].stamp_log_id == fraud_row.id
     assert len(response.force_logout_clusters) == 1
+    assert response.force_logout_clusters[0].tenant_id == OTHER_TENANT_ID
     assert response.force_logout_clusters[0].count == 4
