@@ -204,3 +204,11 @@ async def reviews_page(request: Request) -> HTMLResponse:
     workflow (REVIEW-02). Same no-server-side-auth-check shell as every
     other dashboard page."""
     return templates.TemplateResponse(request, "dashboard/reviews.html")
+
+
+@router.get("/dashboard/billing", response_class=HTMLResponse)
+async def billing_page(request: Request) -> HTMLResponse:
+    """Current subscription status + plan checkout, entirely against the
+    already-shipped /billing/* endpoints. Same no-server-side-auth-check
+    shell as every other dashboard page."""
+    return templates.TemplateResponse(request, "dashboard/billing.html")

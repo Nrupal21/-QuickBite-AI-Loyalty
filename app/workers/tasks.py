@@ -18,6 +18,12 @@ thin around `projection_service`.
 own periodic sweep, scheduled via Celery beat — both are thin wrappers
 around `review_sync_service`, same shape as `drain_projection_outbox`
 around `projection_service`.
+
+`send_campaign_task` and `process_whatsapp_webhook_event` are the WhatsApp
+marketing fan-out and webhook-event workers, thin wrappers around
+`campaign_service` the same way. Idempotency for the campaign send is a DB
+row (CampaignRecipient's unique constraint), not a Celery-level retry guard —
+same choice `post_approved_response` makes for the same reason.
 """
 
 import asyncio
@@ -143,3 +149,43 @@ def post_approved_response(self, review_response_id: str) -> str:
     outcome = asyncio.run(_run())
     logger.info("review_response.post_task_done", review_response_id=review_response_id, outcome=outcome)
     return outcome
+
+
+@celery_app.task(bind=True, max_retries=3)
+def send_campaign_task(self, campaign_id: str) -> int:
+    """Send every still-queued recipient of one campaign. Triggered by
+    `campaign_service.launch_campaign`. If Meta's rate limit is hit,
+    `send_campaign_batch` stops early (leaving the rest `queued`) rather than
+    failing them, and this task retries after a delay so the remainder goes
+    out once the tenant's messaging tier window resets.
+    """
+    import uuid  # noqa: PLC0415
+
+    from app.db.base import async_session_factory  # noqa: PLC0415
+    from app.services import campaign_service  # noqa: PLC0415
+
+    async def _run() -> int:
+        async with async_session_factory() as session:
+            return await campaign_service.send_campaign_batch(session, uuid.UUID(campaign_id))
+
+    sent = asyncio.run(_run())
+    logger.info("marketing.campaign.task_done", campaign_id=campaign_id, sent=sent)
+    return sent
+
+
+@celery_app.task(bind=True, max_retries=3)
+def process_whatsapp_webhook_event(self, payload: dict) -> None:
+    """Process one Meta WhatsApp webhook envelope off the request path, so
+    `POST /webhooks/whatsapp` can ack Meta immediately — Meta disables a
+    webhook subscription that doesn't respond fast, so status/opt-out
+    processing must never block the HTTP response.
+    """
+    from app.db.base import async_session_factory  # noqa: PLC0415
+    from app.services import campaign_service  # noqa: PLC0415
+
+    async def _run() -> None:
+        async with async_session_factory() as session:
+            await campaign_service.process_webhook_payload(session, payload)
+
+    asyncio.run(_run())
+    logger.info("marketing.webhook.task_done")

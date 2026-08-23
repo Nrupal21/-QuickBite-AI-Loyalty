@@ -98,6 +98,10 @@
         <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">link</span>
         Google Profile
       </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/billing">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">credit_card</span>
+        Billing
+      </a>
       <a class="flex items-center gap-3 bg-primary-container text-on-primary-container font-bold rounded-lg px-4 py-3 mx-2" href="/dashboard/settings" aria-current="page">
         <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
         Settings
@@ -157,6 +161,10 @@
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">settings</span>
       Settings
     </a>
+    <a class="qb-more-nav-item" href="/dashboard/billing">
+      <span class="material-symbols-outlined" aria-hidden="true">credit_card</span>
+      Billing
+    </a>
     <div class="qb-more-divider"></div>
   </div>
   <div class="qb-account-sheet-head">
@@ -209,6 +217,60 @@
     <div class="qb-glass overflow-hidden">
       <h3 class="text-lg font-bold text-brand-ink p-6 pb-4">Team Members</h3>
       <div data-team-rows>
+        <div class="qb-empty">
+          <span class="qb-skel" style="width: 8rem; height: 1rem;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add-branch panel — Owner+ only, hidden entirely for Manager/Staff
+         (POST /branches would 403 them). Not a modal: a short form that
+         never needs to interrupt or steal focus. -->
+    <div class="qb-glass p-6" data-branch-create-panel hidden>
+      <h3 class="text-lg font-bold text-brand-ink mb-1">Add a branch</h3>
+      <p class="text-sm text-brand-muted mb-4 max-w-[56ch]">
+        The address and pin here set the geofence a diner has to be inside to
+        collect a stamp — stand at the counter and use your current location
+        for the most accurate radius.
+      </p>
+      <form data-branch-form class="grid grid-cols-1 min-[640px]:grid-cols-2 gap-3">
+        <div class="qb-invite-field min-[640px]:col-span-2">
+          <label class="qb-invite-label" for="branch-name">Branch name</label>
+          <input class="qb-invite-input" id="branch-name" name="name" required
+                 placeholder="Bandra West" autocomplete="off" />
+        </div>
+        <div class="qb-invite-field min-[640px]:col-span-2">
+          <label class="qb-invite-label" for="branch-address">Address</label>
+          <input class="qb-invite-input" id="branch-address" name="address" required
+                 placeholder="123 Linking Road, Bandra West, Mumbai" autocomplete="off" />
+        </div>
+        <div class="qb-invite-field">
+          <label class="qb-invite-label" for="branch-lat">Latitude</label>
+          <input class="qb-invite-input" id="branch-lat" name="gps_lat" type="number" step="any" min="-90" max="90" required />
+        </div>
+        <div class="qb-invite-field">
+          <label class="qb-invite-label" for="branch-lng">Longitude</label>
+          <input class="qb-invite-input" id="branch-lng" name="gps_lng" type="number" step="any" min="-180" max="180" required />
+        </div>
+        <div class="min-[640px]:col-span-2">
+          <button type="button" class="qb-program-action" data-use-location>
+            <span class="material-symbols-outlined align-middle text-[1rem]" aria-hidden="true">my_location</span>
+            Use my current location
+          </button>
+        </div>
+        <div class="qb-invite-field">
+          <label class="qb-invite-label" for="branch-radius">Geofence radius (metres)</label>
+          <input class="qb-invite-input" id="branch-radius" name="geofence_radius_m" type="number" min="10" max="1000" value="100" required />
+        </div>
+        <div class="flex items-end">
+          <button type="submit" class="qb-invite-submit">Add branch</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="qb-glass overflow-hidden">
+      <h3 class="text-lg font-bold text-brand-ink p-6 pb-4">Branches</h3>
+      <div data-branch-rows>
         <div class="qb-empty">
           <span class="qb-skel" style="width: 8rem; height: 1rem;"></span>
         </div>

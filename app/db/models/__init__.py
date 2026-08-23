@@ -16,18 +16,26 @@ from app.db.models.static_data import FeatureFlag, NotificationTemplate
 from app.db.models.subscription import Subscription, SubscriptionPlan, UsageTracking
 from app.db.models.tenant import Tenant
 from app.db.models.user import Role, Session, User
+from app.db.models.whatsapp import (
+    CampaignRecipient,
+    MarketingCampaign,
+    WhatsAppBusinessAccount,
+    WhatsAppTemplate,
+)
 
 __all__ = [
     "AuditLog",
     "BillingAuditLog",
     "BillingEvent",
     "Branch",
+    "CampaignRecipient",
     "Customer",
     "CustomerReview",
     "FeatureFlag",
     "GMBProfile",
     "IdentityLink",
     "Invoice",
+    "MarketingCampaign",
     "NotificationTemplate",
     "PaymentMethod",
     "ProjectionOutbox",
@@ -41,4 +49,6 @@ __all__ = [
     "Tenant",
     "UsageTracking",
     "User",
+    "WhatsAppBusinessAccount",
+    "WhatsAppTemplate",
 ]

@@ -89,6 +89,33 @@
         ],
         "createdAt": "2026-08-21T14:25:07.985Z",
         "reason": "Operate-mode tighter type scale, same documented tradeoff as every other dashboard screen — see DESIGN.md Typography > The Tight-Ratio Rule"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "app/templates/dashboard/billing.html"
+        ],
+        "createdAt": "2026-08-21T18:43:57.261Z",
+        "reason": "Operate-mode tighter type scale, same documented tradeoff as every other dashboard screen — see DESIGN.md Typography > The Tight-Ratio Rule"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "files": [
+          "static/css/dashboard.css"
+        ],
+        "createdAt": "2026-08-22T04:37:22.729Z",
+        "reason": "mask-composite alpha trick in glass-panel::before, not a visible color choice"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "0.5rem",
+        "files": [
+          "static/css/dashboard.css"
+        ],
+        "createdAt": "2026-08-22T04:37:23.068Z",
+        "reason": "matches the dashboard screen's own existing lg radius token (0.5rem) used for the focus-visible ring"
       }
     ]
   }

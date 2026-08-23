@@ -230,6 +230,7 @@ class LoyaltyService:
             redemption.code,
             redemption.expires_at.strftime("%d %b %Y"),
             session=self.session,
+            tenant_id=branch.tenant_id,
         )
 
     async def create_reward_program(

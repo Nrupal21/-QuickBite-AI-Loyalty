@@ -1,9 +1,11 @@
-"""QuickBite — Delivery façades: email via SMTP, SMS/WhatsApp via Twilio.
+"""QuickBite — Delivery façades: email via SMTP, SMS via Twilio, WhatsApp via
+Meta's WhatsApp Business Platform (Cloud API, per-tenant BYO WABA).
 
 This module owns *routing*, not wording and not wire protocol:
 
-  copy     -> services/email_renderer.py (email) or notification_service (SMS)
-  wire     -> core/email_transport.py (SMTP/SendGrid) or the Twilio client
+  copy     -> services/email_renderer.py (email) or notification_service (SMS/WhatsApp)
+  wire     -> core/email_transport.py, the Twilio client, or campaign_service/
+              whatsapp_service (WhatsApp)
   routing  -> here
 
 Every sender is best-effort and returns a bool: a message that fails to go out
@@ -12,18 +14,29 @@ loyalty scans all keep working with the mail server down; the caller logs the
 outcome into its audit trail. Always mocked in tests — never call the real APIs
 from the suite.
 
-Email and SMS resolve copy from different layers, which is deliberate rather
-than accidental duplication: email needs a matched HTML + plaintext pair
+Email and SMS/WhatsApp resolve copy from different layers, which is deliberate
+rather than accidental duplication: email needs a matched HTML + plaintext pair
 wrapped in an on-disk layout (email_renderer), while SMS and WhatsApp are a
 single unstyled string where `notification_service`'s `{name}` formatter is
 the right tool. `notify()` below therefore serves the non-email channels only.
 
-Both Twilio calls are synchronous SDK calls pushed to a worker thread. Calling
-them inline would stall the event loop for a full HTTPS round trip on every
-OTP request — the same bug `email_transport` exists to fix on the mail side.
+WhatsApp cannot send that free-text string as-is, though: Meta requires any
+business-initiated message to use a pre-approved template. `send_whatsapp`
+sends the tenant's synced UTILITY template with the rendered body as its one
+body parameter — a tenant registers a single generic UTILITY template with
+Meta once ("{{1}}"-shaped) rather than one Meta template per notification_service
+template name, which would need re-approval from Meta on every copy change.
+Marketing broadcasts (campaign_service.send_campaign_batch) are a different,
+structured-parameter path and never go through this module.
+
+The Twilio SMS call is a synchronous SDK call pushed to a worker thread.
+Calling it inline would stall the event loop for a full HTTPS round trip on
+every OTP request — the same bug `email_transport` exists to fix on the mail
+side.
 """
 
 import asyncio
+import uuid
 from datetime import datetime
 
 import httpx
@@ -33,13 +46,16 @@ from twilio.rest import Client as TwilioClient
 
 from app.core import email_transport
 from app.core.config import settings
-from app.services import email_renderer, notification_service
+from app.core.encryption import decrypt_pii
+from app.services import campaign_service, email_renderer, notification_service
 from app.services.notification_service import (
     CHANNEL_EMAIL,
     CHANNEL_SMS,
     CHANNEL_WHATSAPP,
     RenderedMessage,
 )
+from app.services.whatsapp_service import WhatsAppSendError
+from app.services.whatsapp_service import send_template_message as _send_meta_template
 
 logger = structlog.get_logger(__name__)
 
@@ -146,31 +162,61 @@ async def send_otp_sms_via_2factor(to_phone: str, otp: str, *, template: str) ->
     return True
 
 
-async def send_whatsapp(to_phone: str, body: str, *, template: str) -> bool:
-    if not settings.TWILIO_ACCOUNT_SID or not settings.TWILIO_WHATSAPP_FROM:
-        logger.warning("whatsapp.skipped_no_credentials", template=template)
+async def send_whatsapp(
+    to_phone: str, body: str, *, template: str, tenant_id: uuid.UUID | None, session: AsyncSession
+) -> bool:
+    """Send `body` as the single body parameter of the tenant's synced
+    UTILITY template. Best-effort like every other sender here: no connected
+    WABA, no synced UTILITY template, or a Meta send error all log and return
+    False rather than raising — a diner's reward is unlocked either way."""
+    if tenant_id is None:
+        logger.error("whatsapp.skipped_no_tenant", template=template)
         return False
 
     try:
-        client = TwilioClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-        await asyncio.to_thread(
-            client.messages.create,
-            body=body,
-            from_=f"whatsapp:{settings.TWILIO_WHATSAPP_FROM}",
-            to=f"whatsapp:{to_phone}",
+        account = await campaign_service.get_connected_account(session, tenant_id)
+    except campaign_service.WhatsAppNotConnected:
+        logger.warning("whatsapp.skipped_not_connected", template=template, tenant_id=str(tenant_id))
+        return False
+
+    utility_template = await campaign_service.get_default_utility_template(session, tenant_id)
+    if utility_template is None:
+        logger.warning(
+            "whatsapp.skipped_no_utility_template", template=template, tenant_id=str(tenant_id)
         )
-    except Exception as exc:
+        return False
+
+    try:
+        await _send_meta_template(
+            account.phone_number_id,
+            decrypt_pii(account.encrypted_access_token),
+            to_phone,
+            utility_template.name,
+            utility_template.language,
+            components=[{"type": "body", "parameters": [{"type": "text", "text": body}]}],
+        )
+    except WhatsAppSendError as exc:
         logger.error("whatsapp.send_failed", template=template, error=str(exc))
         return False
-    logger.info("whatsapp.sent", template=template)
+    logger.info("whatsapp.sent", template=template, tenant_id=str(tenant_id))
     return True
 
 
-async def _dispatch(rendered: RenderedMessage, to: str, *, template: str) -> bool:
+async def _dispatch(
+    rendered: RenderedMessage,
+    to: str,
+    *,
+    template: str,
+    tenant_id: uuid.UUID | None,
+    session: AsyncSession | None,
+) -> bool:
     if rendered.channel == CHANNEL_SMS:
         return await send_sms(to, rendered.body, template=template)
     if rendered.channel == CHANNEL_WHATSAPP:
-        return await send_whatsapp(to, rendered.body, template=template)
+        if session is None:
+            logger.error("whatsapp.skipped_no_session", template=template)
+            return False
+        return await send_whatsapp(to, rendered.body, template=template, tenant_id=tenant_id, session=session)
     if rendered.channel == CHANNEL_EMAIL:
         # notification_service bodies are a single HTML fragment with no
         # plaintext twin and no layout, so sending one would ship unstyled,
@@ -190,20 +236,27 @@ async def _dispatch(rendered: RenderedMessage, to: str, *, template: str) -> boo
 
 
 async def notify(
-    template_name: str, to: str, session: AsyncSession | None = None, **context
+    template_name: str,
+    to: str,
+    session: AsyncSession | None = None,
+    *,
+    tenant_id: uuid.UUID | None = None,
+    **context,
 ) -> bool:
     """Render an SMS/WhatsApp template and deliver it on the channel it declares.
 
     `session` is optional: pass it from a request handler so a Super Admin's
     template override applies, or omit it in a Celery task that has already
-    closed its session and the built-in copy is used.
+    closed its session and the built-in copy is used. `tenant_id` is only
+    consulted on the WhatsApp channel (to find the tenant's connected WABA);
+    every SMS-channel caller can omit it.
     """
     rendered = (
         await notification_service.render(session, template_name, **context)
         if session is not None
         else notification_service.render_default(template_name, **context)
     )
-    return await _dispatch(rendered, to, template=template_name)
+    return await _dispatch(rendered, to, template=template_name, tenant_id=tenant_id, session=session)
 
 
 # --- Named senders ------------------------------------------------------
@@ -365,11 +418,14 @@ async def send_reward_unlocked_whatsapp(
     redemption_code: str,
     expires_at: str,
     session: AsyncSession | None = None,
+    *,
+    tenant_id: uuid.UUID | None = None,
 ) -> bool:
     return await notify(
         "loyalty_reward_unlocked_whatsapp",
         to_phone,
         session,
+        tenant_id=tenant_id,
         branch_name=branch_name,
         redemption_code=redemption_code,
         expires_at=expires_at,

@@ -13,7 +13,21 @@ from slowapi.errors import RateLimitExceeded
 
 from app.api.v1 import api_router
 from app.api.v1.routers.pages import router as pages_router
+from app.core.config import settings
 from app.core.rate_limiter import limiter
+
+# sentry-sdk is prod-only (requirements/prod.txt) — imported lazily so dev/test
+# environments without it installed are unaffected when SENTRY_DSN is unset.
+if settings.SENTRY_DSN:
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.ENVIRONMENT,
+        traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
+        # PII is never sent to Sentry — matches the app-wide no-PII-in-logs rule.
+        send_default_pii=False,
+    )
 
 # Structlog configuration — JSON output with timestamps and context
 structlog.configure(
@@ -55,7 +69,6 @@ async def startup_event() -> None:
     """
     from sqlalchemy import text
 
-    from app.core.config import settings  # noqa: F811
     from app.db.base import engine
 
     log.info(

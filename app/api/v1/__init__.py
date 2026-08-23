@@ -12,6 +12,8 @@ from app.api.v1.routers.customer_auth import router as customer_auth_router
 from app.api.v1.routers.customers import router as customers_router
 from app.api.v1.routers.dashboard import router as dashboard_router
 from app.api.v1.routers.loyalty import router as loyalty_router
+from app.api.v1.routers.marketing import router as marketing_router
+from app.api.v1.routers.marketing import webhook_router as marketing_webhook_router
 from app.api.v1.routers.reputation import gmb_router
 from app.api.v1.routers.reputation import router as reputation_router
 from app.api.v1.routers.team import router as team_router
@@ -31,6 +33,10 @@ api_router.include_router(customer_auth_router)
 api_router.include_router(customers_router)
 api_router.include_router(dashboard_router)
 api_router.include_router(loyalty_router)
+api_router.include_router(marketing_router)
+# Same reasoning as billing_webhook_router: /api/v1/webhooks/whatsapp stays
+# stable even if /marketing/* routes move.
+api_router.include_router(marketing_webhook_router)
 api_router.include_router(reputation_router)
 api_router.include_router(gmb_router)
 api_router.include_router(team_router)
