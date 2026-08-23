@@ -86,27 +86,31 @@
 
   var currentPlanName = null;
 
+  function setSubField(el, text) {
+    if (!el) return;
+    el.classList.remove('qb-skel');
+    el.removeAttribute('data-sub-loading');
+    el.textContent = text;
+  }
+
   function renderSubscription(sub) {
     currentPlanName = sub.plan_name;
 
-    var statusEl = document.querySelector('[data-sub-status]');
-    if (statusEl) {
-      statusEl.textContent = STATUS_LABEL[sub.status] || sub.status;
-      statusEl.className = 'qb-sub-status qb-sub-status--' + sub.status;
+    var statusWrap = document.querySelector('[data-sub-status]');
+    if (statusWrap) {
+      statusWrap.textContent = STATUS_LABEL[sub.status] || sub.status;
+      statusWrap.className = 'qb-sub-status qb-sub-status--' + sub.status;
     }
 
-    var nameEl = document.querySelector('[data-sub-plan-name]');
-    if (nameEl) nameEl.textContent = sub.plan_name || 'No active plan';
+    setSubField(document.querySelector('[data-sub-plan-name]'), sub.plan_name || 'No active plan');
 
     var metaEl = document.querySelector('[data-sub-meta]');
-    if (metaEl) {
-      if (sub.status === 'trialing' && sub.trial_ends_at) {
-        metaEl.textContent = 'Trial ends ' + formatDate(sub.trial_ends_at);
-      } else if (sub.current_period_end) {
-        metaEl.textContent = (sub.cancel_at_period_end ? 'Ends ' : 'Renews ') + formatDate(sub.current_period_end);
-      } else {
-        metaEl.textContent = 'Choose a plan below to get started.';
-      }
+    if (sub.status === 'trialing' && sub.trial_ends_at) {
+      setSubField(metaEl, 'Trial ends ' + formatDate(sub.trial_ends_at));
+    } else if (sub.current_period_end) {
+      setSubField(metaEl, (sub.cancel_at_period_end ? 'Ends ' : 'Renews ') + formatDate(sub.current_period_end));
+    } else {
+      setSubField(metaEl, 'Choose a plan below to get started.');
     }
 
     var cancelNoticeEl = document.querySelector('[data-sub-cancel-notice]');
