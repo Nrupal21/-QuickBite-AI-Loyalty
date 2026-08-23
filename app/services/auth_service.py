@@ -845,6 +845,20 @@ class AuthService:
 
         `method` is a structlog label only — it never changes what is enforced.
         """
+        # Pre-existing gap found via real end-to-end testing (not introduced by
+        # this branch — the same code exists at this branch's base commit):
+        # every AuditLog write below this point (mfa_enrollment_required,
+        # login_success, login_failed) carries the user's real tenant_id, but
+        # nothing had ever bound `app.tenant_id` for this pre-auth session —
+        # login() has no bearer token to read a tenant claim from the way
+        # get_current_user()/_resolve_local() do. RLS's WITH CHECK then
+        # rejects every one of those inserts for any account that already has
+        # a tenant (i.e. every real Owner/Manager/Staff), which breaks first
+        # login for any such account outright. Binding here, once, covers
+        # every AuditLog write for the rest of this call.
+        if user.tenant_id is not None:
+            await rls.set_tenant_context(self.session, user.tenant_id)
+
         # Checked only after the credential verifies, so it cannot be used to
         # enumerate which accounts an Owner has deactivated.
         if not user.is_active:

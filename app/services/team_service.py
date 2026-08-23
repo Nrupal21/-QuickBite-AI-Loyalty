@@ -32,6 +32,7 @@ from app.core import cache_service
 from app.core.encryption import decrypt_pii, encrypt_pii, sha256_hex
 from app.core.rbac import INVITABLE_ROLE_NAMES
 from app.core.security import generate_verification_token, hash_password
+from app.db import rls
 from app.db.models.audit import AuditLog
 from app.db.models.user import Role, Session, User
 from app.schemas.team import (
@@ -175,10 +176,18 @@ class TeamService:
                 },
             )
 
+        # Same pre-existing gap as AuthService.complete_authentication (found
+        # via real end-to-end testing, not introduced by this branch): the
+        # invitee has no session yet, so nothing had ever bound app.tenant_id
+        # before the AuditLog insert below, which carries a real tenant_id.
+        # RLS's WITH CHECK rejects it, so accepting an invite always 500s.
+        invite_tenant_id = uuid.UUID(invite["tenant_id"])
+        await rls.set_tenant_context(self.session, invite_tenant_id)
+
         role = await self._get_role_by_id(uuid.UUID(invite["role_id"]))
         user = User(
             id=uuid.uuid4(),
-            tenant_id=uuid.UUID(invite["tenant_id"]),
+            tenant_id=invite_tenant_id,
             role_id=role.id,
             email_hash=email_hash,
             encrypted_email=encrypt_pii(invite["email"]),
@@ -191,6 +200,12 @@ class TeamService:
             is_active=True,
         )
         self.session.add(user)
+        # Flush before the AuditLog insert below: AuditLog.user_id FKs onto
+        # this row, and there is no ORM relationship() connecting the two
+        # mapped classes for SQLAlchemy's automatic dependency-sort to use,
+        # so without this the two inserts can reach Postgres out of order —
+        # found via real end-to-end testing (not introduced by this branch).
+        await self.session.flush()
         self.session.add(
             AuditLog(
                 tenant_id=user.tenant_id,

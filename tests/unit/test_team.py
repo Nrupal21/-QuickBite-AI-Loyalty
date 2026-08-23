@@ -42,6 +42,7 @@ def make_result(value):
 def make_session(execute_results: list) -> MagicMock:
     session = MagicMock()
     session.commit = AsyncMock()
+    session.flush = AsyncMock()
     session.execute = AsyncMock(side_effect=[make_result(v) for v in execute_results])
     return session
 
@@ -183,7 +184,8 @@ async def test_accept_invite_creates_user_with_the_invited_role(mocker):
         AsyncMock(return_value=invite_payload(MANAGER_ROLE_ID, "MANAGER")),
     )
     mocker.patch("app.services.team_service.cache_service.delete", AsyncMock())
-    session = make_session([None, MANAGER_ROLE])  # email-exists, then role lookup
+    # email-exists, set_tenant_context's set_config, then role lookup
+    session = make_session([None, None, MANAGER_ROLE])
 
     response = await TeamService(session=session).accept_invite(
         AcceptInviteRequest(token="a" * 32, password=STRONG_PASSWORD, name="Chef Anita")
@@ -210,7 +212,8 @@ async def test_accept_invite_hashes_password_with_bcrypt(mocker):
         AsyncMock(return_value=invite_payload(STAFF_ROLE_ID, "STAFF")),
     )
     mocker.patch("app.services.team_service.cache_service.delete", AsyncMock())
-    session = make_session([None, STAFF_ROLE])
+    # email-exists, set_tenant_context's set_config, then role lookup
+    session = make_session([None, None, STAFF_ROLE])
 
     await TeamService(session=session).accept_invite(
         AcceptInviteRequest(token="a" * 32, password=STRONG_PASSWORD, name="Waiter Raj")
