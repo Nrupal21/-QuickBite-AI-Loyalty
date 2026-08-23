@@ -78,7 +78,7 @@
     </div>
     <div class="flex flex-col gap-1 font-body text-sm">
       <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/admin">
-        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors" style="font-variation-settings: 'FILL' 1;">apartment</span>
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">apartment</span>
         Tenants
       </a>
       <a class="flex items-center gap-3 bg-primary-container text-on-primary-container font-bold rounded-lg px-4 py-3 mx-2" href="/admin/audit-logs" aria-current="page">
@@ -102,12 +102,12 @@
 
 <nav class="qb-glass qb-mobile-tabbar min-[900px]:hidden" aria-label="Super Admin">
   <a class="qb-tab" href="/admin">
-    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">apartment</span>
+    <span class="material-symbols-outlined" aria-hidden="true">apartment</span>
     Tenants
   </a>
-  <a class="qb-tab" href="/admin/audit-logs" aria-current="page">
-    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">receipt_long</span>
-    Audit Logs
+  <a class="qb-tab" href="/admin/monitors">
+    <span class="material-symbols-outlined" aria-hidden="true">monitor_heart</span>
+    Monitors
   </a>
   <button type="button" class="qb-tab" data-account-trigger aria-haspopup="true" aria-expanded="false" aria-controls="more-sheet">
     <span class="material-symbols-outlined" aria-hidden="true">more_horiz</span>
@@ -118,9 +118,9 @@
 <div class="qb-account-scrim min-[900px]:hidden" data-account-scrim hidden></div>
 <div class="qb-glass qb-account-sheet" id="more-sheet" role="dialog" aria-label="Account" hidden>
   <div class="min-[900px]:hidden">
-    <a class="qb-more-nav-item" href="/admin/monitors">
-      <span class="material-symbols-outlined" aria-hidden="true">monitor_heart</span>
-      Monitors
+    <a class="qb-more-nav-item" href="/admin/audit-logs">
+      <span class="material-symbols-outlined" aria-hidden="true">receipt_long</span>
+      Audit Logs
     </a>
     <div class="qb-more-divider"></div>
   </div>
