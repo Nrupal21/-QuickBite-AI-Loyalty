@@ -35,13 +35,6 @@
     return;
   }
 
-  // Doc 3: only Owner (and Super Admin) may change the tenant's plan.
-  // Mirrors CONNECT_ROLES in google-profile.js and MANAGE_TEAM_ROLES in
-  // settings.js exactly — this codebase's established pattern is a small,
-  // page-local role check per Owner-only action, not a shared helper.
-  var CAN_CHECKOUT = { SUPER_ADMIN: true, OWNER: true };
-  var canCheckout = !!(session.role && CAN_CHECKOUT[session.role]);
-
   function showError(message) {
     var box = document.getElementById('billing-error');
     if (!box) return;
@@ -92,32 +85,40 @@
   }
 
   var currentPlanName = null;
+  var currentSub = null;
+
+  function setSubField(el, text) {
+    if (!el) return;
+    el.classList.remove('qb-skel');
+    el.removeAttribute('data-sub-loading');
+    el.textContent = text;
+  }
 
   function renderSubscription(sub) {
     currentPlanName = sub.plan_name;
+    currentSub = sub;
 
-    var statusEl = document.querySelector('[data-sub-status]');
-    if (statusEl) {
-      statusEl.textContent = STATUS_LABEL[sub.status] || sub.status;
-      statusEl.className = 'qb-sub-status qb-sub-status--' + sub.status;
+    var statusWrap = document.querySelector('[data-sub-status]');
+    if (statusWrap) {
+      statusWrap.textContent = STATUS_LABEL[sub.status] || sub.status;
+      statusWrap.className = 'qb-sub-status qb-sub-status--' + sub.status;
     }
 
-    var nameEl = document.querySelector('[data-sub-plan-name]');
-    if (nameEl) nameEl.textContent = sub.plan_name || 'No active plan';
+    setSubField(document.querySelector('[data-sub-plan-name]'), sub.plan_name || 'No active plan');
 
     var metaEl = document.querySelector('[data-sub-meta]');
-    if (metaEl) {
-      if (sub.status === 'trialing' && sub.trial_ends_at) {
-        metaEl.textContent = 'Trial ends ' + formatDate(sub.trial_ends_at);
-      } else if (sub.current_period_end) {
-        metaEl.textContent = (sub.cancel_at_period_end ? 'Ends ' : 'Renews ') + formatDate(sub.current_period_end);
-      } else {
-        metaEl.textContent = 'Choose a plan below to get started.';
-      }
+    if (sub.status === 'trialing' && sub.trial_ends_at) {
+      setSubField(metaEl, 'Trial ends ' + formatDate(sub.trial_ends_at));
+    } else if (sub.current_period_end) {
+      setSubField(metaEl, (sub.cancel_at_period_end ? 'Ends ' : 'Renews ') + formatDate(sub.current_period_end));
+    } else {
+      setSubField(metaEl, 'Choose a plan below to get started.');
     }
 
     var cancelNoticeEl = document.querySelector('[data-sub-cancel-notice]');
     if (cancelNoticeEl) cancelNoticeEl.hidden = !sub.cancel_at_period_end;
+
+    renderCancelAction(sub);
   }
 
   function loadSubscription() {
@@ -127,6 +128,64 @@
         if (error.message !== 'unauthorized') showError(error.message);
       });
   }
+
+  // ---------- cancel / reactivate ----------
+  // Only Owner reaches this page's mutating actions at all (require_role
+  // on both routes); no client-side role gate needed here the way
+  // google-profile.js/settings.js gate Manager, since this whole page's
+  // only mutating actions (checkout, cancel, reactivate) are all
+  // Owner-only and Manager/Staff simply get a 403 if they somehow reach
+  // this page and click — matching this page's existing convention of
+  // not hiding the plan grid from non-Owner roles either.
+
+  function renderCancelAction(sub) {
+    var mount = document.querySelector('[data-cancel-action]');
+    if (!mount) return;
+
+    var hasActiveOrPastDue = sub.status === 'active' || sub.status === 'past_due';
+
+    if (hasActiveOrPastDue && !sub.cancel_at_period_end) {
+      mount.innerHTML = '<button type="button" class="qb-plan-cta" data-cancel-subscription>Cancel subscription</button>';
+    } else if (sub.cancel_at_period_end) {
+      mount.innerHTML = '<button type="button" class="qb-plan-cta" data-reactivate-subscription>Keep my plan</button>';
+    } else {
+      mount.innerHTML = '';
+    }
+  }
+
+  document.addEventListener('click', function (event) {
+    var cancelBtn = event.target.closest('[data-cancel-subscription]');
+    if (cancelBtn) {
+      var endDate = currentSub && currentSub.current_period_end
+        ? formatDate(currentSub.current_period_end)
+        : 'the end of your current period';
+      if (!window.confirm('Cancel your subscription? You\'ll keep access until ' + endDate + '.')) return;
+
+      cancelBtn.disabled = true;
+      cancelBtn.textContent = 'Cancelling…';
+      apiFetch('/billing/cancel', { method: 'POST' })
+        .then(renderSubscription)
+        .catch(function (error) {
+          cancelBtn.disabled = false;
+          cancelBtn.textContent = 'Cancel subscription';
+          if (error.message !== 'unauthorized') showError(error.message);
+        });
+      return;
+    }
+
+    var reactivateBtn = event.target.closest('[data-reactivate-subscription]');
+    if (reactivateBtn) {
+      reactivateBtn.disabled = true;
+      reactivateBtn.textContent = 'Restoring…';
+      apiFetch('/billing/reactivate', { method: 'POST' })
+        .then(renderSubscription)
+        .catch(function (error) {
+          reactivateBtn.disabled = false;
+          reactivateBtn.textContent = 'Keep my plan';
+          if (error.message !== 'unauthorized') showError(error.message);
+        });
+    }
+  });
 
   // ---------- plans ----------
 
@@ -159,7 +218,7 @@
       '<p class="qb-plan-price">' + formatInr(plan.price_monthly_inr) + (plan.price_monthly_inr > 0 ? ' <small>/ month</small>' : '') + '</p>' +
       (plan.trial_days > 0 ? '<p class="qb-plan-trial">' + plan.trial_days + '-day free trial</p>' : '') +
       '<ul class="qb-plan-features">' + featureLines(plan.feature_limits || {}) + '</ul>' +
-      (isCurrent || !canCheckout
+      (isCurrent
         ? ''
         : '<button type="button" class="qb-plan-cta" data-choose-plan data-plan-id="' + plan.id + '">Choose plan</button>') +
       '</div>'
