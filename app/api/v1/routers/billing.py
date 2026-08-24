@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.dependencies.auth import get_current_user, require_role
 from app.core import razorpay_signature
 from app.core.config import settings
+from app.core.rbac import RoleLevel
 from app.core.rate_limiter import limiter
 from app.core.rbac import RoleLevel
 from app.db.base import get_db
@@ -82,6 +83,18 @@ async def create_checkout(
     )
     tenant = tenant_result.scalar_one()
     return await BillingService(session=session).create_checkout_order(tenant, payload.plan_id)
+
+
+@router.post("/cancel", response_model=SubscriptionStatusResponse, status_code=status.HTTP_200_OK)
+@limiter.limit("10/hour")
+async def cancel_subscription(
+    request: Request,
+    current_user: User = Depends(require_role(RoleLevel.OWNER)),
+    session: AsyncSession = Depends(get_db),
+) -> SubscriptionStatusResponse:
+    return await BillingService(session=session).cancel_subscription(
+        current_user.tenant_id, current_user
+    )
 
 
 @webhook_router.post(

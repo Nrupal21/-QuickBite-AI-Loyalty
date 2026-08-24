@@ -34,12 +34,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core import razorpay_signature
 from app.core.config import settings
 from app.db import rls
+from app.db.models.audit import AuditLog
 from app.db.models.outbox import ProjectionOutbox
 from app.db.models.payment import BillingEvent
 from app.db.models.static_data import PlanCategory
 from app.db.models.subscription import Subscription, SubscriptionPlan
 from app.db.models.tenant import Tenant
+from app.db.models.user import User
 from app.schemas.billing import CheckoutResponse, PlanOut, SubscriptionStatusResponse
+from app.workers.tasks import finalize_subscription_cancellation
 
 logger = structlog.get_logger(__name__)
 
@@ -97,6 +100,46 @@ _PLAN_NOT_PROVISIONED = HTTPException(
         "error": {
             "code": "PLAN_NOT_PROVISIONED",
             "message": "This plan is not yet available for checkout.",
+        }
+    },
+)
+
+_SUBSCRIPTION_NOT_FOUND = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail={
+        "error": {
+            "code": "SUBSCRIPTION_NOT_FOUND",
+            "message": "This tenant has no subscription to cancel.",
+        }
+    },
+)
+
+_SUBSCRIPTION_ALREADY_CANCELED = HTTPException(
+    status_code=status.HTTP_409_CONFLICT,
+    detail={
+        "error": {
+            "code": "SUBSCRIPTION_ALREADY_CANCELED",
+            "message": "This subscription is already scheduled to cancel.",
+        }
+    },
+)
+
+_SUBSCRIPTION_NOT_CANCELED = HTTPException(
+    status_code=status.HTTP_409_CONFLICT,
+    detail={
+        "error": {
+            "code": "SUBSCRIPTION_NOT_CANCELED",
+            "message": "This subscription isn't scheduled to cancel.",
+        }
+    },
+)
+
+_SUBSCRIPTION_ALREADY_ENDED = HTTPException(
+    status_code=status.HTTP_409_CONFLICT,
+    detail={
+        "error": {
+            "code": "SUBSCRIPTION_ALREADY_ENDED",
+            "message": "This subscription's billing period has already ended.",
         }
     },
 )
@@ -209,6 +252,52 @@ class BillingService:
             trial_ends_at=subscription.trial_ends_at,
             cancel_at_period_end=subscription.cancel_at_period_end,
         )
+
+    # --- Cancel subscription --------------------------------------------------
+
+    async def cancel_subscription(
+        self, tenant_id: uuid.UUID, admin: User
+    ) -> SubscriptionStatusResponse:
+        """Schedule a subscription for cancellation at the current period end.
+
+        Sets cancel_at_period_end locally and schedules finalize_subscription_cancellation
+        for the period's actual end, which re-checks the flag before making the real
+        Razorpay call (since Razorpay has no API to reverse a sent cancellation).
+        """
+        result = await self.session.execute(
+            select(Subscription).where(Subscription.tenant_id == tenant_id)
+        )
+        subscription = result.scalar_one_or_none()
+        if subscription is None:
+            raise _SUBSCRIPTION_NOT_FOUND
+        if subscription.cancel_at_period_end:
+            raise _SUBSCRIPTION_ALREADY_CANCELED
+
+        subscription.cancel_at_period_end = True
+        await self.session.commit()
+
+        finalize_subscription_cancellation.apply_async(
+            args=[str(subscription.id)], eta=subscription.current_period_end
+        )
+
+        self.session.add(
+            AuditLog(
+                tenant_id=tenant_id,
+                user_id=admin.id,
+                action="billing.subscription_canceled",
+                resource_type="subscription",
+                resource_id=subscription.id,
+                event_metadata=None,
+            )
+        )
+        await self.session.commit()
+
+        logger.info(
+            "billing.subscription.cancel_scheduled",
+            tenant_id=str(tenant_id),
+            subscription_id=str(subscription.id),
+        )
+        return await self.get_subscription_status(tenant_id)
 
     # --- Checkout ---------------------------------------------------------
 

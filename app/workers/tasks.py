@@ -21,6 +21,7 @@ around `projection_service`.
 """
 
 import asyncio
+from typing import Any
 
 import structlog
 
@@ -143,3 +144,83 @@ def post_approved_response(self, review_response_id: str) -> str:
     outcome = asyncio.run(_run())
     logger.info("review_response.post_task_done", review_response_id=review_response_id, outcome=outcome)
     return outcome
+
+
+# --- Billing cancellation ---------------------------------------------------
+
+_razorpay_client: Any = None
+
+
+def _get_razorpay_client() -> Any:
+    """Lazy Razorpay SDK client — mirrors billing_service._get_client.
+
+    Not constructed at import: settings default RAZORPAY_KEY_ID/SECRET to
+    empty, so an unconfigured environment (every test run) must never attempt
+    to build a client.
+    """
+    global _razorpay_client  # noqa: PLW0603
+    if _razorpay_client is not None:
+        return _razorpay_client
+    from app.core.config import settings  # noqa: PLC0415
+
+    if not (settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET):
+        return None
+    import razorpay  # noqa: PLC0415
+
+    _razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    return _razorpay_client
+
+
+async def _finalize_subscription_cancellation_async(session, subscription_id: str) -> None:
+    """Async helper for finalize_subscription_cancellation Celery task.
+
+    Checks cancel_at_period_end before calling Razorpay, so a reactivation
+    in the meantime makes this a safe no-op (idempotent under retry).
+    """
+    from sqlalchemy import select  # noqa: PLC0415
+
+    from app.db.models.subscription import Subscription  # noqa: PLC0415
+
+    result = await session.execute(
+        select(Subscription).where(Subscription.id == subscription_id)
+    )
+    subscription = result.scalar_one_or_none()
+    if subscription is None or not subscription.cancel_at_period_end:
+        # Deleted, or reactivated before this task fired — no-op, matches
+        # the idempotent-task convention every other task here follows.
+        logger.info(
+            "billing.subscription.finalize_skipped", subscription_id=subscription_id
+        )
+        return
+
+    client = _get_razorpay_client()
+    if client is None:
+        logger.warning(
+            "billing.subscription.finalize_no_client", subscription_id=subscription_id
+        )
+        return
+
+    client.subscription.cancel(
+        subscription.provider_subscription_ref, data={"cancel_at_cycle_end": 1}
+    )
+    logger.info(
+        "billing.subscription.finalized", subscription_id=subscription_id
+    )
+
+
+@celery_app.task(bind=True, max_retries=3)
+def finalize_subscription_cancellation(self, subscription_id: str) -> None:
+    """Finalize subscription cancellation at the billing period end.
+
+    Doc 3 / this session's billing spec: the real Razorpay cancel call is
+    deferred to here, scheduled for the subscription's current_period_end,
+    because Razorpay has no API to reverse a sent cancellation. Re-checks
+    cancel_at_period_end before acting so a reactivation in the meantime
+    makes this a safe no-op."""
+    from app.db.base import async_session_factory  # noqa: PLC0415
+
+    async def _run() -> None:
+        async with async_session_factory() as session:
+            await _finalize_subscription_cancellation_async(session, subscription_id)
+
+    asyncio.run(_run())
