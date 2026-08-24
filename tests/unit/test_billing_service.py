@@ -1,6 +1,12 @@
-"""Unit tests for BillingService.cancel_subscription / reactivate_subscription."""
+"""Unit tests for BillingService.cancel_subscription / reactivate_subscription.
+
+`rls.tenant_context` is mocked as a no-op for the finalize-task tests below —
+same convention test_review_sync_service.py uses for the same reason (a
+worker session with no execute-result slots reserved for the SET/RESET
+statements `tenant_context` issues)."""
 
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock
 
@@ -12,6 +18,19 @@ from app.db.models.subscription import Subscription
 from app.services.billing_service import BillingService
 
 TENANT_ID = uuid.uuid4()
+
+
+@asynccontextmanager
+async def _noop_tenant_context(session, tenant_id):  # noqa: ARG001
+    yield
+
+
+@pytest.fixture(autouse=True)
+def no_tenant_context(mocker):
+    # tasks.py imports `rls` lazily inside the function (not at module scope,
+    # per this file's own existing convention) — patch the owning module's
+    # attribute directly so the lazy `from app.db import rls` picks it up.
+    mocker.patch("app.db.rls.tenant_context", _noop_tenant_context)
 
 
 def make_result(value):
@@ -78,7 +97,7 @@ async def test_cancel_sets_flag_schedules_task_and_audit_logs(mocker):
     assert response.cancel_at_period_end is True
     assert sub.cancel_at_period_end is True
     apply_async.assert_called_once_with(
-        args=[str(sub.id)], eta=sub.current_period_end
+        args=[str(sub.id), str(TENANT_ID)], eta=sub.current_period_end
     )
     entry = added(session, AuditLog)[-1]
     assert entry.action == "billing.subscription_canceled"
@@ -127,11 +146,15 @@ async def test_finalize_calls_razorpay_when_still_pending_cancel(mocker):
     # it does not exercise async_session_factory's own `async with` wiring,
     # which is a thin, untested-elsewhere-either wrapper the Celery task
     # function itself owns (see finalize_subscription_cancellation's body).
-    await _finalize_subscription_cancellation_async(session, str(sub.id))
+    await _finalize_subscription_cancellation_async(session, str(sub.id), str(TENANT_ID))
 
+    # 0, not 1: this fires AT current_period_end, so the cycle being waited
+    # out is already over — "cancel at cycle end" here would target the
+    # *next* cycle instead. 0 cancels immediately, which is correct now.
     client.subscription.cancel.assert_called_once_with(
-        sub.provider_subscription_ref, data={"cancel_at_cycle_end": 1}
+        sub.provider_subscription_ref, data={"cancel_at_cycle_end": 0}
     )
+    assert sub.status == "canceled"
 
 
 @pytest.mark.asyncio
@@ -142,7 +165,7 @@ async def test_finalize_noops_when_reactivated_before_it_ran():
     from app.workers.tasks import _finalize_subscription_cancellation_async
 
     # Must not raise, must not need a razorpay client at all.
-    await _finalize_subscription_cancellation_async(session, str(sub.id))
+    await _finalize_subscription_cancellation_async(session, str(sub.id), str(TENANT_ID))
 
 
 # --- reactivate_subscription --------------------------------------------------

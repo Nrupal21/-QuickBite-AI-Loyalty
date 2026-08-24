@@ -109,7 +109,7 @@ _SUBSCRIPTION_NOT_FOUND = HTTPException(
     detail={
         "error": {
             "code": "SUBSCRIPTION_NOT_FOUND",
-            "message": "This tenant has no subscription to cancel.",
+            "message": "This tenant has no subscription.",
         }
     },
 )
@@ -277,7 +277,7 @@ class BillingService:
         await self.session.commit()
 
         finalize_subscription_cancellation.apply_async(
-            args=[str(subscription.id)], eta=subscription.current_period_end
+            args=[str(subscription.id), str(tenant_id)], eta=subscription.current_period_end
         )
 
         self.session.add(
@@ -532,7 +532,18 @@ class BillingService:
         current_end = entity.get("current_end")
         if current_end:
             subscription.current_period_end = datetime.fromtimestamp(int(current_end), tz=UTC)
-        subscription.cancel_at_period_end = bool(entity.get("cancel_at_cycle_end", 0))
+        # OR, not overwrite: cancel_at_period_end now also carries *local*
+        # intent (set by cancel_subscription before Razorpay is ever told —
+        # see that method's docstring for why). Razorpay's own entity always
+        # reports cancel_at_cycle_end=0 until finalize_subscription_cancellation
+        # actually sends the cancel call, so a plain overwrite here would let
+        # every ordinary webhook (a renewal charge, a plan update) silently
+        # erase a pending local cancellation before it ever reaches Razorpay.
+        # A provider-side un-cancel can't happen anyway (no such API exists),
+        # so nothing legitimate is lost by never clearing the flag from here.
+        subscription.cancel_at_period_end = (
+            bool(entity.get("cancel_at_cycle_end", 0)) or subscription.cancel_at_period_end
+        )
 
         self._enqueue_projection(
             tenant_id=tenant_id,
