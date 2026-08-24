@@ -17,7 +17,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.dependencies.auth import get_current_user, require_role
 from app.core import razorpay_signature
 from app.core.config import settings
-from app.core.rbac import RoleLevel
 from app.core.rate_limiter import limiter
 from app.core.rbac import RoleLevel
 from app.db.base import get_db
