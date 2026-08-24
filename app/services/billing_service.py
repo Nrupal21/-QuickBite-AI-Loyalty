@@ -299,6 +299,47 @@ class BillingService:
         )
         return await self.get_subscription_status(tenant_id)
 
+    async def reactivate_subscription(
+        self, tenant_id: uuid.UUID, admin: User
+    ) -> SubscriptionStatusResponse:
+        """Undo a pending subscription cancellation.
+
+        Clears cancel_at_period_end locally. Never calls Razorpay, since the
+        deferred-cancellation design means Razorpay was never told about the
+        cancellation unless the period actually ended.
+        """
+        result = await self.session.execute(
+            select(Subscription).where(Subscription.tenant_id == tenant_id)
+        )
+        subscription = result.scalar_one_or_none()
+        if subscription is None:
+            raise _SUBSCRIPTION_NOT_FOUND
+        if not subscription.cancel_at_period_end:
+            raise _SUBSCRIPTION_NOT_CANCELED
+        if subscription.current_period_end < datetime.now(UTC):
+            raise _SUBSCRIPTION_ALREADY_ENDED
+
+        subscription.cancel_at_period_end = False
+
+        self.session.add(
+            AuditLog(
+                tenant_id=tenant_id,
+                user_id=admin.id,
+                action="billing.subscription_reactivated",
+                resource_type="subscription",
+                resource_id=subscription.id,
+                event_metadata=None,
+            )
+        )
+        await self.session.commit()
+
+        logger.info(
+            "billing.subscription.reactivated",
+            tenant_id=str(tenant_id),
+            subscription_id=str(subscription.id),
+        )
+        return await self.get_subscription_status(tenant_id)
+
     # --- Checkout ---------------------------------------------------------
 
     async def create_checkout_order(self, tenant: Tenant, plan_id: uuid.UUID) -> CheckoutResponse:

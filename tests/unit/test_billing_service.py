@@ -143,3 +143,65 @@ async def test_finalize_noops_when_reactivated_before_it_ran():
 
     # Must not raise, must not need a razorpay client at all.
     await _finalize_subscription_cancellation_async(session, str(sub.id))
+
+
+# --- reactivate_subscription --------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_reactivate_clears_flag_and_audit_logs():
+    sub = make_subscription(cancel_at_period_end=True)
+    session = make_session([sub, sub, None])
+    admin = MagicMock()
+    admin.id = uuid.uuid4()
+
+    response = await BillingService(session=session).reactivate_subscription(TENANT_ID, admin)
+
+    assert response.cancel_at_period_end is False
+    assert sub.cancel_at_period_end is False
+    entry = added(session, AuditLog)[-1]
+    assert entry.action == "billing.subscription_reactivated"
+
+
+@pytest.mark.asyncio
+async def test_reactivate_not_canceled_returns_409():
+    sub = make_subscription(cancel_at_period_end=False)
+    session = make_session([sub])
+    admin = MagicMock()
+    admin.id = uuid.uuid4()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await BillingService(session=session).reactivate_subscription(TENANT_ID, admin)
+
+    assert exc_info.value.status_code == 409
+    assert exc_info.value.detail["error"]["code"] == "SUBSCRIPTION_NOT_CANCELED"
+
+
+@pytest.mark.asyncio
+async def test_reactivate_already_ended_returns_409():
+    sub = make_subscription(
+        cancel_at_period_end=True,
+        current_period_end=datetime.now(timezone.utc) - timedelta(days=1),
+    )
+    session = make_session([sub])
+    admin = MagicMock()
+    admin.id = uuid.uuid4()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await BillingService(session=session).reactivate_subscription(TENANT_ID, admin)
+
+    assert exc_info.value.status_code == 409
+    assert exc_info.value.detail["error"]["code"] == "SUBSCRIPTION_ALREADY_ENDED"
+
+
+@pytest.mark.asyncio
+async def test_reactivate_no_subscription_returns_404():
+    session = make_session([None])
+    admin = MagicMock()
+    admin.id = uuid.uuid4()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await BillingService(session=session).reactivate_subscription(TENANT_ID, admin)
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail["error"]["code"] == "SUBSCRIPTION_NOT_FOUND"
