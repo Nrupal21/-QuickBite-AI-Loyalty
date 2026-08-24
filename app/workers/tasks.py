@@ -185,10 +185,12 @@ async def _finalize_subscription_cancellation_async(
     uses for the same reason (a worker session that starts with no principal).
     """
     import uuid  # noqa: PLC0415
+    from datetime import UTC, datetime  # noqa: PLC0415
 
     from sqlalchemy import select  # noqa: PLC0415
 
     from app.db import rls  # noqa: PLC0415
+    from app.db.models.outbox import ProjectionOutbox  # noqa: PLC0415
     from app.db.models.subscription import Subscription  # noqa: PLC0415
 
     async with rls.tenant_context(session, uuid.UUID(tenant_id)):
@@ -223,7 +225,29 @@ async def _finalize_subscription_cancellation_async(
         # never arrive — the webhook remains the authoritative reconciler for
         # everything else (status transitions, period rollovers), but the one
         # fact this task itself just caused is safe to record directly.
+        # billing_service._enqueue_projection's own docstring states the
+        # outbox pattern's whole correctness argument: either both this row
+        # and the Subscription update commit, or neither does — so this row
+        # is added in the same transaction as the status write below, not
+        # bolted on afterward.
         subscription.status = "canceled"
+        session.add(
+            ProjectionOutbox(
+                tenant_id=uuid.UUID(tenant_id),
+                aggregate_type="subscription",
+                aggregate_id=subscription.id,
+                version=int(datetime.now(UTC).timestamp()),
+                event_type="subscription.finalized_cancellation",
+                payload={
+                    "status": subscription.status,
+                    "provider": subscription.provider,
+                    "current_period_end": subscription.current_period_end.isoformat()
+                    if subscription.current_period_end
+                    else None,
+                    "cancel_at_period_end": subscription.cancel_at_period_end,
+                },
+            )
+        )
         await session.commit()
         logger.info(
             "billing.subscription.finalized", subscription_id=subscription_id

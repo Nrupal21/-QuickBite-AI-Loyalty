@@ -14,6 +14,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.db.models.audit import AuditLog
+from app.db.models.outbox import ProjectionOutbox
 from app.db.models.subscription import Subscription
 from app.services.billing_service import BillingService
 
@@ -155,6 +156,10 @@ async def test_finalize_calls_razorpay_when_still_pending_cancel(mocker):
         sub.provider_subscription_ref, data={"cancel_at_cycle_end": 0}
     )
     assert sub.status == "canceled"
+    outbox_entry = added(session, ProjectionOutbox)[-1]
+    assert outbox_entry.event_type == "subscription.finalized_cancellation"
+    assert outbox_entry.tenant_id == TENANT_ID
+    assert outbox_entry.aggregate_id == sub.id
 
 
 @pytest.mark.asyncio
