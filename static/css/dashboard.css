@@ -1252,6 +1252,7 @@
   position: absolute;
   top: 1rem;
   right: 1rem;
+  z-index: 10;
   width: 2rem;
   height: 2rem;
   display: flex;
@@ -1276,6 +1277,10 @@
   padding-top: 0;
   margin-top: 0;
   border-top: none;
+  /* Keeps the tenant-name heading's box clear of .qb-admin-panel-close's
+     top-right footprint — confirmed live that without this, the close
+     button's click target got intercepted by this section's content. */
+  padding-right: 2.5rem;
 }
 
 .qb-admin-staff-row {
