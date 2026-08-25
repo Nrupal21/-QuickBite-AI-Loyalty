@@ -143,6 +143,11 @@
     });
 
     function populatePlanFilterOptions() {
+      // Remove all dynamically-added options (keep the 2 static ones: "All plans" and "No plan")
+      while (planFilter.options.length > 2) {
+        planFilter.remove(2);
+      }
+      // Now append fresh plan names from current tenant list
       var planNames = Array.from(new Set(allTenants.map(function (t) { return t.plan_name; }).filter(Boolean)));
       planNames.forEach(function (name) {
         var opt = document.createElement('option');
