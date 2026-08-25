@@ -24,8 +24,9 @@ import pytest
 from fastapi import HTTPException
 
 from app.db.models.audit import AuditLog
+from app.db.models.branch import Branch
 from app.db.models.loyalty import StampLog
-from app.db.models.subscription import Subscription
+from app.db.models.subscription import Subscription, SubscriptionPlan
 from app.db.models.tenant import Tenant
 from app.db.models.user import Session as UserSession
 from app.db.models.user import User
@@ -82,6 +83,7 @@ def make_tenant(**overrides) -> Tenant:
     defaults.update(overrides)
     tenant = Tenant(**defaults)
     tenant.id = uuid.uuid4()
+    tenant.created_at = datetime.now(timezone.utc)
     return tenant
 
 
@@ -120,11 +122,68 @@ async def test_list_tenants_returns_every_tenant_regardless_of_caller():
     not just the caller's own."""
     mine = make_tenant(name="Marco's")
     other = make_tenant(name="Rival's Diner")
-    session = make_session([[mine, other]])
+    session = make_session([
+        [mine, other],  # 1. base tenant list
+        [],             # 2. subscription+plan join (no subscriptions)
+        [],             # 3. branch counts (no branches)
+        [],             # 4. staff counts (no staff)
+        [],             # 5. last-active (no activity)
+    ])
 
     response = await AdminService(session=session).list_tenants()
 
     assert {t.name for t in response.tenants} == {"Marco's", "Rival's Diner"}
+
+
+@pytest.mark.asyncio
+async def test_list_tenants_includes_plan_subscription_status_counts_and_activity():
+    """Enriched fields: plan name + subscription status (joined), branch and
+    staff counts (grouped COUNT), last-active (grouped MAX on audit_logs)."""
+    tenant = make_tenant(name="Marco's")
+    now = datetime.now(timezone.utc)
+
+    session = make_session([
+        [tenant],                              # 1. base tenant list
+        [(tenant.id, "active", "Pro")],        # 2. subscription+plan join: (tenant_id, status, display_name)
+        [(tenant.id, 3)],                      # 3. branch counts: (tenant_id, count)
+        [(tenant.id, 5)],                      # 4. staff counts: (tenant_id, count)
+        [(tenant.id, now)],                    # 5. last-active: (tenant_id, max(created_at))
+    ])
+
+    response = await AdminService(session=session).list_tenants()
+
+    summary = response.tenants[0]
+    assert summary.plan_name == "Pro"
+    assert summary.subscription_status == "active"
+    assert summary.branch_count == 3
+    assert summary.staff_count == 5
+    assert summary.last_active_at == now
+    assert summary.created_at == tenant.created_at
+
+
+@pytest.mark.asyncio
+async def test_list_tenants_defaults_when_no_subscription_branches_or_activity():
+    """A brand-new tenant: no Subscription row yet, no branches, no staff
+    beyond the Owner who hasn't logged in again since signup, no audit
+    history at all. Every enriched field must degrade gracefully, not error."""
+    tenant = make_tenant(name="New Diner")
+
+    session = make_session([
+        [tenant],   # 1. base tenant list
+        [],         # 2. no subscription row for this tenant
+        [],         # 3. no branches
+        [],         # 4. no staff counted (edge case: even the Owner not yet counted)
+        [],         # 5. no audit history
+    ])
+
+    response = await AdminService(session=session).list_tenants()
+
+    summary = response.tenants[0]
+    assert summary.plan_name is None
+    assert summary.subscription_status == "none"
+    assert summary.branch_count == 0
+    assert summary.staff_count == 0
+    assert summary.last_active_at is None
 
 
 # --- force_logout_user ------------------------------------------------------

@@ -18,6 +18,12 @@ class TenantSummary(BaseModel):
     name: str
     onboarding_state: str
     is_active: bool
+    plan_name: str | None
+    subscription_status: str  # "none" | "trialing" | "active" | "past_due" | "canceled" | "paused"
+    branch_count: int
+    staff_count: int
+    created_at: datetime
+    last_active_at: datetime | None
 
 
 class TenantListResponse(BaseModel):

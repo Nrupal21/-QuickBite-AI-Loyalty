@@ -31,8 +31,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core import cache_service
 from app.db import rls
 from app.db.models.audit import AuditLog
+from app.db.models.branch import Branch
 from app.db.models.loyalty import StampLog
-from app.db.models.subscription import Subscription
+from app.db.models.subscription import Subscription, SubscriptionPlan
 from app.db.models.tenant import Tenant
 from app.db.models.user import Session as UserSession
 from app.db.models.user import User
@@ -89,6 +90,43 @@ class AdminService:
     async def list_tenants(self) -> TenantListResponse:
         result = await self.session.execute(select(Tenant).order_by(Tenant.name))
         tenants = result.scalars().all()
+
+        # Four grouped aggregates, one pass each — not N+1 per tenant.
+        # All four source tables are RLS-protected (restaurant.branches,
+        # restaurant.users, restaurant.audit_logs, payment.subscriptions),
+        # so this whole block runs inside the same bypass every other
+        # cross-tenant read in this file uses.
+        async with rls.admin_bypass_context(self.session):
+            sub_result = await self.session.execute(
+                select(
+                    Subscription.tenant_id, Subscription.status, SubscriptionPlan.display_name
+                ).join(SubscriptionPlan, Subscription.plan_id == SubscriptionPlan.id)
+            )
+            sub_by_tenant: dict[uuid.UUID, tuple[str, str]] = {
+                row[0]: (row[1], row[2]) for row in sub_result.all()
+            }
+
+            branch_result = await self.session.execute(
+                select(Branch.tenant_id, func.count()).group_by(Branch.tenant_id)
+            )
+            branch_counts: dict[uuid.UUID, int] = {row[0]: row[1] for row in branch_result.all()}
+
+            staff_result = await self.session.execute(
+                select(User.tenant_id, func.count())
+                .where(User.tenant_id.is_not(None))
+                .group_by(User.tenant_id)
+            )
+            staff_counts: dict[uuid.UUID, int] = {row[0]: row[1] for row in staff_result.all()}
+
+            activity_result = await self.session.execute(
+                select(AuditLog.tenant_id, func.max(AuditLog.created_at))
+                .where(AuditLog.tenant_id.is_not(None))
+                .group_by(AuditLog.tenant_id)
+            )
+            last_active: dict[uuid.UUID, datetime] = {
+                row[0]: row[1] for row in activity_result.all()
+            }
+
         return TenantListResponse(
             tenants=[
                 TenantSummary(
@@ -97,6 +135,12 @@ class AdminService:
                     name=tenant.name,
                     onboarding_state=tenant.onboarding_state,
                     is_active=tenant.is_active,
+                    plan_name=sub_by_tenant[tenant.id][1] if tenant.id in sub_by_tenant else None,
+                    subscription_status=sub_by_tenant.get(tenant.id, ("none", None))[0],
+                    branch_count=branch_counts.get(tenant.id, 0),
+                    staff_count=staff_counts.get(tenant.id, 0),
+                    created_at=tenant.created_at,
+                    last_active_at=last_active.get(tenant.id),
                 )
                 for tenant in tenants
             ]
