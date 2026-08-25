@@ -47,6 +47,7 @@ def make_result(value):
 def make_session(execute_results: list) -> MagicMock:
     session = MagicMock()
     session.commit = AsyncMock()
+    session.flush = AsyncMock()
     session.add = MagicMock()
     session.execute = AsyncMock(side_effect=[make_result(v) for v in execute_results])
     return session
@@ -110,6 +111,39 @@ async def _noop_admin_bypass(session):  # noqa: ARG001
 @pytest.fixture(autouse=True)
 def _mock_admin_bypass(mocker):
     mocker.patch("app.services.admin_service.rls.admin_bypass_context", _noop_admin_bypass)
+
+
+def make_add_tracking_bypass(session: MagicMock):
+    """A drop-in replacement for `rls.admin_bypass_context` that records
+    whether `session.add()` was called while the context was still open.
+
+    `quickbite_admin_bypass` only has SELECT granted on
+    `restaurant.audit_logs` (migration 0010) — an `AuditLog` INSERT issued
+    while still inside `admin_bypass_context` would run under that role in
+    production and fail with `InsufficientPrivilegeError`. The regular
+    `_noop_admin_bypass` fixture can't see this ordering bug at all (it's a
+    pure no-op), so this variant exists specifically to prove the AuditLog
+    add happens *after* the bypass block has exited.
+    """
+    state = {"active": False, "add_called_while_active": False}
+    original_add = session.add
+
+    def tracking_add(*args, **kwargs):
+        if state["active"]:
+            state["add_called_while_active"] = True
+        return original_add(*args, **kwargs)
+
+    session.add = MagicMock(side_effect=tracking_add)
+
+    @asynccontextmanager
+    async def bypass(_session):  # noqa: ARG001
+        state["active"] = True
+        try:
+            yield
+        finally:
+            state["active"] = False
+
+    return bypass, state
 
 
 # --- list_tenants ---------------------------------------------------------
@@ -185,6 +219,53 @@ async def test_list_tenants_defaults_when_no_subscription_branches_or_activity()
     assert summary.last_active_at is None
 
 
+@pytest.mark.asyncio
+async def test_list_tenants_branch_and_staff_counts_filter_soft_deleted_rows():
+    """Branch.is_active and User.is_active are soft-delete flags (a closed
+    branch or a removed team member keeps its row rather than being deleted)
+    — both aggregate queries must filter on is_active=True or they overcount."""
+    tenant = make_tenant(name="Marco's")
+    session = make_session([
+        [tenant],  # 1. base tenant list
+        [],        # 2. subscription+plan join
+        [],        # 3. branch counts
+        [],        # 4. staff counts
+        [],        # 5. last-active
+    ])
+
+    await AdminService(session=session).list_tenants()
+
+    branch_query = session.execute.await_args_list[2].args[0]
+    assert "branches.is_active" in str(branch_query.whereclause)
+
+    staff_query = session.execute.await_args_list[3].args[0]
+    assert "users.is_active" in str(staff_query.whereclause)
+
+
+@pytest.mark.asyncio
+async def test_list_tenants_staff_count_excludes_super_admin_role():
+    """Every role except USER always carries a tenant_id (User's own
+    docstring) — a SUPER_ADMIN account's tenant_id is not the tenant they
+    administer, so the staff_count query must join Role and exclude it."""
+    tenant = make_tenant(name="Marco's")
+    session = make_session([
+        [tenant],  # 1. base tenant list
+        [],        # 2. subscription+plan join
+        [],        # 3. branch counts
+        [],        # 4. staff counts
+        [],        # 5. last-active
+    ])
+
+    await AdminService(session=session).list_tenants()
+
+    staff_query = session.execute.await_args_list[3].args[0]
+    compiled_where = str(
+        staff_query.whereclause.compile(compile_kwargs={"literal_binds": True})
+    )
+    assert "roles.name" in compiled_where
+    assert "SUPER_ADMIN" in compiled_where
+
+
 # --- force_logout_user ------------------------------------------------------
 
 
@@ -220,6 +301,34 @@ async def test_force_logout_unknown_user_returns_404():
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail["error"]["code"] == "USER_NOT_FOUND"
+
+
+@pytest.mark.asyncio
+async def test_force_logout_audit_log_insert_happens_after_bypass_exits(mocker):
+    """Regression for the CRITICAL final-review finding: the AuditLog insert
+    must run after `admin_bypass_context` has exited, not while the elevated
+    role is still active — quickbite_admin_bypass only has SELECT on
+    restaurant.audit_logs, so an INSERT issued inside the block would 500 in
+    production with InsufficientPrivilegeError, and worse, only after
+    logout_all had already revoked the sessions and committed."""
+    admin = make_admin()
+    target = make_target_user()
+    mocker.patch("app.services.admin_service.AuthService.logout_all", AsyncMock())
+    session = make_session([target])
+    bypass, state = make_add_tracking_bypass(session)
+    mocker.patch("app.services.admin_service.rls.admin_bypass_context", bypass)
+
+    response = await AdminService(session=session).force_logout_user(target.id, admin)
+
+    assert state["add_called_while_active"] is False, (
+        "AuditLog was added while still inside admin_bypass_context — this "
+        "INSERT would fail with InsufficientPrivilegeError against the real "
+        "quickbite_admin_bypass role, which only has SELECT on audit_logs."
+    )
+    assert response.status == "logged_out"
+    entry = added(session, AuditLog)[-1]
+    assert entry.action == "admin.force_logout"
+    assert entry.resource_id == target.id
 
 
 # --- list_audit_logs --------------------------------------------------------
@@ -427,6 +536,38 @@ async def test_override_subscription_no_subscription_returns_404():
         await AdminService(session=session).override_subscription(uuid.uuid4(), payload, admin)
 
     assert exc_info.value.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_override_subscription_audit_log_insert_happens_after_bypass_exits(mocker):
+    """Regression for the CRITICAL final-review finding: same ordering bug as
+    force_logout_user — the AuditLog insert must run after
+    admin_bypass_context has exited, never while the elevated role (SELECT
+    only on restaurant.audit_logs) is still active."""
+    admin = make_admin()
+    sub = make_subscription(status="active")
+    session = make_session([sub])
+    bypass, state = make_add_tracking_bypass(session)
+    mocker.patch("app.services.admin_service.rls.admin_bypass_context", bypass)
+    payload = SubscriptionOverrideRequest(status="canceled", reason="Regression test")
+
+    response = await AdminService(session=session).override_subscription(
+        OTHER_TENANT_ID, payload, admin
+    )
+
+    assert state["add_called_while_active"] is False, (
+        "AuditLog was added while still inside admin_bypass_context — this "
+        "INSERT would fail with InsufficientPrivilegeError against the real "
+        "quickbite_admin_bypass role, which only has SELECT on audit_logs."
+    )
+    assert response.status == "canceled"
+    entry = added(session, AuditLog)[-1]
+    assert entry.action == "admin.subscription_overridden"
+    # The Subscription UPDATE must also be flushed while bypass is still
+    # active — payment.subscriptions is RLS-protected and the admin's own
+    # tenant context (not the override target's) would otherwise silently
+    # filter the UPDATE to zero rows once RESET ROLE has run.
+    session.flush.assert_awaited()
 
 
 # --- get_health_metrics ------------------------------------------------------

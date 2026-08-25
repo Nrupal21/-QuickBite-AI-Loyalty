@@ -94,7 +94,12 @@
       row.querySelector('[data-cell="last-active"]').textContent = formatRelative(tenant.last_active_at);
 
       row.addEventListener('click', function () {
-        openPanel(tenant);
+        openPanel(tenant, row);
+      });
+      row.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
+        event.preventDefault();
+        openPanel(tenant, row);
       });
 
       return frag;
@@ -172,15 +177,21 @@
     var panel = document.querySelector('[data-tenant-panel]');
     var panelScrim = document.querySelector('[data-panel-scrim]');
     var currentTenant = null;
+    var lastTriggerElement = null;
 
     function closePanel() {
       panel.classList.add('hidden');
       panelScrim.classList.add('hidden');
       currentTenant = null;
+      if (lastTriggerElement) {
+        lastTriggerElement.focus();
+        lastTriggerElement = null;
+      }
     }
 
-    function openPanel(tenant) {
+    function openPanel(tenant, triggerElement) {
       currentTenant = tenant;
+      lastTriggerElement = triggerElement || null;
       panel.querySelector('[data-panel-name]').textContent = tenant.name;
       panel.querySelector('[data-panel-subdomain]').textContent = tenant.subdomain;
       panel.querySelector('[data-panel-signup]').textContent = 'Signed up ' + formatDate(tenant.created_at);
@@ -192,10 +203,14 @@
       loadStaffSessions(tenant.tenant_id);
       panel.classList.remove('hidden');
       panelScrim.classList.remove('hidden');
+      panel.querySelector('[data-panel-close]').focus();
     }
 
     panel.querySelector('[data-panel-close]').addEventListener('click', closePanel);
     panelScrim.addEventListener('click', closePanel);
+    panel.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') closePanel();
+    });
 
     panel.querySelector('[data-panel-action="toggle-status"]').addEventListener('click', function () {
       if (!currentTenant) return;
@@ -259,7 +274,14 @@
       staffRowsMount.innerHTML = '';
       staffEmpty.classList.add('hidden');
       admin.apiFetch('/admin/sessions?tenant_id=' + tenantId).then(function (data) {
-        var active = data.sessions.filter(function (s) { return !s.revoked; });
+        // Backend list_sessions applies no expires_at filter (that's a
+        // reasonable server-side follow-up, out of scope here) — a session
+        // that expired weeks ago but was never explicitly revoked would
+        // otherwise still show as "active" with a working-looking Force
+        // logout button.
+        var active = data.sessions.filter(function (s) {
+          return !s.revoked && new Date(s.expires_at) > new Date();
+        });
         if (!active.length) {
           staffEmpty.classList.remove('hidden');
           return;

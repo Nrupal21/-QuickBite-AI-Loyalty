@@ -212,7 +212,7 @@
     </div>
 
     <template id="tenant-row-template">
-      <tr class="border-b border-outline-variant/10 cursor-pointer hover:bg-white/40" data-tenant-row>
+      <tr class="border-b border-outline-variant/10 cursor-pointer hover:bg-white/40" data-tenant-row tabindex="0" role="button">
         <td class="px-5 py-3">
           <p class="font-semibold text-brand-ink" data-cell="name"></p>
           <p class="text-xs text-brand-muted" data-cell="subdomain"></p>
@@ -228,7 +228,7 @@
     </template>
 
     <div class="qb-admin-panel-scrim hidden" data-panel-scrim></div>
-    <div class="qb-glass qb-admin-panel hidden" data-tenant-panel role="dialog" aria-label="Tenant detail">
+    <div class="qb-glass qb-admin-panel hidden" data-tenant-panel role="dialog" aria-modal="true" aria-label="Tenant detail">
       <button type="button" class="qb-admin-panel-close" data-panel-close aria-label="Close">
         <span class="material-symbols-outlined" aria-hidden="true">close</span>
       </button>

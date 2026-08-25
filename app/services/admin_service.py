@@ -18,6 +18,17 @@ existing `tenant_isolation_audit_logs` policy already admits NULL-tenant rows
 unconditionally (they are platform-admin events, per audit.py's docstring),
 so these inserts never need the bypass. The affected tenant/user is recorded
 via `resource_id` instead.
+
+IMPORTANT: "never needs the bypass" means these AuditLog inserts must run
+*after* any `async with rls.admin_bypass_context(...)` block has exited, not
+merely that they would work without one. `quickbite_admin_bypass` (migration
+0010) only has SELECT granted on `restaurant.audit_logs` — an
+`session.add(AuditLog(...))` + `commit()` issued while still inside the
+bypass block runs as an INSERT under that role and fails with
+`InsufficientPrivilegeError`. `force_logout_user` and `override_subscription`
+read/write bypass-only data first, capture the plain values they need into
+local variables before the block exits, then add + commit the AuditLog
+afterwards under the normal `quickbite_app` role.
 """
 
 import uuid
@@ -35,8 +46,8 @@ from app.db.models.branch import Branch
 from app.db.models.loyalty import StampLog
 from app.db.models.subscription import Subscription, SubscriptionPlan
 from app.db.models.tenant import Tenant
+from app.db.models.user import Role, User
 from app.db.models.user import Session as UserSession
-from app.db.models.user import User
 from app.schemas.admin import (
     ApiUsageDay,
     ApiUsageResponse,
@@ -106,14 +117,29 @@ class AdminService:
                 row[0]: (row[1], row[2]) for row in sub_result.all()
             }
 
+            # is_active is the soft-delete flag on both tables (see Branch.is_active
+            # / User.is_active docstrings) — a closed branch or removed team member
+            # keeps its row rather than being deleted, so both counts must filter
+            # it out or they overcount.
             branch_result = await self.session.execute(
-                select(Branch.tenant_id, func.count()).group_by(Branch.tenant_id)
+                select(Branch.tenant_id, func.count())
+                .where(Branch.is_active.is_(True))
+                .group_by(Branch.tenant_id)
             )
             branch_counts: dict[uuid.UUID, int] = {row[0]: row[1] for row in branch_result.all()}
 
+            # Every role except USER always carries a tenant_id (User's own
+            # docstring), so a SUPER_ADMIN account's tenant_id is not the tenant
+            # they administer — joining Role and excluding SUPER_ADMIN keeps this
+            # count to actual staff of the tenant.
             staff_result = await self.session.execute(
                 select(User.tenant_id, func.count())
-                .where(User.tenant_id.is_not(None))
+                .join(Role, Role.id == User.role_id)
+                .where(
+                    User.tenant_id.is_not(None),
+                    User.is_active.is_(True),
+                    Role.name != "SUPER_ADMIN",
+                )
                 .group_by(User.tenant_id)
             )
             staff_counts: dict[uuid.UUID, int] = {row[0]: row[1] for row in staff_result.all()}
@@ -158,24 +184,39 @@ class AdminService:
             # Revokes every active Session row and bumps tokens_valid_from, so
             # a still-unexpired local access token is rejected on its next use
             # too (see _assert_not_globally_revoked in api/v1/dependencies/auth.py).
+            # AuthService.logout_all commits internally — that commit still runs
+            # while the bypass role is active (session.info keeps it re-applied
+            # via _reapply_admin_bypass), so it's safe here.
             await AuthService(self.session).logout_all(target.id)
 
-            self.session.add(
-                AuditLog(
-                    tenant_id=None,
-                    user_id=admin.id,
-                    action="admin.force_logout",
-                    resource_type="user",
-                    resource_id=target.id,
-                    event_metadata={"target_tenant_id": str(target.tenant_id)},
-                )
+            # Read out plain values before the bypass block exits: `target` was
+            # loaded under the elevated role, and touching its attributes after
+            # RESET ROLE can trigger an implicit refresh query that no longer
+            # has cross-tenant visibility.
+            target_id = target.id
+            target_tenant_id = target.tenant_id
+
+        # quickbite_admin_bypass only has SELECT on restaurant.audit_logs
+        # (migration 0010) — this INSERT must run under the normal
+        # quickbite_app role, after the bypass block has exited. The existing
+        # tenant_isolation_audit_logs policy already admits tenant_id=None rows
+        # unconditionally (see this module's docstring), so no bypass is needed.
+        self.session.add(
+            AuditLog(
+                tenant_id=None,
+                user_id=admin.id,
+                action="admin.force_logout",
+                resource_type="user",
+                resource_id=target_id,
+                event_metadata={"target_tenant_id": str(target_tenant_id)},
             )
-            await self.session.commit()
+        )
+        await self.session.commit()
 
         logger.info(
-            "admin.force_logout", admin_id=str(admin.id), target_user_id=str(target.id)
+            "admin.force_logout", admin_id=str(admin.id), target_user_id=str(target_id)
         )
-        return ForceLogoutResponse(status="logged_out", user_id=target.id)
+        return ForceLogoutResponse(status="logged_out", user_id=target_id)
 
     async def list_audit_logs(self, filters: AuditLogFilters) -> AuditLogListResponse:
         async with rls.admin_bypass_context(self.session):
@@ -316,24 +357,45 @@ class AdminService:
             if payload.trial_ends_at is not None:
                 sub.trial_ends_at = payload.trial_ends_at
 
-            self.session.add(
-                AuditLog(
-                    tenant_id=None,
-                    user_id=admin.id,
-                    action="admin.subscription_overridden",
-                    resource_type="tenant",
-                    resource_id=tenant_id,
-                    event_metadata={
-                        "plan_id": str(payload.plan_id) if payload.plan_id else None,
-                        "status": payload.status,
-                        "trial_ends_at": payload.trial_ends_at.isoformat()
-                        if payload.trial_ends_at
-                        else None,
-                        "reason": payload.reason,
-                    },
-                )
+            # Flush the Subscription UPDATE while the bypass role is still
+            # active. payment.subscriptions is RLS-protected, and the admin's
+            # own request set app.tenant_id to *their* tenant (not this
+            # override's target tenant) — if this UPDATE were left to flush
+            # implicitly during the commit below (after RESET ROLE), it would
+            # run under quickbite_app and RLS would silently filter it to zero
+            # rows instead of erroring, so the override would appear to
+            # succeed but never actually write.
+            await self.session.flush()
+
+            # Read out plain values before the bypass block exits — see
+            # force_logout_user for why touching ORM attributes after
+            # RESET ROLE is unsafe to rely on.
+            sub_plan_id = sub.plan_id
+            sub_status = sub.status
+            sub_trial_ends_at = sub.trial_ends_at
+
+        # quickbite_admin_bypass only has SELECT on restaurant.audit_logs
+        # (migration 0010) — this INSERT must run under the normal
+        # quickbite_app role, after the bypass block has exited. See
+        # force_logout_user above for the same reasoning.
+        self.session.add(
+            AuditLog(
+                tenant_id=None,
+                user_id=admin.id,
+                action="admin.subscription_overridden",
+                resource_type="tenant",
+                resource_id=tenant_id,
+                event_metadata={
+                    "plan_id": str(payload.plan_id) if payload.plan_id else None,
+                    "status": payload.status,
+                    "trial_ends_at": payload.trial_ends_at.isoformat()
+                    if payload.trial_ends_at
+                    else None,
+                    "reason": payload.reason,
+                },
             )
-            await self.session.commit()
+        )
+        await self.session.commit()
 
         logger.info(
             "admin.subscription_overridden",
@@ -342,9 +404,9 @@ class AdminService:
         )
         return SubscriptionOverrideResponse(
             tenant_id=tenant_id,
-            plan_id=sub.plan_id,
-            status=sub.status,
-            trial_ends_at=sub.trial_ends_at,
+            plan_id=sub_plan_id,
+            status=sub_status,
+            trial_ends_at=sub_trial_ends_at,
         )
 
     async def get_health_metrics(self) -> HealthMetricsResponse:

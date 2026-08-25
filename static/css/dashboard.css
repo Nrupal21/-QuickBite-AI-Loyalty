@@ -1220,6 +1220,15 @@
    with .qb-glass in markup for the surface treatment, same pattern as
    every other qb-glass surface in this file. */
 
+#admin-error {
+  /* Every panel action's error (e.g. the override form's 404) fires while
+     the panel is open. Without an explicit stacking context this banner
+     sits in normal flow underneath .qb-admin-panel-scrim (210) and
+     .qb-admin-panel (220) and is invisible exactly when it matters most. */
+  position: relative;
+  z-index: 230;
+}
+
 .qb-admin-panel-scrim {
   position: fixed;
   inset: 0;
