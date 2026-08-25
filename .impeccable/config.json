@@ -116,6 +116,15 @@
         ],
         "createdAt": "2026-08-23T14:21:03.519Z",
         "reason": "DESIGN.md Tight-Ratio Rule: Operate-density type scale is intentionally tight (~1.1-1.3 ratio); this header is a verbatim copy of the already-shipped dashboard shell, same as index.html/audit_logs.html's identical sanctioned exception"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "app/templates/dashboard/billing.html"
+        ],
+        "createdAt": "2026-08-25T04:35:40.615Z",
+        "reason": "Sidebar h1/p brand-header markup (text-xl h1 / text-xs p, 1.67x ratio) copied verbatim from the already-shipped dashboard/index.html shell (confirmed byte-identical during Task 3 review) — identical pattern already live on every other /dashboard/* page (loyalty_analytics.html, settings.html, etc). Not a new design decision this task made; fixing only this page would break visual consistency with the rest of the dashboard shell."
       }
     ]
   }
