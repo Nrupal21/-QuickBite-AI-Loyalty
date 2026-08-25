@@ -1213,3 +1213,80 @@
     border-top: 1px solid var(--glass-border);
   }
 }
+
+/* -------------------------------------------------- admin detail panel */
+/* Super Admin tenant-management slide-in — a genuine right-side drawer,
+   distinct from .qb-account-sheet's small popover-menu sizing. Composes
+   with .qb-glass in markup for the surface treatment, same pattern as
+   every other qb-glass surface in this file. */
+
+.qb-admin-panel-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  background: rgba(11, 11, 13, 0.32);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+.qb-admin-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 420px;
+  max-width: 100vw;
+  z-index: 220;
+  overflow-y: auto;
+  padding: 1.5rem;
+  border-radius: 0;
+}
+
+@media (max-width: 640px) {
+  .qb-admin-panel {
+    width: 100vw;
+  }
+}
+
+.qb-admin-panel-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.qb-admin-panel-close:hover {
+  background: rgba(30, 42, 58, 0.06);
+}
+
+.qb-admin-panel-section {
+  padding-top: 1.25rem;
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.qb-admin-panel-section:first-of-type {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
+}
+
+.qb-admin-staff-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.qb-admin-staff-row:last-child {
+  border-bottom: none;
+}

@@ -172,58 +172,116 @@
       </div>
     </div>
 
+    <div class="qb-glass p-4 flex flex-wrap gap-3 items-center">
+      <input type="search" class="qb-invite-input flex-1 min-w-[200px]" placeholder="Search by name or subdomain…" data-tenant-search />
+      <select class="qb-invite-select" data-tenant-status-filter>
+        <option value="">All statuses</option>
+        <option value="active">Active</option>
+        <option value="suspended">Suspended</option>
+      </select>
+      <select class="qb-invite-select" data-tenant-plan-filter>
+        <option value="">All plans</option>
+        <option value="none">No plan</option>
+      </select>
+      <select class="qb-invite-select" data-tenant-sort>
+        <option value="signup_desc">Newest signup</option>
+        <option value="signup_asc">Oldest signup</option>
+        <option value="active_desc">Most recently active</option>
+        <option value="active_asc">Least recently active</option>
+      </select>
+    </div>
+
     <div class="qb-glass overflow-hidden">
-      <div class="p-5 border-b border-outline-variant/20">
-        <input type="search" class="qb-invite-input w-full max-w-sm" placeholder="Search by subdomain or name…" data-tenant-search />
-      </div>
       <table class="w-full text-sm">
         <thead>
           <tr class="text-left text-xs font-bold uppercase tracking-wide text-brand-muted border-b border-outline-variant/20">
             <th class="px-5 py-3">Tenant</th>
-            <th class="px-5 py-3">Subdomain</th>
-            <th class="px-5 py-3">Status</th>
-            <th class="px-5 py-3">Actions</th>
+            <th class="px-5 py-3">Plan</th>
+            <th class="px-5 py-3">Branches</th>
+            <th class="px-5 py-3">Staff</th>
+            <th class="px-5 py-3">Signed up</th>
+            <th class="px-5 py-3">Last active</th>
           </tr>
         </thead>
         <tbody data-tenant-rows></tbody>
       </table>
+      <div class="hidden p-10 text-center" data-tenant-empty>
+        <span class="qb-empty-icon material-symbols-outlined" aria-hidden="true">search_off</span>
+        <p class="text-sm font-semibold text-brand-ink mt-2">No tenants match this filter</p>
+      </div>
     </div>
 
     <template id="tenant-row-template">
-      <tr class="border-b border-outline-variant/10">
-        <td class="px-5 py-3 font-semibold text-brand-ink" data-cell="name"></td>
-        <td class="px-5 py-3 text-brand-muted" data-cell="subdomain"></td>
+      <tr class="border-b border-outline-variant/10 cursor-pointer hover:bg-white/40" data-tenant-row>
         <td class="px-5 py-3">
-          <span class="text-xs font-bold px-2.5 py-1 rounded-full" data-cell="status-badge"></span>
+          <p class="font-semibold text-brand-ink" data-cell="name"></p>
+          <p class="text-xs text-brand-muted" data-cell="subdomain"></p>
         </td>
-        <td class="px-5 py-3 flex flex-wrap gap-2">
-          <button type="button" class="qb-plan-cta" data-action="toggle-status"></button>
-          <button type="button" class="qb-program-action" data-action="toggle-override">Override plan</button>
+        <td class="px-5 py-3">
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full" data-cell="plan-badge"></span>
         </td>
-      </tr>
-      <tr class="border-b border-outline-variant/10" data-override-row hidden>
-        <td colspan="4" class="px-5 py-4">
-          <form class="qb-glass p-4 flex flex-wrap gap-3 items-end" data-override-form>
-            <div class="qb-invite-field">
-              <label class="qb-invite-label">Status</label>
-              <select class="qb-invite-select" name="status">
-                <option value="">— no change —</option>
-                <option value="trialing">Trialing</option>
-                <option value="active">Active</option>
-                <option value="past_due">Past due</option>
-                <option value="canceled">Canceled</option>
-                <option value="paused">Paused</option>
-              </select>
-            </div>
-            <div class="qb-invite-field flex-1 min-w-[240px]">
-              <label class="qb-invite-label">Reason (required)</label>
-              <input class="qb-invite-input w-full" name="reason" required minlength="3" maxlength="500" />
-            </div>
-            <button type="submit" class="qb-invite-submit">Save override</button>
-          </form>
-        </td>
+        <td class="px-5 py-3 text-brand-muted" data-cell="branch-count"></td>
+        <td class="px-5 py-3 text-brand-muted" data-cell="staff-count"></td>
+        <td class="px-5 py-3 text-brand-muted" data-cell="signup-date"></td>
+        <td class="px-5 py-3 text-brand-muted" data-cell="last-active"></td>
       </tr>
     </template>
+
+    <div class="qb-admin-panel-scrim hidden" data-panel-scrim></div>
+    <div class="qb-glass qb-admin-panel hidden" data-tenant-panel role="dialog" aria-label="Tenant detail">
+      <button type="button" class="qb-admin-panel-close" data-panel-close aria-label="Close">
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+
+      <div class="qb-admin-panel-section">
+        <h3 class="text-lg font-bold text-brand-ink" data-panel-name></h3>
+        <p class="text-sm text-brand-muted" data-panel-subdomain></p>
+        <p class="text-xs text-brand-muted mt-1" data-panel-signup></p>
+      </div>
+
+      <div class="qb-admin-panel-section">
+        <p class="text-xs font-bold uppercase tracking-wide text-brand-muted mb-2">Subscription</p>
+        <p class="text-sm mb-3" data-panel-subscription></p>
+        <form class="flex flex-wrap gap-3 items-end" data-override-form>
+          <div class="qb-invite-field">
+            <label class="qb-invite-label">Plan</label>
+            <select class="qb-invite-select" name="plan_id" data-panel-plan-select>
+              <option value="">— no change —</option>
+            </select>
+          </div>
+          <div class="qb-invite-field">
+            <label class="qb-invite-label">Status</label>
+            <select class="qb-invite-select" name="status">
+              <option value="">— no change —</option>
+              <option value="trialing">Trialing</option>
+              <option value="active">Active</option>
+              <option value="past_due">Past due</option>
+              <option value="canceled">Canceled</option>
+              <option value="paused">Paused</option>
+            </select>
+          </div>
+          <div class="qb-invite-field flex-1 min-w-[200px]">
+            <label class="qb-invite-label">Reason (required)</label>
+            <input class="qb-invite-input w-full" name="reason" required minlength="3" maxlength="500" />
+          </div>
+          <button type="submit" class="qb-invite-submit">Save override</button>
+        </form>
+      </div>
+
+      <div class="qb-admin-panel-section">
+        <p class="text-xs font-bold uppercase tracking-wide text-brand-muted mb-2">Actions</p>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="qb-program-action" data-panel-action="toggle-status"></button>
+          <button type="button" class="qb-program-action" data-panel-action="sync-gmb">Sync Google Profile</button>
+        </div>
+      </div>
+
+      <div class="qb-admin-panel-section">
+        <p class="text-xs font-bold uppercase tracking-wide text-brand-muted mb-2">Active staff sessions</p>
+        <div data-panel-staff-rows></div>
+        <p class="hidden text-sm text-brand-muted" data-panel-staff-empty>No active staff sessions.</p>
+      </div>
+    </div>
   </div>
 </main>
 
