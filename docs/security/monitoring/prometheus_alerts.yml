@@ -1,0 +1,84 @@
+# QuickBite AI + Loyalty — Prometheus alerting rules (SEC-29)
+#
+# References the counters defined in app/core/metrics.py, exposed at
+# GET /metrics (app/main.py). Load this file into Prometheus/Alertmanager's
+# `rule_files` — it is not auto-loaded by the application itself.
+#
+# Requires a `scrape_configs` entry (in prometheus.yml, not this file)
+# pointing at the deployed app's /metrics endpoint, e.g.:
+#
+#   scrape_configs:
+#     - job_name: quickbite-api
+#       metrics_path: /metrics
+#       static_configs:
+#         - targets: ["quickbite-api.internal:8000"]
+#
+# Status: rules are written and internally consistent with the metric names
+# actually emitted by the app. NOT yet deployed against a running Prometheus
+# instance — SEC-29's acceptance criterion ("200 failed auth attempts →
+# alert fires within 2 minutes") requires that live verification before
+# sign-off (see docs/security/LAUNCH_SIGNOFF.md item 16's sibling gaps).
+
+groups:
+  - name: quickbite_security
+    rules:
+      # Doc 6 SEC-29: "Sentry alert: > 50 auth-related 401s/minute". Mirrored
+      # here as a Prometheus rule too, so alerting doesn't have a single
+      # point of failure through Sentry alone.
+      - alert: QuickBiteHighFailedLoginRate
+        expr: rate(quickbite_auth_failed_logins_total[1m]) * 60 > 50
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Auth-related 401 rate exceeds 50/min"
+          description: >-
+            {{ $value | humanize }} auth-related 401 responses/min over the
+            last minute. Could be a credential-stuffing attempt, a broken
+            deploy invalidating valid sessions, or a SECRET_KEY rotation in
+            progress (expected, short-lived — see docs/RUNBOOK.md §2).
+
+      # Doc 6 SEC-29: "Prometheus alert for OTP request spike (> 100/min =
+      # possible attack)" — tracked here as OTP *verify failures*, which is
+      # the more direct fraud/abuse signal than raw request volume (a
+      # legitimate traffic spike sends OTPs that verify fine).
+      - alert: QuickBiteHighOTPFailureRate
+        expr: rate(quickbite_otp_verify_failure_total[1m]) * 60 > 100
+        for: 1m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "OTP verification failure rate exceeds 100/min"
+          description: >-
+            {{ $value | humanize }} OTP verify failures/min. See
+            docs/RUNBOOK.md §5 (OTP Abuse) — check whether this is
+            concentrated on one tenant/identifier (harassment) or spread
+            across many (scripted probing).
+
+      - alert: QuickBiteElevatedFraudScanRate
+        expr: rate(quickbite_fraud_scan_total[5m]) * 60 > 20
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Loyalty scan fraud rate (outside-geofence) is elevated"
+          description: >-
+            {{ $value | humanize }} fraudulent (outside-geofence) scans/min
+            over 5 minutes — check for a single branch/QR token being
+            targeted (docs/PENTEST_PLAN.md §7).
+
+      - alert: QuickBiteOTPDeliveryFailuresSpiking
+        expr: rate(quickbite_otp_delivery_failure_total[5m]) * 60 > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "OTP delivery (SMS/email) failure rate is elevated"
+          description: >-
+            {{ $value | humanize }} OTP delivery failures/min — check
+            Twilio/2Factor/SendGrid provider status before assuming an
+            application bug.

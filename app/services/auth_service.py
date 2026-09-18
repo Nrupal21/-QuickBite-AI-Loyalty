@@ -31,7 +31,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from zxcvbn import zxcvbn
 
-from app.core import cache_service
+from app.core import cache_service, metrics
 from app.core.config import settings
 from app.core.encryption import decrypt_pii, encrypt_pii, sha256_hex
 from app.core.security import (
@@ -1137,6 +1137,7 @@ class AuthService:
                 )
             )
             await self.session.commit()
+            metrics.JWT_REVOCATIONS_TOTAL.labels(reason="refresh_reuse_detected").inc()
             logger.warning("auth.refresh.replay_detected", user_id=str(existing.user_id))
             raise self._refresh_invalid_error()
 
@@ -1167,12 +1168,14 @@ class AuthService:
             # there is no narrower revocation available for them.
             await self._bump_tokens_valid_from(existing.user_id)
         await self.session.commit()
+        metrics.JWT_REVOCATIONS_TOTAL.labels(reason="logout").inc()
         return StatusResponse(status="logged_out")
 
     async def logout_all(self, user_id: uuid.UUID) -> StatusResponse:
         await self._revoke_all_sessions(user_id)
         await self._bump_tokens_valid_from(user_id)
         await self.session.commit()
+        metrics.JWT_REVOCATIONS_TOTAL.labels(reason="logout_all").inc()
         return StatusResponse(status="logged_out")
 
     # --- Shared helpers --------------------------------------------------

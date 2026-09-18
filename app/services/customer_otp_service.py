@@ -16,7 +16,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core import cache_service
+from app.core import cache_service, metrics
 from app.core.config import settings
 from app.core.customer_security import create_customer_token
 from app.core.encryption import sha256_hex
@@ -121,9 +121,13 @@ async def request_otp(
     await session.commit()
 
     if identifier_type == "phone":
-        await messaging_service.send_otp_sms(request.identifier, otp)
+        delivered = await messaging_service.send_otp_sms(request.identifier, otp)
+        if not delivered:
+            metrics.OTP_DELIVERY_FAILURE_TOTAL.labels(channel="sms").inc()
     else:
-        await messaging_service.send_otp_email(request.identifier, otp)
+        delivered = await messaging_service.send_otp_email(request.identifier, otp)
+        if not delivered:
+            metrics.OTP_DELIVERY_FAILURE_TOTAL.labels(channel="email").inc()
 
     logger.info("customer.otp.sent", tenant_id=str(request.tenant_id), identifier_type=identifier_type)
     return OTPSentResponse()
@@ -136,11 +140,13 @@ async def verify_otp(request: OTPVerify, session: AsyncSession) -> tuple[OTPVeri
     await rls.set_tenant_context(session, request.tenant_id)
     customer = await _get_customer(session, request.tenant_id, identifier_hash, identifier_type)
     if customer is None:
+        metrics.OTP_VERIFY_FAILURE_TOTAL.labels(reason="expired").inc()
         raise _code_expired_error()
 
     otp_key = f"otp:{request.tenant_id}:{identifier_hash}"
     stored_hash = await cache_service.get(otp_key)
     if stored_hash is None:
+        metrics.OTP_VERIFY_FAILURE_TOTAL.labels(reason="expired").inc()
         raise _code_expired_error()
 
     if sha256_hex(request.otp_code) != stored_hash:
@@ -149,6 +155,7 @@ async def verify_otp(request: OTPVerify, session: AsyncSession) -> tuple[OTPVeri
             await cache_service.delete(otp_key)
             customer.otp_attempts = 0
             await session.commit()
+            metrics.OTP_VERIFY_FAILURE_TOTAL.labels(reason="too_many_attempts").inc()
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={
@@ -159,6 +166,7 @@ async def verify_otp(request: OTPVerify, session: AsyncSession) -> tuple[OTPVeri
                 },
             )
         await session.commit()
+        metrics.OTP_VERIFY_FAILURE_TOTAL.labels(reason="invalid").inc()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={

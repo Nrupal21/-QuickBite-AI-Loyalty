@@ -65,6 +65,12 @@ aiosmtplib==3.0.1
 qrcode[pil]==7.4.2
 shapely==2.0.4
 
+# --- Observability (SEC-29) ---
+# /metrics exposition target — unlike sentry-sdk (requirements/prod.txt,
+# opt-in via SENTRY_DSN), the counters in app/core/metrics.py are
+# unconditional, so this must be a base dependency, not prod-only.
+prometheus-client==0.22.0
+
 # --- Analytics Export (NICE-04) ---
 # S3-compatible client for Cloudflare R2 uploads (app/services/storage_service.py).
 boto3==1.43.83

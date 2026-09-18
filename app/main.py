@@ -5,14 +5,21 @@ and registers the health endpoint.
 """
 
 import structlog
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 
 from app.api.v1 import api_router
 from app.api.v1.routers.pages import router as pages_router
+from app.core import metrics
+from app.core.observability import init_sentry
 from app.core.rate_limiter import limiter, rate_limit_exceeded_handler_with_tracking
+
+# No-op unless SENTRY_DSN is set — see observability.py's module docstring
+# for why this must run before the app starts handling requests, and why it
+# is safe to call unconditionally in every environment (dev/CI included).
+init_sentry()
 
 # Structlog configuration — JSON output with timestamps and context
 structlog.configure(
@@ -43,6 +50,30 @@ app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler_with_tr
 app.include_router(api_router)
 app.include_router(pages_router)  # server-rendered pages, no /api/v1 prefix
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.middleware("http")
+async def count_auth_failures(request: Request, call_next):
+    """SEC-29: every 401 under `/api/v1/auth` or bearing an `Authorization`
+    header counts toward `failed_login_rate` — a blanket response-status
+    check here, rather than instrumenting every individual `raise
+    _UNAUTHORIZED` in `app/api/v1/dependencies/auth.py`, so a new auth call
+    site can never silently miss the metric."""
+    response = await call_next(request)
+    if response.status_code == 401 and (
+        request.url.path.startswith("/api/v1/auth") or "authorization" in request.headers
+    ):
+        metrics.AUTH_FAILED_LOGINS_TOTAL.inc()
+    return response
+
+
+@app.get("/metrics")
+async def metrics_endpoint() -> Response:
+    """Prometheus scrape target (SEC-29). Not tenant/auth-scoped — same
+    trust boundary as `/health/live`, meant to be reachable only from the
+    internal scrape network, not the public internet, at the infra layer."""
+    body, content_type = metrics.render_latest()
+    return Response(content=body, media_type=content_type)
 
 
 @app.on_event("startup")
