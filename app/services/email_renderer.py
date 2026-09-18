@@ -91,6 +91,7 @@ _DEFAULT_SUBJECTS: dict[str, str] = {
     "staff_login_otp_email": "Your QuickBite sign-in code",
     "business_email_otp_email": "Verify this email for your QuickBite business",
     "welcome_email": "Your QuickBite account is ready",
+    "export_ready_email": "Your QuickBite analytics export is ready",
 }
 
 

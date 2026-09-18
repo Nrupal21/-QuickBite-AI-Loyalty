@@ -11,6 +11,7 @@ from app.api.v1.routers.catalog import router as catalog_router
 from app.api.v1.routers.customer_auth import router as customer_auth_router
 from app.api.v1.routers.customers import router as customers_router
 from app.api.v1.routers.dashboard import router as dashboard_router
+from app.api.v1.routers.export import router as export_router
 from app.api.v1.routers.loyalty import router as loyalty_router
 from app.api.v1.routers.reputation import gmb_router
 from app.api.v1.routers.reputation import router as reputation_router
@@ -30,6 +31,7 @@ api_router.include_router(catalog_router)
 api_router.include_router(customer_auth_router)
 api_router.include_router(customers_router)
 api_router.include_router(dashboard_router)
+api_router.include_router(export_router)
 api_router.include_router(loyalty_router)
 api_router.include_router(reputation_router)
 api_router.include_router(gmb_router)

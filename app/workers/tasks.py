@@ -78,6 +78,36 @@ def batch_generate_ai_responses(self) -> int:
 
 
 @celery_app.task(bind=True, max_retries=3)
+def generate_export(
+    self, tenant_id: str, requested_by_user_id: str, export_id: str, export_format: str
+) -> None:
+    """NICE-04: build the CSV/PDF analytics report, upload to R2, email the
+    signed link. Triggered by `POST /export/csv` or `POST /export/pdf`.
+
+    `export_id` is the idempotency key `export_service.generate_and_email_export`
+    checks first — a Celery retry (e.g. a transient R2/SMTP failure after the
+    upload already succeeded) must not double-upload or double-email.
+    """
+    import uuid  # noqa: PLC0415
+
+    from app.db.base import async_session_factory  # noqa: PLC0415
+    from app.services import export_service  # noqa: PLC0415
+
+    async def _run() -> None:
+        async with async_session_factory() as session:
+            await export_service.generate_and_email_export(
+                session,
+                uuid.UUID(tenant_id),
+                uuid.UUID(requested_by_user_id),
+                export_id,
+                export_format,
+            )
+
+    asyncio.run(_run())
+    logger.info("export.task_done", tenant_id=tenant_id, export_format=export_format)
+
+
+@celery_app.task(bind=True, max_retries=3)
 def sync_gmb_tenant(self, tenant_id: str) -> int:
     """Sync every connected GMB profile for one tenant. Triggered by
     `POST /admin/tenants/{id}/sync-gmb` (ADMIN-01).

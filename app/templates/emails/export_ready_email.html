@@ -1,0 +1,11 @@
+{% extends "_layout.html" %}
+
+{% block title %}Your QuickBite analytics export is ready{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 16px 0;">Your {{ export_format }} analytics export for <strong>{{ tenant_name }}</strong> is ready to download.</p>
+<p style="margin:0 0 16px 0;">
+  <a href="{{ download_url }}" style="display:inline-block;padding:10px 20px;border-radius:8px;background:#1A56DB;color:#ffffff;text-decoration:none;font-weight:600;">Download export</a>
+</p>
+<p style="margin:0;font-size:13px;color:#64748b;">This link expires in {{ expires_hours }} hours. If you didn't request this export, you can safely ignore this email.</p>
+{% endblock %}

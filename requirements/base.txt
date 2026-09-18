@@ -64,3 +64,10 @@ aiosmtplib==3.0.1
 # --- Utilities ---
 qrcode[pil]==7.4.2
 shapely==2.0.4
+
+# --- Analytics Export (NICE-04) ---
+# S3-compatible client for Cloudflare R2 uploads (app/services/storage_service.py).
+boto3==1.43.83
+# PDF report generation (app/services/export_service.py). Pure-Python — no
+# system libraries to install, unlike WeasyPrint/wkhtmltopdf.
+reportlab==4.0.9

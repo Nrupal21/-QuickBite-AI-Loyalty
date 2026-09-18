@@ -31,6 +31,8 @@ PLANS = [
             "scratch_cards": False,
             "white_label": False,
             "ai_review_replies": False,
+            "csv_export": False,
+            "pdf_export": False,
         },
     },
     {
@@ -47,6 +49,11 @@ PLANS = [
             "scratch_cards": True,
             "white_label": False,
             "ai_review_replies": True,
+            # NICE-04: "Pro: CSV only. Enterprise: CSV + PDF + scheduled
+            # monthly reports" — scheduled monthly reports not built yet,
+            # tracked as a follow-up beyond this ticket's core criteria.
+            "csv_export": True,
+            "pdf_export": False,
         },
     },
     {
@@ -63,6 +70,8 @@ PLANS = [
             "scratch_cards": True,
             "white_label": True,
             "ai_review_replies": True,
+            "csv_export": True,
+            "pdf_export": True,
         },
     },
 ]

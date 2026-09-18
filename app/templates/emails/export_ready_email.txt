@@ -1,0 +1,9 @@
+{% extends "_layout.txt" %}
+
+{% block content -%}
+Your {{ export_format }} analytics export for {{ tenant_name }} is ready to download.
+
+Download: {{ download_url }}
+
+This link expires in {{ expires_hours }} hours. If you didn't request this export, you can safely ignore this email.
+{%- endblock %}

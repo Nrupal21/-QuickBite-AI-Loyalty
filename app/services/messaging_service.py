@@ -239,6 +239,22 @@ async def send_account_locked_email(to_email: str, unlock_at: datetime) -> bool:
     )
 
 
+async def send_export_ready_email(
+    to_email: str, *, tenant_name: str, export_format: str, download_url: str, expires_hours: int
+) -> bool:
+    """NICE-04: "signed download URL emailed within 5 minutes" — the Celery
+    task's final step once the R2 upload's presigned URL exists."""
+    return await send_rendered_email(
+        "export_ready_email",
+        to_email,
+        log_event="email.export_ready",
+        tenant_name=tenant_name,
+        export_format=export_format,
+        download_url=download_url,
+        expires_hours=expires_hours,
+    )
+
+
 async def send_staff_invite_email(to_email: str, accept_url: str, role_name: str) -> bool:
     return await send_rendered_email(
         "staff_invite_email",
