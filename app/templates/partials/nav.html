@@ -296,6 +296,35 @@
       <button type="button" class="scan-btn scan-btn--primary" data-scansheet-close>Done</button>
     </div>
 
+    {# NICE-01: shown instead of "success" on every 5th valid stamp, when the
+       tenant's plan includes scratch_cards. The prize/code are already
+       decided server-side (LoyaltyService._maybe_create_scratch_card) — this
+       canvas is purely a reveal mechanic, never a decision point. #}
+    <div class="scanstep scanstep--center" data-scan-step="scratch" hidden>
+      <p class="scan-success-count">Bonus scratch card!</p>
+      <p class="scanstep-hint">Scratch to reveal your prize.</p>
+      <div class="scratch-wrap" data-scratch-wrap>
+        <div class="scratch-prize" data-scratch-prize hidden>
+          <span class="scratch-prize-sparkle" aria-hidden="true" data-scratch-sparkle>{{ icon_sparkle(20) }}</span>
+          <p class="scan-reward-label">You won</p>
+          <p class="scan-success-count" data-scratch-prize-label></p>
+          <p class="scan-reward-code" data-scratch-prize-code></p>
+        </div>
+        <canvas class="scratch-canvas" data-scratch-canvas width="280" height="160"
+                aria-label="Scratch here to reveal your prize" role="img"></canvas>
+      </div>
+      <button type="button" class="scan-btn scan-btn--primary" data-scansheet-close hidden data-scratch-done>Done</button>
+    </div>
+
+    {# NICE-01: 5th stamp landed but this tenant's plan doesn't include
+       scratch_cards — the acceptance criterion's "402 upgrade prompt"
+       instead of the scratch screen above. #}
+    <div class="scanstep scanstep--center" data-scan-step="scratch-locked" hidden>
+      <span class="scan-success-icon" aria-hidden="true">{{ icon_sparkle(32) }}</span>
+      <p class="scanstep-text">Bonus scratch cards are a Pro+ feature. Ask this restaurant's owner to upgrade to unlock them for every 5th stamp.</p>
+      <button type="button" class="scan-btn scan-btn--primary" data-scansheet-close>Done</button>
+    </div>
+
     <div class="scanstep scanstep--center" data-scan-step="error" hidden>
       <span class="scan-error-icon" aria-hidden="true">{{ icon_alert_triangle(32) }}</span>
       <p class="scanstep-text" data-scan-error-message>Something went wrong.</p>

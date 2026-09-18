@@ -1,6 +1,7 @@
 """QuickBite — Loyalty schemas: ScanRequest, ScanResponse, reward programs, redemption (LOYALTY-04)."""
 
 import uuid
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -21,6 +22,15 @@ class ScanResponse(BaseModel):
     redemption_code: str | None = None
     next_reward_at: int | None = None
     validity_days: int | None = None
+    # NICE-01: set on every 5th valid stamp. `scratch_card_id` present means
+    # "show the scratch screen for this card"; `scratch_card_locked` means
+    # "the 5th stamp landed, but this tenant's plan doesn't include
+    # scratch_cards" — the acceptance criterion's "402 upgrade prompt"
+    # signal, surfaced here rather than as an actual 402 status on the scan
+    # itself, since the stamp/geofence/rate-limit result is still a genuine
+    # 200 regardless of the scratch-card feature gate.
+    scratch_card_id: uuid.UUID | None = None
+    scratch_card_locked: bool = False
 
 
 class RewardProgramCreateRequest(BaseModel):
@@ -64,3 +74,31 @@ class RedeemCodeResponse(BaseModel):
     status: str  # always "redeemed"
     code: str
     customer_id: uuid.UUID
+
+
+class PrizePoolCreateRequest(BaseModel):
+    branch_id: uuid.UUID
+    prize_label: str = Field(min_length=1, max_length=100)
+
+
+class PrizePoolResponse(BaseModel):
+    id: uuid.UUID
+    branch_id: uuid.UUID
+    branch_name: str
+    prize_label: str
+    is_active: bool
+
+
+class ScratchCardRevealRequest(BaseModel):
+    """`scratched_percentage` is the canvas mechanic's own estimate of erased
+    area (client-computed via `getImageData` sampling) — trusted only as a
+    threshold gate, same trust level as any other client-reported UI state;
+    the actual prize was already decided server-side at card creation."""
+
+    scratched_percentage: float = Field(ge=0.0, le=1.0)
+
+
+class ScratchCardRevealResponse(BaseModel):
+    prize_label: str
+    redemption_code: str
+    revealed_at: datetime

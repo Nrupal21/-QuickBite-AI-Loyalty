@@ -6,6 +6,7 @@ is not implemented yet.
 """
 
 import hashlib
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -15,21 +16,30 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies.subscription import tenant_has_feature
-from app.core import broadcast, cache_service
+from app.core import broadcast, cache_service, metrics
 from app.core.encryption import decrypt_pii
 from app.core.security import generate_redemption_code
 from app.db import bootstrap, rls
 from app.db.models.audit import AuditLog
 from app.db.models.branch import Branch
 from app.db.models.customer import Customer
-from app.db.models.loyalty import RewardProgram, RewardRedemption, StampLog
+from app.db.models.loyalty import (
+    BranchPrizePool,
+    RewardProgram,
+    RewardRedemption,
+    ScratchCard,
+    StampLog,
+)
 from app.db.models.user import User
 from app.schemas.loyalty import (
+    PrizePoolCreateRequest,
+    PrizePoolResponse,
     RedeemCodeResponse,
     RewardProgramCreateRequest,
     RewardProgramResponse,
     RewardProgramUpdateRequest,
     ScanResponse,
+    ScratchCardRevealResponse,
 )
 from app.services import messaging_service
 from app.services.geofence_service import distance_to_branch_m, is_within_geofence
@@ -41,6 +51,12 @@ SCAN_RATE_LIMIT_TTL_SECONDS = 3600
 # tenant's plan — matches check_subscription_tier's feature_limits example
 # ("multi_branch"/"whatsapp") in subscription.py's docstring.
 WHATSAPP_FEATURE = "whatsapp"
+# NICE-01: gates the scratch-card mechanic. Matches the exact key already
+# seeded in scripts/seed_plans.py's feature_limits (True for pro/enterprise,
+# False for starter).
+SCRATCH_CARD_FEATURE = "scratch_cards"
+SCRATCH_CARD_INTERVAL = 5
+SCRATCH_CARD_REVEAL_THRESHOLD = 0.7
 
 
 class LoyaltyService:
@@ -75,6 +91,7 @@ class LoyaltyService:
                 is_fraudulent=True,
             )
             await self.session.commit()
+            metrics.FRAUD_SCAN_TOTAL.inc()
             logger.info(
                 "loyalty.scan.outside_geofence",
                 branch_id=str(branch.id),
@@ -125,6 +142,14 @@ class LoyaltyService:
         # would let a crash between the two commits award a stamp with no
         # corresponding code, or a code with no stamp to justify it.
         response, redemption = await self._apply_reward_program(branch, customer)
+
+        # NICE-01: same same-commit reasoning as the reward program above —
+        # a scratch card minted after this scan's commit could be orphaned by
+        # a crash between the two, same class of bug LOYALTY-04 already
+        # avoids for redemption codes.
+        response.scratch_card_id, response.scratch_card_locked = await self._maybe_create_scratch_card(
+            branch, customer
+        )
 
         await self.session.commit()
         await cache_service.set(rate_limit_key, "1", ttl=SCAN_RATE_LIMIT_TTL_SECONDS)
@@ -231,6 +256,185 @@ class LoyaltyService:
             redemption.expires_at.strftime("%d %b %Y"),
             session=self.session,
         )
+
+    # --- NICE-01: scratch cards -----------------------------------------
+
+    async def _maybe_create_scratch_card(
+        self, branch: Branch, customer: Customer | None
+    ) -> tuple[uuid.UUID | None, bool]:
+        """Returns `(scratch_card_id, locked)` for this scan's `ScanResponse`.
+
+        Anonymous scans (`customer is None`) never get a card — there is no
+        identity to attach the prize/redemption code to, same reasoning
+        `_apply_reward_program` already applies to reward-program progress.
+        `total_stamps_alltime` (not `current_reward_count`) is the counter
+        checked, deliberately: it never resets on a reward redemption, so the
+        "every 5th scan" cadence in the acceptance criteria holds across
+        reward cycles, not just within one.
+        """
+        if customer is None or customer.total_stamps_alltime % SCRATCH_CARD_INTERVAL != 0:
+            return None, False
+
+        if not await tenant_has_feature(self.session, branch.tenant_id, SCRATCH_CARD_FEATURE):
+            return None, True
+
+        prize_label = await self._pick_prize(branch)
+        if prize_label is None:
+            # No prize pool configured for this branch — nothing to award.
+            # Not "locked" (that means "upgrade your plan"); this is an
+            # owner setup gap, logged so it's visible without failing the scan.
+            logger.warning(
+                "loyalty.scratch_card.no_prize_pool",
+                branch_id=str(branch.id),
+                tenant_id=str(branch.tenant_id),
+            )
+            return None, False
+
+        card = ScratchCard(
+            id=uuid.uuid4(),
+            tenant_id=branch.tenant_id,
+            branch_id=branch.id,
+            customer_id=customer.id,
+            prize_label=prize_label,
+            redemption_code=generate_redemption_code(),
+            is_revealed=False,
+        )
+        self.session.add(card)
+        logger.info(
+            "loyalty.scratch_card.created",
+            branch_id=str(branch.id),
+            tenant_id=str(branch.tenant_id),
+            customer_id=str(customer.id),
+        )
+        return card.id, False
+
+    async def _pick_prize(self, branch: Branch) -> str | None:
+        """Uniform random draw over this branch's active prize pool.
+
+        `secrets.choice` (not `random.choice`) matches this codebase's
+        general preference for the `secrets` module — see
+        `generate_redemption_code`/`generate_otp_code` — even though the
+        selection itself isn't a secret; there is no meaningful downside to
+        the CSPRNG here and one fewer module convention to remember.
+        """
+        result = await self.session.execute(
+            select(BranchPrizePool.prize_label).where(
+                BranchPrizePool.branch_id == branch.id, BranchPrizePool.is_active.is_(True)
+            )
+        )
+        labels = result.scalars().all()
+        return secrets.choice(labels) if labels else None
+
+    async def reveal_scratch_card(
+        self, card_id: uuid.UUID, customer: Customer, scratched_percentage: float
+    ) -> ScratchCardRevealResponse:
+        """Customer-facing reveal — the canvas mechanic calls this once it
+        judges >= 70% of the card scratched. The prize/code were already
+        decided at card-creation time (`_maybe_create_scratch_card`); this
+        only gates *disclosure* of what was already persisted."""
+        result = await self.session.execute(select(ScratchCard).where(ScratchCard.id == card_id))
+        card = result.scalar_one_or_none()
+        # 404-for-both, same shape as _get_owned_reward_program: RLS should
+        # already hide another tenant's card, and a card belonging to a
+        # different customer within the same tenant must read identically to
+        # one that doesn't exist at all — never confirm another customer's
+        # card id is valid.
+        if card is None or card.customer_id != customer.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": {
+                        "code": "SCRATCH_CARD_NOT_FOUND",
+                        "message": "No such scratch card.",
+                    }
+                },
+            )
+
+        if card.is_revealed:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": {
+                        "code": "SCRATCH_CARD_ALREADY_REVEALED",
+                        "message": "This scratch card has already been revealed.",
+                    }
+                },
+            )
+
+        if scratched_percentage < SCRATCH_CARD_REVEAL_THRESHOLD:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error": {
+                        "code": "SCRATCH_CARD_INCOMPLETE",
+                        "message": "Keep scratching to reveal your prize.",
+                    }
+                },
+            )
+
+        card.is_revealed = True
+        card.revealed_at = datetime.now(timezone.utc)
+        await self.session.commit()
+
+        logger.info(
+            "loyalty.scratch_card.revealed",
+            tenant_id=str(customer.tenant_id),
+            card_id=str(card.id),
+        )
+        return ScratchCardRevealResponse(
+            prize_label=card.prize_label,
+            redemption_code=card.redemption_code,
+            revealed_at=card.revealed_at,
+        )
+
+    async def create_prize_pool_entry(
+        self, request: PrizePoolCreateRequest, owner: User
+    ) -> PrizePoolResponse:
+        """Owner configures the possible NICE-01 scratch-card prizes for one
+        of their branches. Same ownership-check shape as create_reward_program."""
+        branch = await self._get_branch_or_404(request.branch_id)
+
+        entry = BranchPrizePool(
+            id=uuid.uuid4(),
+            tenant_id=owner.tenant_id,
+            branch_id=request.branch_id,
+            prize_label=request.prize_label,
+            is_active=True,
+        )
+        self.session.add(entry)
+        await self.session.commit()
+
+        logger.info(
+            "loyalty.prize_pool.created",
+            tenant_id=str(owner.tenant_id),
+            branch_id=str(request.branch_id),
+        )
+        return PrizePoolResponse(
+            id=entry.id,
+            branch_id=entry.branch_id,
+            branch_name=branch.name,
+            prize_label=entry.prize_label,
+            is_active=entry.is_active,
+        )
+
+    async def list_prize_pool_entries(self) -> list[PrizePoolResponse]:
+        """RLS already scopes `branch_prize_pool` to the caller's tenant —
+        same outer-join-free join as list_reward_programs."""
+        result = await self.session.execute(
+            select(BranchPrizePool, Branch.name)
+            .join(Branch, Branch.id == BranchPrizePool.branch_id)
+            .order_by(BranchPrizePool.prize_label)
+        )
+        return [
+            PrizePoolResponse(
+                id=entry.id,
+                branch_id=entry.branch_id,
+                branch_name=branch_name,
+                prize_label=entry.prize_label,
+                is_active=entry.is_active,
+            )
+            for entry, branch_name in result.all()
+        ]
 
     async def create_reward_program(
         self, request: RewardProgramCreateRequest, owner: User

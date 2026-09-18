@@ -44,6 +44,9 @@
       src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
       defer
     ></script>
+    {# NICE-01's scratch-card reveal sparkle — the scan sheet (nav.html) ships
+       on every page, so this loads globally rather than per-page. #}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" defer></script>
     <script src="{{ url_for('static', path='js/nav.js') }}" defer></script>
     <script src="{{ url_for('static', path='js/scan.js') }}" defer></script>
     {% block extra_scripts %}{% endblock %}

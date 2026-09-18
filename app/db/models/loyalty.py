@@ -1,4 +1,5 @@
-"""QuickBite — RewardProgram, StampLog, RewardRedemption models (Doc 2 Tables 12/13).
+"""QuickBite — RewardProgram, StampLog, RewardRedemption, BranchPrizePool,
+ScratchCard models (Doc 2 Tables 12/13 + NICE-01).
 
 RewardProgram is owner configuration (restaurant schema). StampLog is
 append-only scan history with GPS at scan time for fraud audit (customer
@@ -7,7 +8,15 @@ the 6-char code minted when a customer crosses `stamps_required`, and its
 staff-facing verification — restaurant schema, since redemption is an
 owner/staff flow, not a customer one.
 
-ScratchCard belongs to a later loyalty ticket and is not built yet.
+BranchPrizePool (NICE-01) is the owner-configured list of possible scratch-
+card prizes per branch — restaurant schema, same reasoning as RewardProgram.
+ScratchCard is the customer-facing record of one scratch opportunity (every
+5th stamp, Pro+ only) — customer schema, same reasoning as StampLog: it is
+the diner's own activity/reward history, not an owner-facing verification
+flow (that's `redemption_code` here, verified the same way as
+RewardRedemption.code, just inline rather than via a separate staff route
+since NICE-01's acceptance criteria describe the code as revealed directly
+to the customer, not redeemed at the till).
 """
 
 import uuid
@@ -17,8 +26,6 @@ from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, fu
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
-
-# TODO(LOYALTY-NICE): ScratchCard model.
 
 
 class RewardProgram(Base):
@@ -80,3 +87,44 @@ class RewardRedemption(Base):
     redeemed_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("restaurant.users.id"), nullable=True
     )
+
+
+class BranchPrizePool(Base):
+    """Owner-configured possible scratch-card prizes for one branch (NICE-01).
+
+    `_pick_prize` (loyalty_service.py) draws uniformly at random from the
+    active rows for a branch — `weight` exists for a future weighted-draw
+    upgrade but is not read yet, so every active prize is equally likely
+    today regardless of its value."""
+
+    __tablename__ = "branch_prize_pool"
+    __table_args__ = {"schema": "restaurant"}
+
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.tenants.id"), index=True)
+    branch_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.branches.id"), index=True)
+    prize_label: Mapped[str] = mapped_column(String)
+    weight: Mapped[int] = mapped_column(Integer, default=1)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class ScratchCard(Base):
+    """One scratch-off opportunity, granted every 5th stamp on a Pro+ plan
+    (NICE-01). `prize_label` and `redemption_code` are decided and persisted
+    at creation time (server-authoritative — the customer never influences
+    which prize they get), but only returned to the customer once
+    `is_revealed` flips true via `POST /loyalty/scratch-cards/{id}/reveal`,
+    matching the acceptance criterion that the code is "generated on full
+    reveal" from the caller's point of view."""
+
+    __tablename__ = "scratch_cards"
+    __table_args__ = {"schema": "customer"}
+
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.tenants.id"), index=True)
+    branch_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurant.branches.id"), index=True)
+    customer_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("customer.customers.id"), index=True
+    )
+    prize_label: Mapped[str] = mapped_column(String)
+    redemption_code: Mapped[str] = mapped_column(String(6))
+    is_revealed: Mapped[bool] = mapped_column(Boolean, default=False)
+    revealed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

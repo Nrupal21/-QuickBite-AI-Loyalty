@@ -8,7 +8,7 @@ from app.db.models.audit import AuditLog
 from app.db.models.branch import Branch
 from app.db.models.customer import Customer
 from app.db.models.identity_link import IdentityLink
-from app.db.models.loyalty import RewardProgram, StampLog
+from app.db.models.loyalty import BranchPrizePool, RewardProgram, ScratchCard, StampLog
 from app.db.models.outbox import ProjectionOutbox
 from app.db.models.payment import BillingAuditLog, BillingEvent, Invoice, PaymentMethod
 from app.db.models.reputation import CustomerReview, GMBProfile, ReviewResponse
@@ -22,6 +22,7 @@ __all__ = [
     "BillingAuditLog",
     "BillingEvent",
     "Branch",
+    "BranchPrizePool",
     "Customer",
     "CustomerReview",
     "FeatureFlag",
@@ -34,6 +35,7 @@ __all__ = [
     "ReviewResponse",
     "RewardProgram",
     "Role",
+    "ScratchCard",
     "Session",
     "StampLog",
     "Subscription",

@@ -1,11 +1,15 @@
 """QuickBite — Loyalty routes: scan, reward programs, redemption (LOYALTY-03/04),
-analytics (DASH-02).
+analytics (DASH-02), scratch cards + prize pool (NICE-01).
 
 reward-programs -> OWNER (Doc 3: owner configures loyalty rules)
 redeem/{code}   -> STAFF (till-side verification, any staff member)
 analytics       -> MANAGER (business-intelligence view, same rank as
                    team_service.list_members — a Manager supervises the
                    floor, Staff do not need the numbers)
+prize-pool      -> OWNER to create, MANAGER+ to list (same split as
+                   reward-programs above)
+scratch-cards/{id}/reveal -> customer session (the diner revealing their own
+                   card), not a staff role at all
 
 TODO(LOYALTY-01/02): /loyalty/card/{id}, /loyalty/menu/{branch_id}
 """
@@ -17,7 +21,7 @@ from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies.auth import require_role
-from app.api.v1.dependencies.customer_auth import get_current_customer_optional
+from app.api.v1.dependencies.customer_auth import get_current_customer, get_current_customer_optional
 from app.core.rate_limiter import limiter
 from app.core.rbac import RoleLevel
 from app.db.base import get_db
@@ -25,12 +29,16 @@ from app.db.models.customer import Customer
 from app.db.models.user import User
 from app.schemas.dashboard import LoyaltyAnalyticsResponse
 from app.schemas.loyalty import (
+    PrizePoolCreateRequest,
+    PrizePoolResponse,
     RedeemCodeResponse,
     RewardProgramCreateRequest,
     RewardProgramResponse,
     RewardProgramUpdateRequest,
     ScanRequest,
     ScanResponse,
+    ScratchCardRevealRequest,
+    ScratchCardRevealResponse,
 )
 from app.services import dashboard_service
 from app.services.loyalty_service import LoyaltyService
@@ -119,3 +127,48 @@ async def get_loyalty_analytics(
     session: AsyncSession = Depends(get_db),
 ) -> LoyaltyAnalyticsResponse:
     return await dashboard_service.get_loyalty_analytics(session, branch_id=branch_id)
+
+
+@router.post(
+    "/prize-pool", response_model=PrizePoolResponse, status_code=status.HTTP_201_CREATED
+)
+async def create_prize_pool_entry(
+    body: PrizePoolCreateRequest,
+    current_user: User = Depends(require_role(RoleLevel.OWNER)),
+    session: AsyncSession = Depends(get_db),
+) -> PrizePoolResponse:
+    """Owner+ — same rank as creating a reward program (NICE-01)."""
+    return await LoyaltyService(session=session).create_prize_pool_entry(body, current_user)
+
+
+@router.get(
+    "/prize-pool", response_model=list[PrizePoolResponse], status_code=status.HTTP_200_OK
+)
+async def list_prize_pool_entries(
+    current_user: User = Depends(require_role(RoleLevel.MANAGER)),
+    session: AsyncSession = Depends(get_db),
+) -> list[PrizePoolResponse]:
+    """Manager+ — same rank as GET /loyalty/reward-programs."""
+    return await LoyaltyService(session=session).list_prize_pool_entries()
+
+
+@router.post(
+    "/scratch-cards/{card_id}/reveal",
+    response_model=ScratchCardRevealResponse,
+    status_code=status.HTTP_200_OK,
+)
+@limiter.limit("30/hour")
+async def reveal_scratch_card(
+    request: Request,
+    card_id: uuid.UUID,
+    body: ScratchCardRevealRequest,
+    current_customer: Customer = Depends(get_current_customer),
+    session: AsyncSession = Depends(get_db),
+) -> ScratchCardRevealResponse:
+    """Customer-facing — the diner revealing their own scratch card, not a
+    staff/owner action. `get_current_customer` (required, not `_optional`)
+    because a scratch card always belongs to a known customer_id
+    (`_maybe_create_scratch_card` never mints one for an anonymous scan)."""
+    return await LoyaltyService(session=session).reveal_scratch_card(
+        card_id, current_customer, body.scratched_percentage
+    )
