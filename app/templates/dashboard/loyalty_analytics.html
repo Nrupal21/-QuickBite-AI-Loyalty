@@ -108,6 +108,10 @@
         <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">link</span>
         Google Profile
       </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/billing">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">credit_card</span>
+        Billing
+      </a>
       <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/settings">
         <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">settings</span>
         Settings
@@ -162,6 +166,10 @@
       <span class="material-symbols-outlined" aria-hidden="true">link</span>
       Google Profile
     </a>
+    <a class="qb-more-nav-item" href="/dashboard/billing">
+      <span class="material-symbols-outlined" aria-hidden="true">credit_card</span>
+      Billing
+    </a>
     <a class="qb-more-nav-item" href="/dashboard/settings">
       <span class="material-symbols-outlined" aria-hidden="true">settings</span>
       Settings
@@ -204,7 +212,7 @@
         </div>
         <div class="qb-kpi-body">
           <p class="qb-kpi-label">Stamps This Month</p>
-          <h3 class="qb-kpi-value" data-metric="total_stamps_month">—</h3>
+          <h3 class="qb-kpi-value"><span class="qb-skel" data-metric="total_stamps_month" data-metric-loading></span></h3>
         </div>
       </div>
       <div class="qb-kpi">
@@ -213,7 +221,7 @@
         </div>
         <div class="qb-kpi-body">
           <p class="qb-kpi-label">Active Loyalty Customers</p>
-          <h3 class="qb-kpi-value" data-metric="active_customers">—</h3>
+          <h3 class="qb-kpi-value"><span class="qb-skel" data-metric="active_customers" data-metric-loading></span></h3>
         </div>
       </div>
       <div class="qb-kpi">
@@ -222,7 +230,7 @@
         </div>
         <div class="qb-kpi-body">
           <p class="qb-kpi-label">Reward Redemption Rate</p>
-          <h3 class="qb-kpi-value" data-metric="redemption_rate">—</h3>
+          <h3 class="qb-kpi-value"><span class="qb-skel" data-metric="redemption_rate" data-metric-loading></span></h3>
         </div>
       </div>
     </div>

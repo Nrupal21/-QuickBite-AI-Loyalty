@@ -116,6 +116,33 @@
         ],
         "createdAt": "2026-08-23T14:21:03.519Z",
         "reason": "DESIGN.md Tight-Ratio Rule: Operate-density type scale is intentionally tight (~1.1-1.3 ratio); this header is a verbatim copy of the already-shipped dashboard shell, same as index.html/audit_logs.html's identical sanctioned exception"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "app/templates/dashboard/billing.html"
+        ],
+        "createdAt": "2026-08-21T18:43:57.261Z",
+        "reason": "Operate-mode tighter type scale, same documented tradeoff as every other dashboard screen — see DESIGN.md Typography > The Tight-Ratio Rule"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "files": [
+          "static/css/dashboard.css"
+        ],
+        "createdAt": "2026-08-22T04:37:22.729Z",
+        "reason": "mask-composite alpha trick in glass-panel::before, not a visible color choice"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "0.5rem",
+        "files": [
+          "static/css/dashboard.css"
+        ],
+        "createdAt": "2026-08-22T04:37:23.068Z",
+        "reason": "matches the dashboard screen's own existing lg radius token (0.5rem) used for the focus-visible ring"
       }
     ]
   }

@@ -84,11 +84,25 @@ class Settings(BaseSettings):
     AI_DRAFT_CACHE_TTL_SECONDS: int = 3600  # 1h, per REVIEW-01
     AI_PROVIDER: str = "auto"
 
-    # --- Twilio (SMS + WhatsApp) ---
+    # --- Twilio (SMS only — WhatsApp sends via Meta directly, see below) ---
     TWILIO_ACCOUNT_SID: str = ""
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_FROM_NUMBER: str = ""
-    TWILIO_WHATSAPP_FROM: str = ""
+
+    # --- Meta WhatsApp Business Platform (Cloud API, per-tenant BYO WABA) ---
+    # Each tenant connects their own WhatsApp Business Account via Embedded
+    # Signup; these are QuickBite's own Meta app credentials, used to run
+    # that OAuth exchange and to call the Graph API on the tenant's behalf.
+    META_APP_ID: str = ""
+    META_APP_SECRET: str = ""
+    META_GRAPH_API_VERSION: str = "v21.0"
+    # Meta Login for Business "Configuration ID" the Embedded Signup JS SDK
+    # needs — created in Meta App Dashboard > WhatsApp > Embedded Signup.
+    META_EMBEDDED_SIGNUP_CONFIG_ID: str = ""
+    # Shared secret Meta echoes back as hub.verify_token on GET /webhooks/whatsapp
+    # (subscription handshake) — distinct from META_APP_SECRET, which signs
+    # the POST payloads instead.
+    META_WEBHOOK_VERIFY_TOKEN: str = ""
 
     # --- SMS provider selection (OTP sends only — see messaging_service.py) ---
     # 2Factor.in's no-DLT-template "quick OTP" API only carries a bare OTP
@@ -182,6 +196,10 @@ class Settings(BaseSettings):
 
     # --- Sentry (Error Tracking) ---
     SENTRY_DSN: str = ""
+    # 0.0 disables performance tracing (errors are still captured regardless);
+    # sentry-sdk is only installed in prod.txt, so this has no effect unless
+    # SENTRY_DSN is also set.
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.0
 
     # --- Computed Properties ---
     @property
@@ -338,6 +356,14 @@ class Settings(BaseSettings):
     def validate_smtp_port(cls, v: int) -> int:
         if not 1 <= v <= 65535:
             msg = "SMTP_PORT must be between 1 and 65535 (current: %d)" % v
+            raise ValueError(msg)
+        return v
+
+    @field_validator("SENTRY_TRACES_SAMPLE_RATE")
+    @classmethod
+    def validate_sentry_traces_sample_rate(cls, v: float) -> float:
+        if not 0.0 <= v <= 1.0:
+            msg = "SENTRY_TRACES_SAMPLE_RATE must be between 0.0 and 1.0 (current: %s)" % v
             raise ValueError(msg)
         return v
 

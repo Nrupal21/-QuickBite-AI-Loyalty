@@ -36,6 +36,10 @@ class Customer(Base):
     encrypted_username: Mapped[str | None] = mapped_column(String, nullable=True)
     encrypted_name: Mapped[str | None] = mapped_column(String, nullable=True)
     whatsapp_opt_in: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Separate from whatsapp_opt_in (transactional alerts, e.g. reward
+    # unlocked): Meta requires distinct consent for MARKETING-category
+    # template sends, and a customer may want one without the other.
+    whatsapp_marketing_opt_in: Mapped[bool] = mapped_column(Boolean, default=False)
     total_stamps_alltime: Mapped[int] = mapped_column(Integer, default=0)
     current_reward_count: Mapped[int] = mapped_column(Integer, default=0)
     is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -92,6 +92,10 @@
         <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">link</span>
         Google Profile
       </a>
+      <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/billing">
+        <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">credit_card</span>
+        Billing
+      </a>
       <a class="flex items-center gap-3 text-on-surface-variant hover:text-primary-container px-4 py-3 mx-2 hover:bg-white/50 transition-colors duration-200 rounded-lg group" href="/dashboard/settings">
         <span class="material-symbols-outlined text-brand-muted group-hover:text-primary-container transition-colors">settings</span>
         Settings
@@ -146,6 +150,10 @@
     <a class="qb-more-nav-item" href="/dashboard/google-profile">
       <span class="material-symbols-outlined" aria-hidden="true">link</span>
       Google Profile
+    </a>
+    <a class="qb-more-nav-item" href="/dashboard/billing">
+      <span class="material-symbols-outlined" aria-hidden="true">credit_card</span>
+      Billing
     </a>
     <a class="qb-more-nav-item" href="/dashboard/settings">
       <span class="material-symbols-outlined" aria-hidden="true">settings</span>
@@ -222,8 +230,21 @@
     <div class="qb-glass overflow-hidden">
       <h3 class="text-lg font-bold text-brand-ink p-6 pb-4">Programs</h3>
       <div data-program-rows>
-        <div class="qb-empty">
-          <span class="qb-skel" style="width: 8rem; height: 1rem;"></span>
+        <div class="qb-program-row" aria-hidden="true">
+          <div class="qb-program-main">
+            <div class="qb-program-body">
+              <p class="qb-program-name"><span class="qb-skel" style="width: 11rem; height: 1rem;"></span></p>
+              <p class="qb-program-meta"><span class="qb-skel" style="width: 8rem; height: 0.8125rem; margin-top: 0.375rem;"></span></p>
+            </div>
+          </div>
+        </div>
+        <div class="qb-program-row" aria-hidden="true">
+          <div class="qb-program-main">
+            <div class="qb-program-body">
+              <p class="qb-program-name"><span class="qb-skel" style="width: 8rem; height: 1rem;"></span></p>
+              <p class="qb-program-meta"><span class="qb-skel" style="width: 8rem; height: 0.8125rem; margin-top: 0.375rem;"></span></p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

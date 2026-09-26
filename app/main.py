@@ -21,6 +21,7 @@ from app.core.rate_limiter import limiter, rate_limit_exceeded_handler_with_trac
 # is safe to call unconditionally in every environment (dev/CI included).
 init_sentry()
 
+
 # Structlog configuration — JSON output with timestamps and context
 structlog.configure(
     processors=[
@@ -85,7 +86,6 @@ async def startup_event() -> None:
     """
     from sqlalchemy import text
 
-    from app.core.config import settings  # noqa: F811
     from app.db.base import engine
 
     log.info(

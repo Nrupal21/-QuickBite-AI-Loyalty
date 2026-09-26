@@ -226,3 +226,11 @@ async def admin_audit_logs_page(request: Request) -> HTMLResponse:
 async def admin_monitors_page(request: Request) -> HTMLResponse:
     """Same shell convention as admin_tenants_page above."""
     return templates.TemplateResponse(request, "admin/monitors.html")
+
+
+@router.get("/dashboard/billing", response_class=HTMLResponse)
+async def billing_page(request: Request) -> HTMLResponse:
+    """Current subscription status + plan checkout, entirely against the
+    already-shipped /billing/* endpoints. Same no-server-side-auth-check
+    shell as every other dashboard page."""
+    return templates.TemplateResponse(request, "dashboard/billing.html")

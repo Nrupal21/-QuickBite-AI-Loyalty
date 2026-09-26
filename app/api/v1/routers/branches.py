@@ -1,8 +1,7 @@
-"""QuickBite — Branch routes: GET /branches (list), QR code image + rotation
-(BRANCH-01).
+"""QuickBite — Branch routes: GET/POST /branches (list, create), QR code
+image + rotation, geofence update, fraud-attempt visibility (BRANCH-01).
 
-See branch_service.py's module docstring — branch create/update/delete are a
-later ticket.
+Delete is a later ticket.
 """
 
 import uuid
@@ -14,7 +13,12 @@ from app.api.v1.dependencies.auth import require_role
 from app.core.rbac import RoleLevel
 from app.db.base import get_db
 from app.db.models.user import User
-from app.schemas.branches import BranchOut
+from app.schemas.branches import (
+    BranchCreateRequest,
+    BranchGeofenceUpdateRequest,
+    BranchOut,
+    FraudAttemptOut,
+)
 from app.services import branch_service
 
 router = APIRouter(prefix="/branches", tags=["branches"])
@@ -28,6 +32,17 @@ async def list_branches(
     """Manager+ — same rank as `/team` and `/loyalty/analytics`: a Manager
     supervises the floor and needs the branch list, Staff do not."""
     return await branch_service.list_branches(session)
+
+
+@router.post("", response_model=BranchOut, status_code=status.HTTP_201_CREATED)
+async def create_branch(
+    body: BranchCreateRequest,
+    current_user: User = Depends(require_role(RoleLevel.OWNER)),
+    session: AsyncSession = Depends(get_db),
+) -> BranchOut:
+    """Owner+ — same rank as inviting a team member: a new branch changes
+    what the whole tenant's staff can see and do."""
+    return await branch_service.create_branch(session, body, current_user)
 
 
 @router.get("/{branch_id}/qr-code.png", status_code=status.HTTP_200_OK)
@@ -55,3 +70,28 @@ async def regenerate_branch_qr_code(
     printed with the old one. Same rank as create/update on reward programs
     and GMB connect/disconnect: an irreversible, tenant-wide change."""
     return await branch_service.regenerate_qr_token(session, branch_id, current_user)
+
+
+@router.patch("/{branch_id}/geofence", response_model=BranchOut, status_code=status.HTTP_200_OK)
+async def update_branch_geofence(
+    branch_id: uuid.UUID,
+    body: BranchGeofenceUpdateRequest,
+    current_user: User = Depends(require_role(RoleLevel.OWNER)),
+    session: AsyncSession = Depends(get_db),
+) -> BranchOut:
+    """Owner+ — same rank as create: moving the pin or resizing the radius
+    changes who can collect a stamp tenant-wide."""
+    return await branch_service.update_branch_geofence(session, branch_id, body, current_user)
+
+
+@router.get(
+    "/{branch_id}/fraud-attempts", response_model=list[FraudAttemptOut], status_code=status.HTTP_200_OK
+)
+async def list_branch_fraud_attempts(
+    branch_id: uuid.UUID,
+    current_user: User = Depends(require_role(RoleLevel.MANAGER)),
+    session: AsyncSession = Depends(get_db),
+) -> list[FraudAttemptOut]:
+    """Manager+, same rank as the branch list — every scan this branch
+    rejected for being outside its geofence, newest first."""
+    return await branch_service.list_fraud_attempts(session, branch_id)
