@@ -12,8 +12,8 @@ existing whatsapp_opt_in (transactional alerts) — Meta requires distinct
 consent for MARKETING-category template sends. Defaults False so no existing
 customer is silently opted into broadcast messages by this migration.
 
-Revision ID: 0016
-Revises: 0015
+Revision ID: 0020
+Revises: 0019
 Create Date: 2026-08-22
 """
 from collections.abc import Sequence
@@ -22,8 +22,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects.postgresql import JSONB
 
-revision: str = "0016"
-down_revision: str | None = "0015"
+revision: str = "0020"
+down_revision: str | None = "0019"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

@@ -1,0 +1,180 @@
+# CI gate required by AGENTS.md §9 (SEC-02): ruff, bandit, safety, git-secrets, pytest, trivy + Alembic fresh-DB upgrade must pass before any PR merges.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements/*.txt
+      - run: pip install ruff==0.4.5
+      - run: ruff check app/ tests/
+
+  migrations:
+    name: alembic single head + upgrade
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: quickbite
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/quickbite
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/quickbite
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements/*.txt
+      - run: pip install -r requirements/dev.txt
+      # app.core.config validates these at import, and alembic/env.py imports settings.
+      - name: Generate ephemeral secrets
+        run: |
+          {
+            echo "SECRET_KEY=$(openssl rand -hex 32)"
+            echo "CUSTOMER_SECRET_KEY=$(openssl rand -hex 32)"
+            echo "ENCRYPTION_KEY_V1=$(openssl rand -base64 32)"
+          } >> "$GITHUB_ENV"
+      # Fails on duplicate revision ids / forked history (the 0016 collision class of bug).
+      - name: Exactly one Alembic head
+        run: |
+          heads=$(alembic heads | grep -c '(head)')
+          echo "heads=$heads"
+          test "$heads" -eq 1
+      # Fresh, empty PostGIS database: proves the whole 0001 -> head chain applies from scratch.
+      - run: alembic upgrade head
+      - name: Database is at head
+        run: alembic current | grep -q '(head)'
+
+  test:
+    name: pytest
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: quickbite_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/quickbite_test
+      TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/quickbite_test
+      REDIS_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements/*.txt
+      - run: pip install -r requirements/dev.txt
+      # Throwaway per-run secrets; SECRET_KEY must differ from CUSTOMER_SECRET_KEY (startup assertion).
+      - name: Generate ephemeral test secrets
+        run: |
+          {
+            echo "SECRET_KEY=$(openssl rand -hex 32)"
+            echo "CUSTOMER_SECRET_KEY=$(openssl rand -hex 32)"
+            echo "ENCRYPTION_KEY_V1=$(openssl rand -base64 32)"
+          } >> "$GITHUB_ENV"
+      - run: pytest tests/unit tests/security --cov=app --cov-report=term-missing --cov-fail-under=80
+
+  bandit:
+    name: bandit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install bandit==1.7.8
+      - run: bandit -r app/ -ll
+
+  safety:
+    name: safety
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install safety==3.2.0
+      - run: safety check -r requirements/prod.txt --full-report
+
+  git-secrets:
+    name: git-secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install git-secrets
+        run: |
+          git clone --depth 1 https://github.com/awslabs/git-secrets.git "$RUNNER_TEMP/git-secrets"
+          sudo make -C "$RUNNER_TEMP/git-secrets" install
+      - name: Register patterns
+        run: |
+          git secrets --register-aws
+          git secrets --add 'sk_live_[0-9a-zA-Z]{20,}'
+          git secrets --add 'whsec_[0-9a-zA-Z]{20,}'
+          git secrets --add 'SG\.[0-9A-Za-z_-]{20,}\.[0-9A-Za-z_-]{20,}'
+          git secrets --add 'AC[0-9a-f]{32}'
+          git secrets --add -- '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'
+          # Dummy PEM in tests/unit/test_firebase_credentials_config.py (body is "abc").
+          git secrets --add --allowed -- 'BEGIN PRIVATE KEY-----\\nabc\\n'
+      - run: git secrets --scan
+
+  trivy:
+    name: trivy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan dependencies, secrets and IaC
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scanners: vuln,secret,misconfig
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Build image
+        run: docker build -t quickbite:ci .
+      - name: Scan image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: quickbite:ci
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
