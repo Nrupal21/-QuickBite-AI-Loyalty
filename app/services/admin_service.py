@@ -48,6 +48,7 @@ from app.db.models.subscription import Subscription, SubscriptionPlan
 from app.db.models.tenant import Tenant
 from app.db.models.user import Role, User
 from app.db.models.user import Session as UserSession
+from app.middleware.subdomain import invalidate_tenant_cache
 from app.schemas.admin import (
     ApiUsageDay,
     ApiUsageResponse,
@@ -330,6 +331,7 @@ class AdminService:
             )
         )
         await self.session.commit()
+        await invalidate_tenant_cache(tenant.subdomain)
 
         logger.info(
             "admin.tenant_status_changed",

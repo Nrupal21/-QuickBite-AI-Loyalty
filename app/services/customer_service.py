@@ -6,9 +6,11 @@ profile tickets and are not implemented yet.
 
 import json
 import uuid
+from datetime import datetime, timedelta, timezone
 
+import structlog
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
@@ -32,11 +34,44 @@ from app.schemas.customers import (
 from app.services import identity_link_service
 from app.services.identity_service import classify_identifier
 
+logger = structlog.get_logger(__name__)
+
+_ANON_STAMP_LINK_WINDOW = timedelta(hours=24)
+
 # Recent drafts only — this is a profile-page preview, not a full export.
 _RECENT_REVIEW_DRAFTS_LIMIT = 20
 
 
-async def register(request: CustomerRegister, session: AsyncSession) -> tuple[CustomerRegisterResponse, str]:
+async def _link_anonymous_stamps(session: AsyncSession, customer: Customer, identity_hash: str) -> None:
+    """Attach this device's pre-signup anonymous stamps to the new customer.
+
+    Matches by the IP hash stored on anonymous scans, scoped to the tenant
+    (RLS context is already bound) and to unclaimed, non-fraudulent rows from
+    the last _ANON_STAMP_LINK_WINDOW so an old shared-IP scan isn't claimed.
+    """
+    cutoff = datetime.now(timezone.utc) - _ANON_STAMP_LINK_WINDOW
+    result = await session.execute(
+        update(StampLog)
+        .where(
+            StampLog.tenant_id == customer.tenant_id,
+            StampLog.customer_id.is_(None),
+            StampLog.anon_identity_hash == identity_hash,
+            StampLog.is_fraudulent.is_(False),
+            StampLog.scanned_at >= cutoff,
+        )
+        .values(customer_id=customer.id, customer_phone_hash=customer.phone_hash, anon_identity_hash=None)
+    )
+    linked = result.rowcount or 0
+    if linked:
+        customer.total_stamps_alltime += linked
+        customer.current_reward_count += linked
+    await session.commit()
+    logger.info("customer.register.anon_stamps_linked", customer_id=str(customer.id), count=linked)
+
+
+async def register(
+    request: CustomerRegister, session: AsyncSession, client_ip: str | None = None
+) -> tuple[CustomerRegisterResponse, str]:
     pending = await cache_service.get(f"pending_customer_reg:{request.registration_token}")
     if pending is None:
         raise HTTPException(
@@ -84,6 +119,7 @@ async def register(request: CustomerRegister, session: AsyncSession) -> tuple[Cu
                 "error": {
                     "code": "CUSTOMER_ALREADY_REGISTERED",
                     "message": "An account with this phone number already exists. Try logging in instead.",
+                    "login_url": "/login",
                 }
             },
         )
@@ -127,6 +163,9 @@ async def register(request: CustomerRegister, session: AsyncSession) -> tuple[Cu
 
     if identifier_type == "oauth":
         await _link_oauth_identity(session, customer, pending_data)
+
+    if client_ip:
+        await _link_anonymous_stamps(session, customer, sha256_hex(client_ip))
 
     token = create_customer_token(customer.id, customer.tenant_id, customer.phone_hash)
     return CustomerRegisterResponse(customer_id=str(customer.id)), token

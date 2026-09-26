@@ -267,3 +267,49 @@ async def test_register_expired_token_returns_400(mocker):
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail["error"]["code"] == "REGISTRATION_TOKEN_INVALID"
+
+
+@pytest.mark.asyncio
+async def test_register_duplicate_phone_409_includes_login_url(mocker):
+    session = make_session([MagicMock()])  # existing customer with this phone_hash
+    mocker.patch(
+        "app.services.customer_service.cache_service.get",
+        AsyncMock(return_value=pending_payload(PHONE, "phone")),
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        await customer_service.register(CustomerRegister(registration_token=TOKEN, name="Priya"), session)
+
+    assert exc.value.status_code == 409
+    assert exc.value.detail["error"]["login_url"] == "/login"
+
+
+@pytest.mark.asyncio
+async def test_register_links_pending_anonymous_stamps_to_new_customer(mocker):
+    session = make_session([None])
+    linked = MagicMock()
+    linked.rowcount = 2
+    session.execute.side_effect = [MagicMock(), _scalar(None), linked]
+    mocker.patch(
+        "app.services.customer_service.cache_service.get",
+        AsyncMock(return_value=pending_payload(PHONE, "phone")),
+    )
+    mocker.patch("app.services.customer_service.cache_service.delete", AsyncMock())
+    mocker.patch("app.services.customer_service.create_customer_token", return_value="jwt")
+
+    await customer_service.register(
+        CustomerRegister(registration_token=TOKEN, name="Priya"), session, client_ip="203.0.113.7"
+    )
+
+    customer = added_instances(session, Customer)[0]
+    assert customer.total_stamps_alltime == 2
+    assert customer.current_reward_count == 2
+    stmt = str(session.execute.await_args_list[-1].args[0])
+    assert "UPDATE customer.stamp_logs" in stmt
+    assert "customer_id IS NULL" in stmt
+
+
+def _scalar(value):
+    result = MagicMock()
+    result.scalar_one_or_none.return_value = value
+    return result

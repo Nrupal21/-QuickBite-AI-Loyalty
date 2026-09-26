@@ -1,0 +1,75 @@
+# CI ticket AC5/AC6: staging auto-deploys on merge to main; production needs manual approval.
+# Approval is enforced by GitHub, not this file: Settings > Environments > production >
+# "Required reviewers". Each environment needs a DEPLOY_HOOK_URL secret (the platform's
+# deploy webhook); the job fails loudly if it is missing rather than pretending to deploy.
+name: Deploy
+
+on:
+  # Runs after CI on main, and only if CI succeeded.
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  image:
+    name: build and push image
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.meta.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        run: echo "ref=ghcr.io/${GITHUB_REPOSITORY,,}:${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.ref }}
+
+  staging:
+    name: deploy staging
+    needs: image
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Trigger deploy
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+        run: |
+          test -n "$DEPLOY_HOOK_URL" || { echo "DEPLOY_HOOK_URL not set for staging"; exit 1; }
+          curl --fail-with-body -sS -X POST "$DEPLOY_HOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -d '{"image":"${{ needs.image.outputs.ref }}"}'
+
+  production:
+    name: deploy production
+    needs: [image, staging]
+    runs-on: ubuntu-latest
+    # Pauses here until a required reviewer approves in the GitHub UI.
+    environment: production
+    steps:
+      - name: Trigger deploy
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+        run: |
+          test -n "$DEPLOY_HOOK_URL" || { echo "DEPLOY_HOOK_URL not set for production"; exit 1; }
+          curl --fail-with-body -sS -X POST "$DEPLOY_HOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -d '{"image":"${{ needs.image.outputs.ref }}"}'

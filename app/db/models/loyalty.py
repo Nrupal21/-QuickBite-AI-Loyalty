@@ -56,6 +56,9 @@ class StampLog(Base):
         ForeignKey("customer.customers.id"), nullable=True, index=True
     )
     customer_phone_hash: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    # SHA-256 of the scanner's IP for anonymous scans only (NEW-OTP-03): lets
+    # register() link a diner's pre-signup stamp to their new customer_id.
+    anon_identity_hash: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     gps_latitude_at_scan: Mapped[float] = mapped_column(Float)
     gps_longitude_at_scan: Mapped[float] = mapped_column(Float)
     distance_from_branch_m: Mapped[float] = mapped_column(Float)

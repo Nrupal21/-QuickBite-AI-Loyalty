@@ -6,6 +6,7 @@ implemented.
 """
 
 from fastapi import APIRouter, Depends, Request, Response, status
+from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies.customer_auth import require_customer_session
@@ -27,7 +28,7 @@ async def register(
     response: Response,
     session: AsyncSession = Depends(get_db),
 ) -> CustomerRegisterResponse:
-    result, token = await customer_service.register(payload, session)
+    result, token = await customer_service.register(payload, session, client_ip=get_remote_address(request))
     set_customer_session_cookie(response, token)
     return result
 
