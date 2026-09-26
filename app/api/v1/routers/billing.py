@@ -84,6 +84,30 @@ async def create_checkout(
     return await BillingService(session=session).create_checkout_order(tenant, payload.plan_id)
 
 
+@router.post("/cancel", response_model=SubscriptionStatusResponse, status_code=status.HTTP_200_OK)
+@limiter.limit("10/hour")
+async def cancel_subscription(
+    request: Request,
+    current_user: User = Depends(require_role(RoleLevel.OWNER)),
+    session: AsyncSession = Depends(get_db),
+) -> SubscriptionStatusResponse:
+    return await BillingService(session=session).cancel_subscription(
+        current_user.tenant_id, current_user
+    )
+
+
+@router.post("/reactivate", response_model=SubscriptionStatusResponse, status_code=status.HTTP_200_OK)
+@limiter.limit("10/hour")
+async def reactivate_subscription(
+    request: Request,
+    current_user: User = Depends(require_role(RoleLevel.OWNER)),
+    session: AsyncSession = Depends(get_db),
+) -> SubscriptionStatusResponse:
+    return await BillingService(session=session).reactivate_subscription(
+        current_user.tenant_id, current_user
+    )
+
+
 @webhook_router.post(
     "/webhooks/razorpay", response_model=WebhookAckResponse, status_code=status.HTTP_200_OK
 )

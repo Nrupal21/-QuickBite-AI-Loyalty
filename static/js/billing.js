@@ -35,10 +35,13 @@
     return;
   }
 
-  // Doc 3: only Owner (and Super Admin) may change the tenant's plan.
-  // Mirrors CONNECT_ROLES in google-profile.js and MANAGE_TEAM_ROLES in
-  // settings.js exactly — this codebase's established pattern is a small,
-  // page-local role check per Owner-only action, not a shared helper.
+  // Doc 3: only Owner (and Super Admin) may change the tenant's plan —
+  // mirrors CONNECT_ROLES in google-profile.js and MANAGE_TEAM_ROLES in
+  // settings.js exactly. Also gates cancel/reactivate: require_role(OWNER)
+  // already enforces this server-side, but every other Owner-only mutating
+  // surface in this codebase hides its own button client-side too, and a
+  // Manager/Staff who reaches this page should see the same "nothing to
+  // click" experience as everywhere else, not a 403 banner.
   var CAN_CHECKOUT = { SUPER_ADMIN: true, OWNER: true };
   var canCheckout = !!(session.role && CAN_CHECKOUT[session.role]);
 
@@ -47,6 +50,13 @@
     if (!box) return;
     box.textContent = message;
     box.classList.remove('hidden');
+  }
+
+  function clearError() {
+    var box = document.getElementById('billing-error');
+    if (!box) return;
+    box.textContent = '';
+    box.classList.add('hidden');
   }
 
   function apiFetch(path, options) {
@@ -92,6 +102,14 @@
   }
 
   var currentPlanName = null;
+  var currentSub = null;
+
+  function setSubField(el, text) {
+    if (!el) return;
+    el.classList.remove('qb-skel');
+    el.removeAttribute('data-sub-loading');
+    el.textContent = text;
+  }
 
   function setSubField(el, text) {
     if (!el) return;
@@ -102,6 +120,7 @@
 
   function renderSubscription(sub) {
     currentPlanName = sub.plan_name;
+    currentSub = sub;
 
     var statusWrap = document.querySelector('[data-sub-status]');
     if (statusWrap) {
@@ -120,8 +139,13 @@
       setSubField(metaEl, 'Choose a plan below to get started.');
     }
 
+    // The markup uses Tailwind's `hidden` *class* (display:none), not the
+    // `hidden` DOM property — toggling the property alone leaves the class
+    // in place and the element stays display:none regardless.
     var cancelNoticeEl = document.querySelector('[data-sub-cancel-notice]');
-    if (cancelNoticeEl) cancelNoticeEl.hidden = !sub.cancel_at_period_end;
+    if (cancelNoticeEl) cancelNoticeEl.classList.toggle('hidden', !sub.cancel_at_period_end);
+
+    renderCancelAction(sub);
   }
 
   function loadSubscription() {
@@ -131,6 +155,73 @@
         if (error.message !== 'unauthorized') showError(error.message);
       });
   }
+
+  // ---------- cancel / reactivate ----------
+  // require_role(OWNER) enforces this server-side on both routes; canCheckout
+  // additionally hides the buttons client-side, matching this codebase's
+  // established convention (google-profile.js/settings.js gate Manager the
+  // same way) rather than showing a button that would only 403 on click.
+
+  function renderCancelAction(sub) {
+    var mount = document.querySelector('[data-cancel-action]');
+    if (!mount) return;
+    if (!canCheckout) {
+      mount.innerHTML = '';
+      return;
+    }
+
+    var hasActiveOrPastDue = sub.status === 'active' || sub.status === 'past_due';
+    // A pending cancellation only stays reactivable while the period it
+    // will end at hasn't passed yet — past that point the backend rejects
+    // reactivate with SUBSCRIPTION_ALREADY_ENDED (the finalize task either
+    // already ran or is about to), so offering the button here would just
+    // hand the owner a guaranteed error.
+    var periodStillOpen = sub.current_period_end && new Date(sub.current_period_end) > new Date();
+
+    if (sub.cancel_at_period_end && periodStillOpen) {
+      mount.innerHTML = '<button type="button" class="qb-plan-cta" data-reactivate-subscription>Keep my plan</button>';
+    } else if (hasActiveOrPastDue && !sub.cancel_at_period_end) {
+      mount.innerHTML = '<button type="button" class="qb-plan-cta" data-cancel-subscription>Cancel subscription</button>';
+    } else {
+      mount.innerHTML = '';
+    }
+  }
+
+  document.addEventListener('click', function (event) {
+    var cancelBtn = event.target.closest('[data-cancel-subscription]');
+    if (cancelBtn) {
+      var endDate = currentSub && currentSub.current_period_end
+        ? formatDate(currentSub.current_period_end)
+        : 'the end of your current period';
+      if (!window.confirm('Cancel your subscription? You\'ll keep access until ' + endDate + '.')) return;
+
+      clearError();
+      cancelBtn.disabled = true;
+      cancelBtn.textContent = 'Cancelling…';
+      apiFetch('/billing/cancel', { method: 'POST' })
+        .then(renderSubscription)
+        .catch(function (error) {
+          cancelBtn.disabled = false;
+          cancelBtn.textContent = 'Cancel subscription';
+          if (error.message !== 'unauthorized') showError(error.message);
+        });
+      return;
+    }
+
+    var reactivateBtn = event.target.closest('[data-reactivate-subscription]');
+    if (reactivateBtn) {
+      clearError();
+      reactivateBtn.disabled = true;
+      reactivateBtn.textContent = 'Restoring…';
+      apiFetch('/billing/reactivate', { method: 'POST' })
+        .then(renderSubscription)
+        .catch(function (error) {
+          reactivateBtn.disabled = false;
+          reactivateBtn.textContent = 'Keep my plan';
+          if (error.message !== 'unauthorized') showError(error.message);
+        });
+    }
+  });
 
   // ---------- plans ----------
 
@@ -202,6 +293,7 @@
     var btn = event.target.closest('[data-choose-plan]');
     if (!btn) return;
 
+    clearError();
     btn.disabled = true;
     btn.textContent = 'Starting checkout…';
     apiFetch('/billing/checkout', {

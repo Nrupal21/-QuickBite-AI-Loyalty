@@ -206,6 +206,13 @@ async def reviews_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "dashboard/reviews.html")
 
 
+@router.get("/dashboard/billing", response_class=HTMLResponse)
+async def billing_page(request: Request) -> HTMLResponse:
+    """Current subscription status, plan grid, checkout, cancel/reactivate.
+    Same no-server-side-auth-check shell as every other dashboard page."""
+    return templates.TemplateResponse(request, "dashboard/billing.html")
+
+
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_tenants_page(request: Request) -> HTMLResponse:
     """Super Admin tenants shell (ADMIN-01). Same no-server-side-auth-check
