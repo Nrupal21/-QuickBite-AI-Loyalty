@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuickBite Project Tracker</title>
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--ink:#14171f;--mute:#5d6675;--line:#e2e5ea;--done:#1a8a4a;--part:#c77a00;--todo:#c0392b;--acc:#f26b21;--donebg:#e6f5ec;--partbg:#fff2dc;--todobg:#fbe7e4}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1217;--card:#181c24;--ink:#e8ebf1;--mute:#9aa3b2;--line:#2a303b;--done:#4cc482;--part:#f0a63a;--todo:#f0705f;--donebg:#12301f;--partbg:#382a0d;--todobg:#3a1815}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 16px 64px}
+  h1{margin:0 0 4px;font-size:26px} h2{margin:36px 0 12px;font-size:19px} h3{margin:0 0 8px;font-size:15px}
+  .sub{color:var(--mute);margin:0 0 20px}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .kpi b{display:block;font-size:28px;line-height:1.1} .kpi span{color:var(--mute);font-size:13px}
+  .bar{height:12px;border-radius:6px;background:var(--line);overflow:hidden;display:flex}
+  .bar i{display:block;height:100%} .b-done{background:var(--done)} .b-part{background:var(--part)}
+  .alert{border-left:4px solid var(--todo);background:var(--todobg);padding:10px 14px;border-radius:6px;margin:12px 0}
+  .warn{border-left-color:var(--part);background:var(--partbg)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;font-size:14px}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);background:var(--bg)}
+  tr:last-child td{border-bottom:0}
+  .tbl{overflow-x:auto}
+  .tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+  .t-done{background:var(--donebg);color:var(--done)} .t-part{background:var(--partbg);color:var(--part)} .t-todo{background:var(--todobg);color:var(--todo)}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+  .filters button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 12px;border-radius:99px;cursor:pointer;font:inherit;font-size:13px}
+  .filters button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+  .grp{margin:0 0 14px} .grp>summary{cursor:pointer;font-weight:600;padding:8px 0}
+  .tk{display:grid;grid-template-columns:22px 110px 1fr auto;gap:8px;align-items:start;padding:7px 0;border-top:1px solid var(--line)}
+  .tk input{margin-top:4px;accent-color:var(--done)} .tk .id{font-family:ui-monospace,Consolas,monospace;font-size:13px;color:var(--mute)}
+  .tk .note{display:block;color:var(--mute);font-size:12.5px}
+  code{font-family:ui-monospace,Consolas,monospace;font-size:13px;background:var(--bg);padding:1px 5px;border-radius:4px}
+  .tl{position:relative;height:34px;background:var(--line);border-radius:6px;margin:6px 0 2px}
+  .tl .seg{position:absolute;top:0;bottom:0;border-radius:6px;font-size:11px;color:#fff;padding:9px 6px;overflow:hidden;white-space:nowrap}
+  .today{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--acc)}
+  .weeks{display:grid;grid-template-columns:repeat(12,1fr);font-size:11px;color:var(--mute);text-align:center}
+  ul.miss{margin:6px 0 0;padding-left:20px} ul.miss li{margin:3px 0}
+  .foot{margin-top:40px;color:var(--mute);font-size:12.5px}
+  @media (max-width:640px){.tk{grid-template-columns:22px 1fr auto}.tk .id{grid-column:2}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>QuickBite AI + Loyalty: Project Tracker</h1>
+  <p class="sub">Audit of branch <code>feature/sub-03-upgrade-billing-portal</code> (67 commits ahead of <code>main</code>) against the tickets in Doc 5 (its title says 70, but it actually lists 80 ticket headings, all counted here). Snapshot: <b>2026-09-26</b>. Checked by reading the code, not by running the test suite.</p>
+
+  <div class="grid" id="kpis"></div>
+  <div class="card" style="margin-top:12px">
+    <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin-bottom:6px"><span>Overall progress (done = 1, partial = 0.5)</span><span id="pct"></span></div>
+    <div class="bar"><i class="b-done" id="bdone"></i><i class="b-part" id="bpart"></i></div>
+  </div>
+
+  <div class="alert"><b>Behind schedule.</b> Today is week 11 of the 12-week plan, where Phases 1 to 10 should be finished and production launch is next. Phases 1 to 6 are mostly built, but CI, the animation pass, the pen-test run (SEC-21 to SEC-25), load testing and pilot restaurants have not been started. The last SEC-28 checklist is explicitly marked <i>NOT SIGNED</i>.</div>
+
+  <h2>Timeline: plan vs actual</h2>
+  <div class="card">
+    <div class="weeks" id="weeks"></div>
+    <div style="font-size:12px;color:var(--mute);margin:8px 0 2px">Plan (Doc 5 / Doc 6, start 16 Jul 2026)</div>
+    <div class="tl" id="tlplan"></div>
+    <div style="font-size:12px;color:var(--mute);margin:12px 0 2px">Actual (commit activity, by first evidence in git)</div>
+    <div class="tl" id="tlact"></div>
+    <p style="font-size:13px;color:var(--mute);margin:12px 0 0">Orange line = today (week 11, day 3). No commits between 26 Aug and 17 Sep (about 3 weeks), then a burst of NICE/SEC work on 18 to 24 Sep, ahead of the core gates that are still open.</p>
+  </div>
+  <div class="tbl" style="margin-top:12px"><table id="phasetbl"></table></div>
+
+  <h2>Todo list (from Doc 5)</h2>
+  <p class="sub" style="margin-bottom:10px">Ticks are set from the code audit. Click a box to override locally (not saved).</p>
+  <div class="filters" id="filters"></div>
+  <div id="groups"></div>
+
+  <h2>Missing files and gaps <span class="tag t-todo">not in the todo list</span></h2>
+  <div class="card"><h3>Files and folders that should exist but do not (on this branch)</h3>
+    <ul class="miss">
+      <li><code>.github/workflows/ci.yml</code>: CI ticket and SEC-02 (bandit, trivy, safety, pytest gate). Only <code>Makefile</code> targets exist. AGENTS.md says no PR can merge without CI.</li>
+      <li><code>tests/integration/*</code> and <code>tests/load/*</code>: both folders contain only <code>__init__.py</code>. No full-flow HTTP tests and no Locust load test (Phase 10).</li>
+      <li><code>tests/security/</code> only has SEC-18, 19 and 20. AGENTS.md requires one test file per SEC ticket (SEC-03 to 16 have none).</li>
+      <li><code>app/templates/dashboard/billing.html</code> and its <code>/dashboard/billing</code> route: only on unmerged branches. <code>static/js/billing.js</code> is here with no page to load it.</li>
+      <li>Customer pages: no dedicated review-composer, stamp-celebration or loyalty-card templates (behaviour lives in <code>scan.js</code> and <code>profile.html</code>). No page serves the staff invite link (<code>TODO(STITCH-13)</code> in <code>team.py</code>).</li>
+      <li>Routes noted as TODO: <code>/loyalty/card/{id}</code> and <code>/loyalty/menu/{branch_id}</code> (<code>TODO(LOYALTY-01/02)</code>), LoyaltyCard schema.</li>
+      <li>Security deliverables: SEC-14 QR entropy audit, SEC-15 Celery idempotency audit, SEC-16 WebSocket auth audit, SEC-21 ZAP scan, SEC-22 Burp report, SEC-23 staging RLS check, SEC-24 findings report, SEC-25 remediation, SEC-30 incident drill. None exist.</li>
+      <li>Deploy config: no staging or production deployment files. <code>firebase.json</code> and Docker are the only infra. Pilot restaurant onboarding has no artefacts.</li>
+      <li>NICE-05 white-label review page: nothing exists.</li>
+    </ul>
+  </div>
+  <div class="card" style="margin-top:12px"><h3>Work sitting on unmerged branches</h3>
+    <ul class="miss">
+      <li><code>feature/marketing-01-whatsapp-direct</code> (30 ahead): <code>whatsapp_service.py</code>, <code>campaign_service.py</code>, <code>meta_signature.py</code>, <code>models/whatsapp.py</code>, <code>schemas/marketing.py</code>, <code>billing.html</code>. Covers NICE-02 and NICE-03. It is missing the export, metrics and admin work that this branch has.</li>
+      <li><code>sdd/billing-cancel-reactivate</code> (62 ahead): owner billing page with cancel/reactivate. Completes SUB-03.</li>
+      <li><code>feature/auth-04-rbac-roles</code> (20 ahead) and <code>sdd/super-admin-manager-dashboards</code> (52 ahead): older; already contained in this branch's history.</li>
+      <li><b>Migration clash:</b> the WhatsApp branch adds <code>0016_whatsapp_marketing.py</code>, but this branch already has <code>0016_admin_bypass_payment_grant.py</code>. Renumber before merging or Alembic gets two heads.</li>
+      <li><code>main</code> holds only the initial commit. No feature has been merged through a PR yet.</li>
+    </ul>
+  </div>
+  <div class="card" style="margin-top:12px"><h3>Deviations from the rules in AGENTS.md</h3>
+    <ul class="miss">
+      <li>Billing is <b>Razorpay</b>, not Stripe (SUB-01, SEC-10 were reinterpreted). Auth also gained Firebase and Supabase token families.</li>
+      <li>Celery lives in <code>app/workers/</code>, but AGENTS.md specifies <code>app/tasks/</code>. Routers are flat in <code>app/api/v1/routers/</code>, not split into <code>auth/ reviews/ loyalty/</code> folders.</li>
+      <li>Branch model, GMB and other stubs use a Geometry-or-Text fallback for local dev. Check that production actually gets PostGIS.</li>
+      <li>Repo root has stray files: 7 screenshots (<code>*.png</code>), <code>.playwright-mcp</code>. Move or ignore them.</li>
+      <li>Open <code>TODO(SEC-04)</code> in <code>db/models/outbox.py</code>: the outbox table has no RLS yet.</li>
+    </ul>
+  </div>
+
+  <p class="foot">Sources: Doc/md/05_Feature_Tickets.md, 06_SysArch_TeamPlan.md, git history of all 8 branches on origin, and the files under app/, tests/, docs/, static/. About 531 test functions exist (not run here). Statuses are judgement calls; re-check before sign-off.</p>
+</div>
+
+<script>
+const PH = [
+ {n:1,w:[1,1],name:"Infrastructure + SEC-01/02",gate:"Startup pass. CI green."},
+ {n:2,w:[2,2],name:"Auth + Tenant + SEC-03/04",gate:"Auth flows pass. RLS verified."},
+ {n:3,w:[3,3],name:"Customer OTP + Billing + SEC-05..10",gate:"OTP < 10s. SEC-05..10 passed."},
+ {n:4,w:[4,4],name:"Review + Branch/QR + Stitch 01-03 + SEC-11",gate:"Draft works. QR scans."},
+ {n:5,w:[5,5],name:"Review 02/03 + Geofence + Stitch 04-06 + SEC-12..14",gate:"GMB sync. Stamp logged."},
+ {n:6,w:[6,6],name:"Rewards + Dashboard + Stitch 07-09 + SEC-15/16",gate:"Reward unlock. WebSocket live."},
+ {n:7,w:[6,7],name:"Animations ANIM-01..06",gate:"Animations on all screens."},
+ {n:8,w:[7,7],name:"Admin + Stitch 10-12 + SEC-17..20",gate:"Admin works. Pen plan written."},
+ {n:9,w:[8,8],name:"Pen test SEC-21..24",gate:"0 Critical/High. Report signed."},
+ {n:10,w:[9,10],name:"Load test + SEC-25..28 + pilots",gate:"Checklist signed. 2 pilots live."},
+ {n:11,w:[11,12],name:"Production launch + SEC-29/30",gate:"Deployed. Monitoring active."},
+ {n:12,w:[13,13],name:"NICE-01..05 (v1.1)",gate:"Post-launch sprint."}
+];
+// [id, title, phase, status(d/p/t), evidence]
+const T = [
+ ["INFRA-01","Project skeleton & config",1,"d","config.py, main.py, pyproject, .env.example"],
+ ["INFRA-02","PostgreSQL + PostGIS + Alembic",1,"d","19 migrations, RLS-aware session"],
+ ["INFRA-03","Redis + cache service",1,"d","cache_service.py, celery_app.py"],
+ ["DOCKER","Docker + docker-compose stack",1,"d","Dockerfile, docker-compose.yml, Makefile"],
+ ["CI","GitHub Actions CI/CD",1,"t","No .github/ folder"],
+ ["SEC-01","Threat model document",1,"p","docs/THREAT_MODEL.md is Draft, pending review"],
+ ["SEC-02","CI security toolchain",1,"t","Only Makefile bandit target; no CI"],
+ ["AUTH-01","Registration + email verification",2,"d","auth_service.py register 147-207 (Redis pending reg, 24h TTL, zxcvbn); verify_email 224-299 creates tenant-less user (tenant made later in become_restaurant); audit register_requested + email_verified tested in test_auth_register.py. 30s email latency not measured"],
+ ["AUTH-02","Login + TOTP MFA",2,"d","/auth/login, /mfa/*"],
+ ["AUTH-03","JWT refresh rotation",2,"d","/auth/token/refresh + tests"],
+ ["AUTH-04","RBAC dependency guards",2,"d","rbac.py, team router, tests"],
+ ["TENANT-01","Subdomain routing middleware",2,"p","Implemented on feature/tenant-01-subdomain-middleware: ASGI SubdomainTenantMiddleware (404/403/WS close, 1h Redis cache, invalidation on tenant create/suspend) + tests/unit/test_subdomain_middleware.py. NOT yet run (no Python env on authoring machine) — run pytest before marking done"],
+ ["TENANT-02","Row-level security policies",2,"d","Migrations 0006-0009, rls.py"],
+ ["SEC-03","Owner/staff auth security audit",2,"p","SEC-18 tests exist; no audit report"],
+ ["SEC-04","RLS cross-tenant audit",2,"p","RLS forced; outbox still open (TODO SEC-04)"],
+ ["NEW-OTP-01","Customer OTP request",3,"d","customer_otp_service + tests"],
+ ["NEW-OTP-02","OTP verify + customer JWT",3,"d","customer_security.py, test_customer_session"],
+ ["NEW-OTP-03","Seamless registration",3,"d","test_customer_register"],
+ ["SUB-01","Plans + payment integration",3,"d","Built on Razorpay, not Stripe"],
+ ["SUB-02","Usage tracking + plan gating",3,"d","usage_service, dependencies/subscription"],
+ ["SUB-03","Upgrade flow + billing portal",3,"p","billing.js and API here; billing.html only on unmerged branches"],
+ ["SEC-05","OTP crypto audit",3,"p","Tests exist; no audit report"],
+ ["SEC-06","OTP enumeration prevention",3,"p","Covered by SEC-19 tests"],
+ ["SEC-07","OTP rate limiting",3,"p","rate_limiter + tests"],
+ ["SEC-08","Customer JWT key isolation",3,"p","Implemented; no dedicated test file"],
+ ["SEC-09","PII encryption audit",3,"p","encryption.py + tests; no report"],
+ ["SEC-10","Payment webhook signature",3,"p","razorpay_signature + tests (Razorpay)"],
+ ["REVIEW-01","Smart review composer",4,"d","reputation /generate, Gemini fallback"],
+ ["LOYALTY-01","Branch management + GPS",4,"d","branch_service, branches router"],
+ ["LOYALTY-02","QR generation + R2 storage",4,"d","qr_service, storage_service"],
+ ["STITCH-01","Customer OTP login screen",4,"d","customer/login.html"],
+ ["STITCH-02","OTP verification screen",4,"d","login/verify flow"],
+ ["STITCH-03","Customer registration screen",4,"d","register.html, onboarding.html"],
+ ["SEC-11","GMB OAuth PKCE audit",4,"p","test_gmb_oauth; no report"],
+ ["REVIEW-02","AI response drafting + approval",5,"d","response_service, approve/reject PATCH"],
+ ["REVIEW-03","GMB OAuth + incremental sync",5,"d","gmb_service, sync tasks"],
+ ["LOYALTY-03","Geofence validation + stamp log",5,"d","geofence_service, anti_fraud, /loyalty/scan"],
+ ["STITCH-04","Review composer screen",5,"p","Logic in scan.js; no dedicated template"],
+ ["STITCH-05","Loyalty card screen",5,"d","profile.html + customer-rewards.js"],
+ ["STITCH-06","Stamp celebration screen",5,"p","Scratch step exists; no confetti"],
+ ["SEC-12","Prompt injection prevention test",5,"p","prompt_guard + tests"],
+ ["SEC-13","Geofence fraud bypass audit",5,"p","test_loyalty_scan; no report"],
+ ["SEC-14","QR token entropy audit",5,"t","Nothing found"],
+ ["LOYALTY-04","Rewards + redemption codes",6,"d","/loyalty/redeem, migration 0011"],
+ ["DASH-01","Dashboard + WebSocket",6,"d","dashboard.py WS, broadcast.py"],
+ ["DASH-02","Loyalty analytics + fraud log",6,"d","loyalty_analytics.html, /loyalty/analytics"],
+ ["STITCH-07","Owner dashboard screen",6,"d","dashboard/index.html"],
+ ["STITCH-08","Branch setup + QR download",6,"d","qr_codes.html, loyalty_programs.html"],
+ ["STITCH-09","Loyalty analytics screen",6,"d","loyalty_analytics.html"],
+ ["SEC-15","Celery idempotency audit",6,"t","Nothing found"],
+ ["SEC-16","WebSocket auth + tenant isolation",6,"t","WS exists; no audit or tests"],
+ ["ANIM-01","OTP screen animations",7,"p","Animate.css only on verify_email"],
+ ["ANIM-02","Review composer animations",7,"p","Partial in scan.js"],
+ ["ANIM-03","Loyalty card + stamp animations",7,"p","anime.js loaded; no confetti"],
+ ["ANIM-04","Dashboard animations",7,"t","Not evident"],
+ ["ANIM-05","Landing: Three.js + GSAP",7,"d","landing-motion.js, constellation-grid.js"],
+ ["ANIM-06","Animate.css global setup + modals",7,"d","Libraries wired in base.html"],
+ ["ADMIN-01","Super Admin panel API",8,"d","admin router + tenant mgmt UI"],
+ ["STITCH-10","Billing + pricing page",8,"p","Only on unmerged branches"],
+ ["STITCH-11","Super Admin panel screen",8,"d","admin/index, audit_logs, monitors"],
+ ["STITCH-12","Landing page hero + nav",8,"d","landing/index.html"],
+ ["SEC-17","Pen test plan document",8,"d","docs/PENTEST_PLAN.md (draft)"],
+ ["SEC-18","Auth bypass pen tests",8,"d","tests/security/test_sec18"],
+ ["SEC-19","OTP attack pen tests",8,"d","tests/security/test_sec19"],
+ ["SEC-20","Injection pen tests",8,"d","tests/security/test_sec20"],
+ ["SEC-21","OWASP ZAP dynamic scan",9,"t","No report"],
+ ["SEC-22","Burp Suite manual testing",9,"t","No report"],
+ ["SEC-23","RLS final check (staging)",9,"t","No staging"],
+ ["SEC-24","Security findings report",9,"t","Not written"],
+ ["SEC-25","Remediation verification",10,"t","Depends on SEC-24"],
+ ["SEC-26","SECURITY.md disclosure policy",10,"d","SECURITY.md"],
+ ["SEC-27","RUNBOOK.md incident guide",10,"d","docs/RUNBOOK.md"],
+ ["SEC-28","Pre-launch checklist sign-off",10,"p","Scaffold exists, marked NOT SIGNED"],
+ ["SEC-29","Production monitoring",11,"d","metrics.py, Sentry, Grafana, alerts"],
+ ["SEC-30","Incident response drills",11,"t","Not started"],
+ ["NICE-01","Scratch card gamification",12,"d","migration 0019, test_scratch_cards"],
+ ["NICE-02","WhatsApp reward notifications",12,"p","On unmerged marketing-01 branch"],
+ ["NICE-03","CRM campaign manager",12,"p","On unmerged marketing-01 branch"],
+ ["NICE-04","Analytics export CSV/PDF",12,"d","export router + service"],
+ ["NICE-05","White-label review page",12,"t","Not started"]
+];
+const L = {d:"Done",p:"Partial",t:"Not started"}, C = {d:"t-done",p:"t-part",t:"t-todo"};
+const cnt = s => T.filter(t=>t[3]===s).length, N = T.length;
+const pct = Math.round((cnt("d")+cnt("p")*.5)/N*100);
+document.getElementById("kpis").innerHTML =
+ [[N,"Tickets in Doc 5"],[cnt("d"),"Done"],[cnt("p"),"Partial"],[cnt("t"),"Not started"],[pct+"%","Weighted progress"]]
+ .map(k=>`<div class="card kpi"><b>${k[0]}</b><span>${k[1]}</span></div>`).join("");
+document.getElementById("pct").textContent = pct+"%";
+document.getElementById("bdone").style.width = cnt("d")/N*100+"%";
+document.getElementById("bpart").style.width = cnt("p")/N*100+"%";
+
+// timeline
+const start = new Date("2026-07-16"), today = new Date("2026-09-26");
+const wk = (today-start)/864e5/7;
+document.getElementById("weeks").innerHTML = Array.from({length:12},(_,i)=>`<span>W${i+1}</span>`).join("");
+const col = ["#5b8def","#7a6df0","#a45fd4","#d1568f","#e0684e","#e08b3a","#c9a227","#6aa84f","#2fa38a","#2d8fb5","#4a6fd0","#888"];
+const pos = (a,b)=>`left:${a/12*100}%;width:${(b-a)/12*100}%`;
+document.getElementById("tlplan").innerHTML = PH.filter(p=>p.n<12).map(p=>`<div class="seg" style="${pos(p.w[0]-1,Math.min(p.w[1],12))};background:${col[p.n-1]};opacity:${p.n%2?1:.78}" title="Phase ${p.n}: ${p.name}">P${p.n}</div>`).join("")+`<div class="today" style="left:${wk/12*100}%"></div>`;
+// actual: week of evidence
+const act = [[0,1,"Landing UI (Jul 16-18)"],[1,2.9,"Email, REVIEW-01"],[2.9,4,"Auth, Supabase/Firebase"],[4,5.4,"Core services (Aug 15)"],[5.4,6.6,"Admin, billing (Aug 22-25)"],[6.6,9.3,"No commits"],[9.3,10.2,"NICE + SEC"]];
+document.getElementById("tlact").innerHTML = act.map((a,i)=>`<div class="seg" style="${pos(a[0],a[1])};background:${a[2]==="No commits"?"#999":"#2b6cb0"};opacity:${i%2?.8:1}" title="${a[2]}">${a[2]}</div>`).join("")+`<div class="today" style="left:${wk/12*100}%"></div>`;
+
+// phase table
+const stat = p => { const r=T.filter(t=>t[2]===p.n); const d=r.filter(t=>t[3]==="d").length, pa=r.filter(t=>t[3]==="p").length; return {n:r.length,d,pa,pc:Math.round((d+pa*.5)/r.length*100)}; };
+const wd = w => { const a=new Date(start.getTime()+(w-1)*7*864e5), b=new Date(a.getTime()+6*864e5); const f=x=>x.toLocaleDateString("en-GB",{day:"numeric",month:"short"}); return f(a)+" to "+f(b); };
+document.getElementById("phasetbl").innerHTML = `<tr><th>Phase</th><th>Plan window</th><th>Tickets</th><th>Done</th><th>Progress</th><th>Schedule</th></tr>` + PH.map(p=>{
+  const s=stat(p), due = p.w[1] <= Math.floor(wk);
+  const tag = s.pc===100?["t-done","Complete"]:(due?["t-todo","Overdue"]:(p.w[0]<=wk+1?["t-part","Due now / next"]:["t-part","Upcoming"]));
+  return `<tr><td><b>${p.n}</b> ${p.name}<br><span style="color:var(--mute);font-size:12px">Gate: ${p.gate}</span></td><td>${p.n===12?"Ongoing":`W${p.w[0]}${p.w[1]>p.w[0]?"-"+p.w[1]:""}<br><span style="color:var(--mute);font-size:12px">${wd(p.w[0])}${p.w[1]>p.w[0]?" ... "+wd(p.w[1]).split(" to ")[1]:""}</span>`}</td><td>${s.n}</td><td>${s.d} done, ${s.pa} partial</td><td><div class="bar" style="width:110px"><i class="b-done" style="width:${s.d/s.n*100}%"></i><i class="b-part" style="width:${s.pa/s.n*100}%"></i></div>${s.pc}%</td><td><span class="tag ${tag[0]}">${tag[1]}</span></td></tr>`;}).join("");
+
+// todo list
+let flt="all";
+const F = document.getElementById("filters");
+function drawF(){F.innerHTML=[["all","All"],["d","Done"],["p","Partial"],["t","Not started"]].map(f=>`<button aria-pressed="${flt===f[0]}" data-f="${f[0]}">${f[1]}</button>`).join("");}
+F.onclick=e=>{const b=e.target.closest("button"); if(!b)return; flt=b.dataset.f; drawF(); drawG();};
+function drawG(){
+  document.getElementById("groups").innerHTML = PH.map(p=>{
+    const r=T.filter(t=>t[2]===p.n && (flt==="all"||t[3]===flt)); if(!r.length) return "";
+    return `<details class="grp card" open><summary>Phase ${p.n}: ${p.name}</summary>`+r.map(t=>`<div class="tk"><input type="checkbox" ${t[3]==="d"?"checked":""} aria-label="${t[0]}"><span class="id">${t[0]}</span><span>${t[1]}<span class="note">${t[4]}</span></span><span class="tag ${C[t[3]]}">${L[t[3]]}</span></div>`).join("")+`</details>`;
+  }).join("");
+}
+drawF(); drawG();
+</script>
+</body>
+</html>

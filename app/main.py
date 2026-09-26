@@ -13,8 +13,10 @@ from slowapi.errors import RateLimitExceeded
 from app.api.v1 import api_router
 from app.api.v1.routers.pages import router as pages_router
 from app.core import metrics
+from app.core.config import settings
 from app.core.observability import init_sentry
 from app.core.rate_limiter import limiter, rate_limit_exceeded_handler_with_tracking
+from app.middleware.subdomain import SubdomainTenantMiddleware
 
 # No-op unless SENTRY_DSN is set — see observability.py's module docstring
 # for why this must run before the app starts handling requests, and why it
@@ -51,6 +53,7 @@ app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler_with_tr
 app.include_router(api_router)
 app.include_router(pages_router)  # server-rendered pages, no /api/v1 prefix
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.add_middleware(SubdomainTenantMiddleware)  # TENANT-01: Host header -> request.state.tenant_id
 
 
 @app.middleware("http")

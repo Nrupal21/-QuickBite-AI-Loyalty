@@ -149,6 +149,14 @@ async def onboarding_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "customer/onboarding.html")
 
 
+@router.get("/review", response_class=HTMLResponse)
+async def review_composer_page(request: Request) -> HTMLResponse:
+    """Customer review composer (STITCH-04). Static shell — the branch QR token
+    arrives as `?t=` and is sent by static/js/review-composer.js to the public
+    POST /api/v1/reviews/generate; nothing tenant-specific is rendered here."""
+    return templates.TemplateResponse(request, "customer/review_composer.html")
+
+
 @router.get("/rewards")
 async def rewards_page() -> RedirectResponse:
     """"My Rewards" now lives at /profile — this URL is kept as a redirect

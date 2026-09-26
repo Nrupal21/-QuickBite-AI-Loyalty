@@ -422,6 +422,21 @@ async def test_suspend_tenant_flips_is_active_and_audit_logs():
 
 
 @pytest.mark.asyncio
+async def test_set_tenant_status_invalidates_subdomain_cache(mocker):
+    """TENANT-01: the middleware caches tenant lookups for 1h, so a suspension
+    must drop the cached entry or the tenant stays reachable until it expires."""
+    invalidate = mocker.patch("app.services.admin_service.invalidate_tenant_cache", AsyncMock())
+    tenant = make_tenant(subdomain="marcos", is_active=True)
+    session = make_session([tenant])
+
+    await AdminService(session=session).set_tenant_status(
+        tenant.id, is_active=False, admin=make_admin()
+    )
+
+    invalidate.assert_awaited_once_with("marcos")
+
+
+@pytest.mark.asyncio
 async def test_reactivate_tenant_audit_logs_the_right_action():
     admin = make_admin()
     tenant = make_tenant(is_active=False)

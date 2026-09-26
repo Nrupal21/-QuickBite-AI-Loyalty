@@ -259,6 +259,23 @@ async def test_success_creates_tenant_promotes_role_and_issues_tokens(mocker):
 
 
 @pytest.mark.asyncio
+async def test_success_invalidates_the_new_subdomains_cache_entry(mocker):
+    """TENANT-01: a 30s negative cache entry may exist for this slug from an
+    earlier visit — the new tenant must be resolvable immediately."""
+    invalidate = mocker.patch("app.services.auth_service.invalidate_tenant_cache", AsyncMock())
+    user = make_standard_user(mfa_enabled=True)
+    session = make_session([make_category(), make_plan(), make_owner_role(mfa_required=True), None])
+    mocker.patch(
+        "app.services.auth_service.cache_service.get",
+        AsyncMock(return_value=contact_verification_payload(user)),
+    )
+
+    response = await AuthService(session=session).become_restaurant(user, make_request(), "iphash")
+
+    invalidate.assert_awaited_once_with(response.subdomain)
+
+
+@pytest.mark.asyncio
 async def test_success_revokes_the_stale_tenant_less_token(mocker):
     user = make_standard_user(mfa_enabled=True)
     owner_role = make_owner_role(mfa_required=False)

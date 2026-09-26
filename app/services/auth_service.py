@@ -81,6 +81,7 @@ from app.schemas.auth import (
     UserRegister,
     VerifyEmailResponse,
 )
+from app.middleware.subdomain import invalidate_tenant_cache
 from app.services import messaging_service
 from app.services.identity_service import classify_identifier, classify_staff_identifier
 
@@ -541,6 +542,7 @@ class AuthService:
         if owner_role.mfa_required and not user.mfa_enabled:
             mfa_token = await self._issue_mfa_session(user, purpose="enroll")
             await self.session.commit()
+            await invalidate_tenant_cache(subdomain)
             await self._send_join_success_notifications(user, payload.restaurant_name)
             logger.info(
                 "auth.become_restaurant.mfa_enrollment_required",
@@ -556,6 +558,7 @@ class AuthService:
 
         tokens = await self.issue_tokens(user, ip_address_hash, role=owner_role)
         await self.session.commit()
+        await invalidate_tenant_cache(subdomain)
         await self._send_join_success_notifications(user, payload.restaurant_name)
         logger.info(
             "auth.become_restaurant.success", tenant_id=str(tenant.id), user_id=str(user.id)

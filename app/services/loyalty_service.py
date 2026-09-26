@@ -657,6 +657,7 @@ class LoyaltyService:
                 branch_id=branch.id,
                 customer_id=customer.id if customer else None,
                 customer_phone_hash=rate_limit_identity if customer else None,
+                anon_identity_hash=None if customer else rate_limit_identity,
                 gps_latitude_at_scan=gps_lat,
                 gps_longitude_at_scan=gps_lng,
                 distance_from_branch_m=distance_m,

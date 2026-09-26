@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "local"
     DEBUG: bool = False
     ALLOWED_HOSTS: str = "localhost,127.0.0.1"
+    # Apex domain restaurants hang off: <subdomain>.<BASE_DOMAIN> (TENANT-01).
+    # Use `localhost` locally to reach tenants at marcos.localhost:8000.
+    BASE_DOMAIN: str = "quickbite.ai"
 
     # --- Database & Cache ---
     DATABASE_URL: str
