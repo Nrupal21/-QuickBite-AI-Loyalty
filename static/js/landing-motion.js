@@ -6,7 +6,13 @@
   'use strict';
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Both scripts are separate CDN requests — gsap.min.js can succeed while
+  // ScrollTrigger.min.js fails (network hiccup, an extension blocking a
+  // "tracker"-sounding filename, ...). Checking only `hasGsap` let that case
+  // reach `gsap.registerPlugin(ScrollTrigger)` below and throw, aborting the
+  // whole script before any [data-reveal] element was ever made visible.
   var hasGsap = typeof window.gsap !== 'undefined';
+  var hasScrollTrigger = typeof window.ScrollTrigger !== 'undefined';
 
   document.documentElement.classList.remove('no-js');
 
@@ -31,7 +37,7 @@
     });
   }
 
-  if (!hasGsap || reduceMotion) {
+  if (!hasGsap || !hasScrollTrigger || reduceMotion) {
     document.querySelectorAll('[data-reveal]').forEach(function (el) {
       el.style.opacity = '1';
       el.style.transform = 'none';

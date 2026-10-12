@@ -295,6 +295,7 @@ async def test_scan_unlock_sends_whatsapp_when_opted_in_and_plan_allows(mocker):
     mocker.patch("app.core.cache_service.set", AsyncMock())
     mocker.patch("app.services.loyalty_service.tenant_has_feature", AsyncMock(return_value=True))
     mocker.patch("app.services.loyalty_service.decrypt_pii", MagicMock(return_value="+919876543210"))
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(return_value=True))
     send_whatsapp = mocker.patch(
         "app.services.loyalty_service.messaging_service.send_reward_unlocked_whatsapp",
         AsyncMock(return_value=True),
@@ -625,3 +626,80 @@ async def test_redeem_expired_code_returns_410():
 
     assert exc_info.value.status_code == 410
     assert exc_info.value.detail["error"]["code"] == "REDEMPTION_CODE_EXPIRED"
+
+
+# --- SEC-15: reward WhatsApp idempotency ---------------------------------
+
+
+def _fake_idempotency_store(mocker) -> dict[str, str]:
+    store: dict[str, str] = {}
+
+    async def set_if_absent(key, value, ttl):  # noqa: ARG001
+        if key in store:
+            return False
+        store[key] = value
+        return True
+
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(side_effect=set_if_absent))
+    mocker.patch("app.core.cache_service.delete", AsyncMock(side_effect=lambda key: store.pop(key, None)))
+    mocker.patch("app.services.loyalty_service.tenant_has_feature", AsyncMock(return_value=True))
+    mocker.patch("app.services.loyalty_service.decrypt_pii", MagicMock(return_value="+919876543210"))
+    return store
+
+
+def _redemption():
+    return RewardRedemption(
+        tenant_id=TENANT_ID,
+        branch_id=uuid.uuid4(),
+        reward_program_id=uuid.uuid4(),
+        customer_id=uuid.uuid4(),
+        code="ABC123",
+        expires_at=datetime.now(timezone.utc) + timedelta(days=7),
+    )
+
+
+@pytest.mark.asyncio
+async def test_reward_whatsapp_alert_sends_once_for_the_same_redemption(mocker):
+    _fake_idempotency_store(mocker)
+    send = mocker.patch(
+        "app.services.loyalty_service.messaging_service.send_reward_unlocked_whatsapp",
+        AsyncMock(return_value=True),
+    )
+    service = LoyaltyService(session=MagicMock())
+    branch, customer, redemption = make_branch(), make_customer(), _redemption()
+
+    await service._send_reward_whatsapp_alert(branch, customer, redemption)
+    await service._send_reward_whatsapp_alert(branch, customer, redemption)  # retry / duplicate request
+
+    send.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_reward_whatsapp_alert_can_retry_after_a_failed_send(mocker):
+    _fake_idempotency_store(mocker)
+    send = mocker.patch(
+        "app.services.loyalty_service.messaging_service.send_reward_unlocked_whatsapp",
+        AsyncMock(side_effect=[False, True]),
+    )
+    service = LoyaltyService(session=MagicMock())
+    branch, customer, redemption = make_branch(), make_customer(), _redemption()
+
+    await service._send_reward_whatsapp_alert(branch, customer, redemption)  # Meta failure
+    await service._send_reward_whatsapp_alert(branch, customer, redemption)  # retry delivers
+
+    assert send.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_reward_whatsapp_alert_releases_the_claim_when_the_send_raises(mocker):
+    store = _fake_idempotency_store(mocker)
+    mocker.patch(
+        "app.services.loyalty_service.messaging_service.send_reward_unlocked_whatsapp",
+        AsyncMock(side_effect=RuntimeError("boom")),
+    )
+    service = LoyaltyService(session=MagicMock())
+
+    with pytest.raises(RuntimeError):
+        await service._send_reward_whatsapp_alert(make_branch(), make_customer(), _redemption())
+
+    assert store == {}

@@ -39,14 +39,15 @@
         el.textContent = new Date().getFullYear();
       });
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
-      defer
-    ></script>
+    {# Self-hosted under static/vendor/ rather than loaded from cdnjs — a
+       blocked/failed CDN request (ad-blocker, corporate proxy, flaky
+       network) used to leave every [data-reveal] element permanently
+       hidden; vendoring removes that external dependency entirely. #}
+    <script src="{{ url_for('static', path='vendor/gsap/gsap.min.js') }}" defer></script>
+    <script src="{{ url_for('static', path='vendor/gsap/ScrollTrigger.min.js') }}" defer></script>
     {# NICE-01's scratch-card reveal sparkle — the scan sheet (nav.html) ships
        on every page, so this loads globally rather than per-page. #}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" defer></script>
+    <script src="{{ url_for('static', path='vendor/animejs/anime.min.js') }}" defer></script>
     <script src="{{ url_for('static', path='js/nav.js') }}" defer></script>
     <script src="{{ url_for('static', path='js/scan.js') }}" defer></script>
     {% block extra_scripts %}{% endblock %}

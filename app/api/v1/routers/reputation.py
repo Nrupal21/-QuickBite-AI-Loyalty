@@ -143,8 +143,8 @@ async def connect_gmb(
 ) -> GmbConnectResponse:
     """Start the GMB OAuth flow for one branch. Owner+ only (REVIEW-03)."""
     await _get_owned_branch(session, branch_id)
-    state = await gmb_service.create_oauth_state(current_user.tenant_id, branch_id)
-    return GmbConnectResponse(authorize_url=gmb_service.build_authorize_url(state))
+    state, code_verifier = await gmb_service.create_oauth_state(current_user.tenant_id, branch_id)
+    return GmbConnectResponse(authorize_url=gmb_service.build_authorize_url(state, code_verifier))
 
 
 @gmb_router.get("/oauth/callback", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
@@ -170,7 +170,8 @@ async def gmb_oauth_callback(
     dest = "/dashboard/google-profile"
 
     parsed = await gmb_service.consume_oauth_state(state)
-    if parsed is None:
+    # A state minted before SEC-11 has no code_verifier — treat it as expired.
+    if parsed is None or "code_verifier" not in parsed:
         return RedirectResponse(url=f"{dest}?gmb=expired", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
     tenant_id = uuid.UUID(parsed["tenant_id"])
@@ -179,7 +180,11 @@ async def gmb_oauth_callback(
 
     try:
         await gmb_service.complete_connect(
-            session, code=code, tenant_id=tenant_id, branch_id=branch_id
+            session,
+            code=code,
+            code_verifier=parsed["code_verifier"],
+            tenant_id=tenant_id,
+            branch_id=branch_id,
         )
     except gmb_service.GMBOAuthError:
         return RedirectResponse(url=f"{dest}?gmb=failed", status_code=status.HTTP_307_TEMPORARY_REDIRECT)

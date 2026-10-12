@@ -28,6 +28,9 @@
   --hero-fg: #f5f5f7;
   --hero-muted: #a1a1aa;
   --hero-border: rgba(255, 255, 255, 0.1);
+  /* --accent lightened ~35% toward white so it stays legible on the dark
+     hero/stat surfaces — same hue as --accent, never a second brand blue. */
+  --accent-on-dark: #5f8ef5;
 
   --radius-sm: 10px;
   --radius-md: 16px;
@@ -1046,30 +1049,30 @@ p {
   background-image: radial-gradient(120% 140% at 0% 0%, rgba(37, 99, 235, 0.16), transparent 55%);
   color: var(--hero-fg);
   border-radius: var(--radius-lg);
-  padding: var(--space-5) var(--space-4);
+  padding: clamp(2rem, 4vw, var(--space-5)) clamp(1.5rem, 4vw, var(--space-4));
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-5);
   overflow: hidden;
 }
 
 @media (min-width: 720px) {
   .stat-band {
     grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4);
   }
 
-  /* Hairline dividers seated in the grid gap — no extra padding needed. */
+  /* Divider lives on the border, not a positioned pseudo-element — no magic
+     offsets to keep in sync with the grid gap. */
   .stat:not(:first-child) {
-    position: relative;
+    padding-left: var(--space-4);
+    border-left: 1px solid var(--hero-border);
   }
+}
 
-  .stat:not(:first-child)::before {
-    content: '';
-    position: absolute;
-    top: 0.25rem;
-    bottom: 0.25rem;
-    left: calc(var(--space-4) / -2);
-    width: 1px;
-    background: rgba(255, 255, 255, 0.1);
+@media (max-width: 719px) {
+  .stat:not(:first-child) {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--hero-border);
   }
 }
 
@@ -1077,15 +1080,27 @@ p {
   text-align: left;
 }
 
+.stat-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+  background: rgba(95, 142, 245, 0.14);
+  color: var(--accent-on-dark);
+}
+
 .stat-accent {
   display: block;
-  width: 28px;
-  height: 3px;
+  width: 24px;
+  height: 2px;
   border-radius: var(--radius-full);
-  margin-bottom: var(--space-1);
-  background: linear-gradient(90deg, var(--accent), #60a5fa);
+  margin-bottom: var(--space-2);
+  background: var(--accent-on-dark);
   transform: scaleX(0);
   transform-origin: left;
+  transition: transform 400ms var(--ease-out);
 }
 
 .no-js .stat-accent {
@@ -1107,6 +1122,7 @@ p {
 
 .stat-label {
   margin-top: 0.375rem;
+  max-width: 26ch;
   font-size: 0.875rem;
   line-height: 1.5;
   color: var(--hero-muted);

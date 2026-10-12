@@ -96,16 +96,6 @@ def create_refresh_token() -> str:
     return secrets.token_urlsafe(48)
 
 
-def generate_qr_token() -> str:
-    """Fresh, unguessable value for `Branch.qr_code_token` (128-bit) — printed
-    on a receipt QR and posted back verbatim as `ScanRequest.qr_token` /
-    `ReviewGenerateRequest.branch_qr_token`. Regenerating a branch's token
-    (BRANCH-01) invalidates every receipt already printed with the old one,
-    same intent as generate_verification_token but its own function so the
-    two can never be interchanged at a call site."""
-    return secrets.token_urlsafe(16)
-
-
 _REDEMPTION_CODE_ALPHABET = string.ascii_uppercase + string.digits
 
 

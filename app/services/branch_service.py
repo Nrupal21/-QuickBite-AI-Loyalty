@@ -18,7 +18,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.encryption import encrypt_pii, sha256_hex
-from app.core.security import generate_qr_token
 from app.db.models.audit import AuditLog
 from app.db.models.branch import Branch
 from app.db.models.loyalty import StampLog
@@ -68,7 +67,7 @@ async def create_branch(session: AsyncSession, request: BranchCreateRequest, own
         encrypted_address=encrypt_pii(request.address),
         location=location,
         geofence_radius_m=request.geofence_radius_m,
-        qr_code_token=generate_qr_token(),
+        qr_code_token=qr_service.generate_qr_token(),
         is_active=True,
     )
     session.add(branch)
@@ -98,7 +97,7 @@ async def regenerate_qr_token(
     the old one — the QR Codes page's "Regenerate" action, for a leaked or
     compromised code."""
     branch = await _get_branch_or_404(session, branch_id)
-    branch.qr_code_token = generate_qr_token()
+    branch.qr_code_token = qr_service.generate_qr_token()
     session.add(
         AuditLog(
             tenant_id=owner.tenant_id,

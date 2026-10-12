@@ -4,10 +4,14 @@ httpx and Redis (cache_service) are always mocked (AGENTS.md §7): these
 tests never talk to Google or boot a real Redis instance.
 """
 
+import base64
+import hashlib
 import json
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock
+from urllib.parse import parse_qs, urlparse
 
 import httpx
 import pytest
@@ -84,13 +88,84 @@ def test_authorize_url_carries_state_and_offline_access(mocker):
     mocker.patch.object(gmb_service.settings, "GOOGLE_CLIENT_ID", "client-123")
     mocker.patch.object(gmb_service.settings, "GMB_OAUTH_REDIRECT_URI", "https://app.quickbite.ai/gmb/callback")
 
-    url = gmb_service.build_authorize_url("state-abc")
+    url = gmb_service.build_authorize_url("state-abc", "verifier-xyz")
 
     assert "client_id=client-123" in url
     assert "state=state-abc" in url
     assert "access_type=offline" in url
     assert "prompt=consent" in url
     assert "response_type=code" in url
+
+
+# --- PKCE (SEC-11) -------------------------------------------------------------
+
+
+def _query(url: str) -> dict[str, str]:
+    return {k: v[0] for k, v in parse_qs(urlparse(url).query).items()}
+
+
+def test_authorize_url_uses_s256_code_challenge():
+    verifier = secrets.token_urlsafe(64)
+    params = _query(gmb_service.build_authorize_url("s", verifier))
+
+    expected = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
+    assert params["code_challenge_method"] == "S256"
+    assert params["code_challenge"] == expected
+    assert "=" not in params["code_challenge"]
+    assert verifier not in gmb_service.build_authorize_url("s", verifier)  # verifier never leaves the server
+
+
+def test_code_challenge_matches_rfc7636_vector():
+    # RFC 7636 Appendix B
+    assert (
+        gmb_service.compute_code_challenge("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk")
+        == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+    )
+
+
+@pytest.mark.asyncio
+async def test_create_oauth_state_mints_a_64_byte_verifier_and_stores_it(mocker):
+    store: dict[str, str] = {}
+    mocker.patch(
+        "app.services.gmb_service.cache_service.set",
+        AsyncMock(side_effect=lambda key, value, ttl=None: store.__setitem__(key, value)),
+    )
+
+    state, verifier = await gmb_service.create_oauth_state(TENANT_ID, BRANCH_ID)
+
+    assert len(verifier) == len(secrets.token_urlsafe(64))  # 86 chars, within RFC 7636's 43-128
+    stored = json.loads(store[f"gmb_oauth_state:{state}"])
+    assert stored["code_verifier"] == verifier
+
+
+@pytest.mark.asyncio
+async def test_exchange_sends_code_verifier(mocker):
+    post = AsyncMock(return_value=json_response(200, {"access_token": "a"}))
+    mock_httpx_client(mocker, post=post)
+
+    await gmb_service.exchange_code_for_tokens("auth-code", "the-verifier")
+
+    assert post.call_args.kwargs["data"]["code_verifier"] == "the-verifier"
+
+
+@pytest.mark.asyncio
+async def test_exchange_with_a_different_code_verifier_fails(mocker):
+    """Simulates Google: it redeems the code only if SHA256(verifier) matches
+    the challenge from the authorize request. A replay with another verifier is rejected."""
+    real_verifier = secrets.token_urlsafe(64)
+    challenge = gmb_service.compute_code_challenge(real_verifier)
+
+    async def fake_google(url, data=None, **_):
+        ok = gmb_service.compute_code_challenge(data["code_verifier"]) == challenge
+        if ok:
+            return json_response(200, {"access_token": "a", "refresh_token": "r"})
+        return json_response(400, {"error": "invalid_grant"})
+
+    mock_httpx_client(mocker, post=AsyncMock(side_effect=fake_google))
+
+    assert (await gmb_service.exchange_code_for_tokens("code", real_verifier))["access_token"] == "a"
+    with pytest.raises(gmb_service.GMBOAuthError):
+        await gmb_service.exchange_code_for_tokens("code", secrets.token_urlsafe(64))
 
 
 # --- OAuth state (CSRF) -------------------------------------------------------
@@ -110,10 +185,10 @@ async def test_oauth_state_round_trips_tenant_and_branch(mocker):
         "app.services.gmb_service.cache_service.delete", AsyncMock(side_effect=lambda key: store.pop(key, None))
     )
 
-    state = await gmb_service.create_oauth_state(TENANT_ID, BRANCH_ID)
+    state, verifier = await gmb_service.create_oauth_state(TENANT_ID, BRANCH_ID)
     parsed = await gmb_service.consume_oauth_state(state)
 
-    assert parsed == {"tenant_id": str(TENANT_ID), "branch_id": str(BRANCH_ID)}
+    assert parsed == {"tenant_id": str(TENANT_ID), "branch_id": str(BRANCH_ID), "code_verifier": verifier}
 
 
 @pytest.mark.asyncio
@@ -212,7 +287,7 @@ async def test_complete_connect_creates_a_new_profile(mocker):
     session = make_session([None])  # no existing profile
 
     profile = await gmb_service.complete_connect(
-        session, code="auth-code", tenant_id=TENANT_ID, branch_id=BRANCH_ID
+        session, code="auth-code", code_verifier="v", tenant_id=TENANT_ID, branch_id=BRANCH_ID
     )
 
     assert profile.gmb_account_id == "999"
@@ -240,7 +315,9 @@ async def test_complete_connect_wraps_a_403_from_the_accounts_api(mocker):
     session = make_session()
 
     with pytest.raises(gmb_service.GMBOAuthError):
-        await gmb_service.complete_connect(session, code="auth-code", tenant_id=TENANT_ID, branch_id=BRANCH_ID)
+        await gmb_service.complete_connect(
+            session, code="auth-code", code_verifier="v", tenant_id=TENANT_ID, branch_id=BRANCH_ID
+        )
 
 
 @pytest.mark.asyncio
@@ -249,7 +326,7 @@ async def test_exchange_code_wraps_a_connection_failure(mocker):
     mock_httpx_client(mocker, post=post)
 
     with pytest.raises(gmb_service.GMBOAuthError):
-        await gmb_service.exchange_code_for_tokens("auth-code")
+        await gmb_service.exchange_code_for_tokens("auth-code", "v")
 
 
 @pytest.mark.asyncio
@@ -269,7 +346,9 @@ async def test_complete_connect_without_refresh_token_raises(mocker):
     session = make_session()
 
     with pytest.raises(gmb_service.GMBOAuthError):
-        await gmb_service.complete_connect(session, code="auth-code", tenant_id=TENANT_ID, branch_id=BRANCH_ID)
+        await gmb_service.complete_connect(
+            session, code="auth-code", code_verifier="v", tenant_id=TENANT_ID, branch_id=BRANCH_ID
+        )
 
 
 @pytest.mark.asyncio
@@ -286,7 +365,7 @@ async def test_complete_connect_updates_an_existing_profile(mocker):
     session = make_session([existing])
 
     profile = await gmb_service.complete_connect(
-        session, code="auth-code", tenant_id=TENANT_ID, branch_id=BRANCH_ID
+        session, code="auth-code", code_verifier="v", tenant_id=TENANT_ID, branch_id=BRANCH_ID
     )
 
     assert profile is existing
@@ -346,3 +425,23 @@ async def test_disconnect_already_disconnected_is_a_no_op(mocker):
     assert result is profile
     post.assert_not_called()
     session.commit.assert_not_called()
+
+
+# --- callback guard (SEC-11 rollout) -------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_callback_treats_a_pre_pkce_state_as_expired(mocker):
+    """A state minted before SEC-11 has no code_verifier: redirect to ?gmb=expired, never 500."""
+    from app.api.v1.routers import reputation  # noqa: PLC0415
+
+    legacy = {"tenant_id": str(TENANT_ID), "branch_id": str(BRANCH_ID)}
+    mocker.patch.object(reputation.gmb_service, "consume_oauth_state", AsyncMock(return_value=legacy))
+    complete = mocker.patch.object(reputation.gmb_service, "complete_connect", AsyncMock())
+
+    response = await reputation.gmb_oauth_callback.__wrapped__(
+        MagicMock(), code="c", state="s", session=MagicMock()
+    )
+
+    assert response.headers["location"].endswith("?gmb=expired")
+    complete.assert_not_called()

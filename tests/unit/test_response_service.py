@@ -375,12 +375,12 @@ async def test_batch_skips_a_review_when_generation_fails(mocker):
 @pytest.mark.asyncio
 async def test_post_skips_when_already_sent(mocker):
     mocker.patch("app.services.response_service.cache_service.exists", AsyncMock(return_value=True))
-    session = MagicMock()
+    session = make_session([make_response(approval_state="posted")])
 
     outcome = await response_service.post_approved_response_to_gmb(session, RESPONSE_ID)
 
     assert outcome == "already_sent"
-    session.execute.assert_not_called()
+    session.commit.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -457,3 +457,53 @@ async def test_staff_is_blocked_from_the_approval_endpoints():
         await guard(current_user=make_user(), session=session)
 
     assert exc_info.value.status_code == 403
+
+
+# --- SEC-15: Celery idempotency / crash recovery ---------------------------
+
+
+def _fake_flag_store(mocker) -> dict[str, str]:
+    store: dict[str, str] = {}
+    mocker.patch(
+        "app.services.response_service.cache_service.exists",
+        AsyncMock(side_effect=lambda key: key in store),
+    )
+    mocker.patch(
+        "app.services.response_service.cache_service.set",
+        AsyncMock(side_effect=lambda key, value, ttl=None: store.__setitem__(key, value)),
+    )
+    return store
+
+
+@pytest.mark.asyncio
+async def test_post_twice_makes_only_one_gmb_call(mocker):
+    _fake_flag_store(mocker)
+    post_reply = mocker.patch("app.services.response_service.gmb_service.post_review_reply", AsyncMock())
+    response = make_response(approval_state="approved", final_text="Thanks!")
+    session = make_session([response, make_review(), make_profile(), response])
+
+    first = await response_service.post_approved_response_to_gmb(session, RESPONSE_ID)
+    second = await response_service.post_approved_response_to_gmb(session, RESPONSE_ID)
+
+    assert (first, second) == ("posted", "already_sent")
+    post_reply.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_worker_crash_before_commit_does_not_repost_on_restart(mocker):
+    """Worker dies after Google accepted the reply but before the DB commit.
+    The restarted task must not call GMB again, and must finish the
+    bookkeeping so the row ends 'posted'."""
+    _fake_flag_store(mocker)
+    post_reply = mocker.patch("app.services.response_service.gmb_service.post_review_reply", AsyncMock())
+    response = make_response(approval_state="approved", final_text="Thanks!")
+    session = make_session([response, make_review(), make_profile(), response])
+    session.commit = AsyncMock(side_effect=[RuntimeError("worker killed"), None])
+
+    with pytest.raises(RuntimeError):
+        await response_service.post_approved_response_to_gmb(session, RESPONSE_ID)
+    outcome = await response_service.post_approved_response_to_gmb(session, RESPONSE_ID)  # restart
+
+    assert outcome == "already_sent"
+    post_reply.assert_awaited_once()
+    assert response.approval_state == "posted"

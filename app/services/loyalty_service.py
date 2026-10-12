@@ -51,6 +51,7 @@ SCAN_RATE_LIMIT_TTL_SECONDS = 3600
 # tenant's plan — matches check_subscription_tier's feature_limits example
 # ("multi_branch"/"whatsapp") in subscription.py's docstring.
 WHATSAPP_FEATURE = "whatsapp"
+REWARD_WHATSAPP_IDEMPOTENCY_TTL_SECONDS = 86400
 # NICE-01: gates the scratch-card mechanic. Matches the exact key already
 # seeded in scripts/seed_plans.py's feature_limits (True for pro/enterprise,
 # False for starter).
@@ -249,14 +250,28 @@ class LoyaltyService:
     ) -> None:
         if not await tenant_has_feature(self.session, branch.tenant_id, WHATSAPP_FEATURE):
             return
-        await messaging_service.send_reward_unlocked_whatsapp(
-            decrypt_pii(customer.encrypted_phone),
-            branch.name,
-            redemption.code,
-            redemption.expires_at.strftime("%d %b %Y"),
-            session=self.session,
-            tenant_id=branch.tenant_id,
-        )
+
+        # SEC-15: one reward code -> at most one WhatsApp, however many times
+        # this runs (duplicate request, retry, redelivery). The claim is atomic
+        # (SET NX), and released if the send fails so a retry can still deliver.
+        sent_key = f"reward_whatsapp_sent:{branch.tenant_id}:{redemption.code}"
+        if not await cache_service.set_if_absent(sent_key, "1", ttl=REWARD_WHATSAPP_IDEMPOTENCY_TTL_SECONDS):
+            logger.info("loyalty.reward_whatsapp.skipped_already_sent", branch_id=str(branch.id))
+            return
+        try:
+            delivered = await messaging_service.send_reward_unlocked_whatsapp(
+                decrypt_pii(customer.encrypted_phone),
+                branch.name,
+                redemption.code,
+                redemption.expires_at.strftime("%d %b %Y"),
+                session=self.session,
+                tenant_id=branch.tenant_id,
+            )
+        except Exception:
+            await cache_service.delete(sent_key)
+            raise
+        if not delivered:
+            await cache_service.delete(sent_key)
 
     # --- NICE-01: scratch cards -----------------------------------------
 

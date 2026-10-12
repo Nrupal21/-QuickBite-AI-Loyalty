@@ -15,9 +15,19 @@ later, not a rework of this contract.
 """
 
 import io
+import secrets
 
 import qrcode
 import qrcode.constants
+
+
+def generate_qr_token() -> str:
+    """Fresh, unguessable value for `Branch.qr_code_token` (SEC-14: 256-bit,
+    43 chars) — printed on a receipt QR and posted back verbatim as
+    `ScanRequest.qr_token` / `ReviewGenerateRequest.branch_qr_token`.
+    Regenerating a branch's token (BRANCH-01) invalidates every receipt
+    already printed with the old one."""
+    return secrets.token_urlsafe(32)
 
 
 def generate_qr_png(token: str) -> bytes:

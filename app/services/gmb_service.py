@@ -10,6 +10,8 @@ refresh token (`get_valid_access_token`), and disconnecting
 about what QuickBite does with the reviews it returns.
 """
 
+import base64
+import hashlib
 import json
 import secrets
 import uuid
@@ -117,8 +119,14 @@ async def post_review_reply(profile: GMBProfile, external_review_id: str, reply_
 # --- OAuth: connect ----------------------------------------------------------
 
 
-def build_authorize_url(state: str) -> str:
-    """The URL to send the owner's browser to start the consent screen."""
+def compute_code_challenge(code_verifier: str) -> str:
+    """PKCE S256 challenge: base64url(SHA-256(verifier)) with no '=' padding (RFC 7636)."""
+    digest = hashlib.sha256(code_verifier.encode("ascii")).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+
+
+def build_authorize_url(state: str, code_verifier: str) -> str:
+    """The URL to send the owner's browser to start the consent screen (PKCE S256, SEC-11)."""
     params = {
         "client_id": settings.GOOGLE_CLIENT_ID,
         "redirect_uri": settings.GMB_OAUTH_REDIRECT_URI,
@@ -130,19 +138,34 @@ def build_authorize_url(state: str) -> str:
         # reconnect after a revoke silently gets no refresh_token at all.
         "prompt": "consent",
         "state": state,
+        "code_challenge": compute_code_challenge(code_verifier),
+        "code_challenge_method": "S256",
     }
     return f"{_OAUTH_AUTHORIZE_URL}?{urlencode(params)}"
 
 
-async def create_oauth_state(tenant_id: uuid.UUID, branch_id: uuid.UUID) -> str:
-    """Mint a single-use CSRF token binding this connect attempt to a branch."""
+async def create_oauth_state(tenant_id: uuid.UUID, branch_id: uuid.UUID) -> tuple[str, str]:
+    """Mint a single-use CSRF token binding this connect attempt to a branch,
+    plus the PKCE `code_verifier` for it (SEC-11). The verifier is kept only
+    server-side, in the same Redis payload as the state — it never reaches the
+    browser, so an intercepted callback can't be redeemed without it.
+
+    Returns `(state, code_verifier)`.
+    """
     state = secrets.token_urlsafe(32)
+    code_verifier = secrets.token_urlsafe(64)
     await cache_service.set(
         f"{_OAUTH_STATE_KEY_PREFIX}:{state}",
-        json.dumps({"tenant_id": str(tenant_id), "branch_id": str(branch_id)}),
+        json.dumps(
+            {
+                "tenant_id": str(tenant_id),
+                "branch_id": str(branch_id),
+                "code_verifier": code_verifier,
+            }
+        ),
         ttl=_OAUTH_STATE_TTL_SECONDS,
     )
-    return state
+    return state, code_verifier
 
 
 async def consume_oauth_state(state: str) -> dict[str, str] | None:
@@ -155,14 +178,16 @@ async def consume_oauth_state(state: str) -> dict[str, str] | None:
     return json.loads(raw)
 
 
-async def exchange_code_for_tokens(code: str) -> dict:
-    """Trade an authorization code for an access + refresh token pair."""
+async def exchange_code_for_tokens(code: str, code_verifier: str) -> dict:
+    """Trade an authorization code for an access + refresh token pair.
+    Google checks `code_verifier` against the `code_challenge` sent at authorize time."""
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT_SECONDS) as client:
             response = await client.post(
                 _OAUTH_TOKEN_URL,
                 data={
                     "code": code,
+                    "code_verifier": code_verifier,
                     "client_id": settings.GOOGLE_CLIENT_ID,
                     "client_secret": settings.GOOGLE_CLIENT_SECRET,
                     "redirect_uri": settings.GMB_OAUTH_REDIRECT_URI,
@@ -220,12 +245,12 @@ async def _resolve_first_account_and_location(access_token: str) -> tuple[str, s
 
 
 async def complete_connect(
-    session: AsyncSession, *, code: str, tenant_id: uuid.UUID, branch_id: uuid.UUID
+    session: AsyncSession, *, code: str, code_verifier: str, tenant_id: uuid.UUID, branch_id: uuid.UUID
 ) -> GMBProfile:
     """Finish the OAuth callback: exchange the code, resolve the location,
     and upsert the branch's `GMBProfile`. Caller must have already bound
     `tenant_id` for RLS (the callback has no bearer token to do it for us)."""
-    token_data = await exchange_code_for_tokens(code)
+    token_data = await exchange_code_for_tokens(code, code_verifier)
     access_token = token_data["access_token"]
     refresh_token = token_data.get("refresh_token")
     if not refresh_token:

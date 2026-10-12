@@ -270,6 +270,19 @@ async def _draft_for_tenant(session: AsyncSession, tenant_id: uuid.UUID, *, limi
     return drafted
 
 
+async def _mark_posted_after_crash(session: AsyncSession, review_response_id: uuid.UUID) -> None:
+    """A retry that finds the posted flag: the GMB call already happened, so
+    only repair the row if the crashed run died before its commit."""
+    response = (
+        await session.execute(select(ReviewResponse).where(ReviewResponse.id == review_response_id))
+    ).scalar_one_or_none()
+    if response is None or response.approval_state != "approved":
+        return
+    async with rls.tenant_context(session, response.tenant_id):
+        response.approval_state = "posted"
+        await session.commit()
+
+
 async def post_approved_response_to_gmb(session: AsyncSession, review_response_id: uuid.UUID) -> str:
     """Post one approved response to GMB. Called by the `post_approved_response`
     Celery task — kept here, not in the task, so it is unit-testable directly.
@@ -278,15 +291,17 @@ async def post_approved_response_to_gmb(session: AsyncSession, review_response_i
     case (already sent, not approved, no GMB profile, token issues) is an
     expected skip the task should log and move past, not a Celery retry.
 
-    Idempotency (REVIEW-02: "prevents duplicate GMB posts on Celery retry")
-    is two layers: a Redis flag keyed on the row id short-circuits a retry
-    cheaply, and `approval_state` on the row is the authoritative guard once
-    Postgres is touched — the Redis flag is set only after `approval_state`
-    flips to "posted", so a crash between the two just means the next retry
-    finds the row already posted and returns early there instead.
+    Idempotency (REVIEW-02: "prevents duplicate GMB posts on Celery retry";
+    SEC-15: crash mid-task -> restart -> exactly one GMB call) is two layers:
+    a Redis flag keyed on the row id, and `approval_state` on the row. The
+    flag is set immediately after Google accepts the reply and BEFORE the DB
+    commit, so a worker crash between the two cannot lead to a second GMB
+    call: the retry finds the flag, and only finishes the bookkeeping the
+    crashed run missed (flips `approval_state` to "posted").
     """
     posted_key = f"gmb_reply_posted:{review_response_id}"
     if await cache_service.exists(posted_key):
+        await _mark_posted_after_crash(session, review_response_id)
         logger.info("review_response.post_skipped_already_sent", review_response_id=str(review_response_id))
         return "already_sent"
 
@@ -323,10 +338,12 @@ async def post_approved_response_to_gmb(session: AsyncSession, review_response_i
             )
             return "not_connected" if isinstance(exc, GMBNotConnected) else "token_expired"
 
+        # Flag before commit — see docstring. Google has the reply now; from
+        # here a retry must never call GMB again.
+        await cache_service.set(posted_key, "1", ttl=_GMB_POST_IDEMPOTENCY_TTL_SECONDS)
         response.approval_state = "posted"
         await session.commit()
 
-    await cache_service.set(posted_key, "1", ttl=_GMB_POST_IDEMPOTENCY_TTL_SECONDS)
     logger.info("review_response.posted_to_gmb", review_response_id=str(review_response_id))
     return "posted"
 
