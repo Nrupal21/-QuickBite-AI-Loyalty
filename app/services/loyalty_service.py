@@ -109,7 +109,11 @@ class LoyaltyService:
                 },
             )
 
-        if await cache_service.exists(rate_limit_key):
+        # SEC-15/8.4: claim the rate-limit slot atomically (SET NX) BEFORE any
+        # DB write. The old check-then-set-after-commit let N concurrent
+        # requests all pass the check and all be stamped. Released below if
+        # the scan fails to commit, so a failed request doesn't burn the slot.
+        if not await cache_service.set_if_absent(rate_limit_key, "1", ttl=SCAN_RATE_LIMIT_TTL_SECONDS):
             logger.info("loyalty.scan.rate_limited", branch_id=str(branch.id))
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -123,37 +127,40 @@ class LoyaltyService:
                 headers={"Retry-After": str(SCAN_RATE_LIMIT_TTL_SECONDS)},
             )
 
-        self._add_stamp_log(
-            branch=branch,
-            customer=customer,
-            rate_limit_identity=rate_limit_identity,
-            gps_lat=gps_lat,
-            gps_lng=gps_lng,
-            distance_m=distance_m,
-            is_fraudulent=False,
-        )
+        try:
+            self._add_stamp_log(
+                branch=branch,
+                customer=customer,
+                rate_limit_identity=rate_limit_identity,
+                gps_lat=gps_lat,
+                gps_lng=gps_lng,
+                distance_m=distance_m,
+                is_fraudulent=False,
+            )
 
-        if customer is not None:
-            customer.total_stamps_alltime += 1
-            customer.current_reward_count += 1
+            if customer is not None:
+                customer.total_stamps_alltime += 1
+                customer.current_reward_count += 1
 
-        # Reward-program lookup and redemption-code creation must land in the
-        # same commit as the stamp log and counter bump above — doing this
-        # after commit (the shape the LOYALTY-04 TODO originally left it in)
-        # would let a crash between the two commits award a stamp with no
-        # corresponding code, or a code with no stamp to justify it.
-        response, redemption = await self._apply_reward_program(branch, customer)
+            # Reward-program lookup and redemption-code creation must land in the
+            # same commit as the stamp log and counter bump above — doing this
+            # after commit (the shape the LOYALTY-04 TODO originally left it in)
+            # would let a crash between the two commits award a stamp with no
+            # corresponding code, or a code with no stamp to justify it.
+            response, redemption = await self._apply_reward_program(branch, customer)
 
-        # NICE-01: same same-commit reasoning as the reward program above —
-        # a scratch card minted after this scan's commit could be orphaned by
-        # a crash between the two, same class of bug LOYALTY-04 already
-        # avoids for redemption codes.
-        response.scratch_card_id, response.scratch_card_locked = await self._maybe_create_scratch_card(
-            branch, customer
-        )
+            # NICE-01: same same-commit reasoning as the reward program above —
+            # a scratch card minted after this scan's commit could be orphaned by
+            # a crash between the two, same class of bug LOYALTY-04 already
+            # avoids for redemption codes.
+            response.scratch_card_id, response.scratch_card_locked = await self._maybe_create_scratch_card(
+                branch, customer
+            )
 
-        await self.session.commit()
-        await cache_service.set(rate_limit_key, "1", ttl=SCAN_RATE_LIMIT_TTL_SECONDS)
+            await self.session.commit()
+        except BaseException:
+            await cache_service.delete(rate_limit_key)
+            raise
 
         logger.info(
             "loyalty.scan.success",

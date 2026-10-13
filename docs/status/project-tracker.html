@@ -39,6 +39,9 @@
   .today{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--acc)}
   .weeks{display:grid;grid-template-columns:repeat(12,1fr);font-size:11px;color:var(--mute);text-align:center}
   ul.miss{margin:6px 0 0;padding-left:20px} ul.miss li{margin:3px 0}
+  .gate{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:start;padding:7px 0;border-top:1px solid var(--line)} .gate:first-child{border-top:0} .gate input{margin-top:4px;accent-color:var(--done)} .gate.on b{text-decoration:line-through;color:var(--mute)}
+  .nx{display:grid;grid-template-columns:110px 1fr auto;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:14px} .nx:first-child{border-top:0} .nx .o{color:var(--mute);font-size:12.5px}
+  .filters button:focus-visible,.tk input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .foot{margin-top:40px;color:var(--mute);font-size:12.5px}
   @media (max-width:640px){.tk{grid-template-columns:22px 1fr auto}.tk .id{grid-column:2}}
 </style>
@@ -46,7 +49,7 @@
 <body>
 <div class="wrap">
   <h1>QuickBite AI + Loyalty: Project Tracker</h1>
-  <p class="sub">Audit of branch <code>feature/sub-03-upgrade-billing-portal</code> (67 commits ahead of <code>main</code>) against the tickets in Doc 5 (its title says 70, but it actually lists 80 ticket headings, all counted here). Snapshot: <b>2026-09-26</b>. Checked by reading the code, not by running the test suite.</p>
+  <p class="sub">Updated 13 Oct 2026 on branch <code>feature/sec-11-gmb-pkce</code> (4 commits ahead of <code>origin/main</code>, which is still <code>54a098a</code>). Tickets are the 80 headings in Doc 5. Statuses match the Engineering Reference artifact. Tick a box to mark a ticket done; ticks are saved in this browser.</p>
 
   <div class="grid" id="kpis"></div>
   <div class="card" style="margin-top:12px">
@@ -54,7 +57,21 @@
     <div class="bar"><i class="b-done" id="bdone"></i><i class="b-part" id="bpart"></i></div>
   </div>
 
-  <div class="alert"><b>Behind schedule.</b> Today is week 11 of the 12-week plan, where Phases 1 to 10 should be finished and production launch is next. Phases 1 to 6 are mostly built, but CI, the animation pass, the pen-test run (SEC-21 to SEC-25), load testing and pilot restaurants have not been started. The last SEC-28 checklist is explicitly marked <i>NOT SIGNED</i>.</div>
+  <div class="alert"><b>Past the planned end date.</b> Today is week 13 of the 12-week plan. Core features are built. What is left is merging the branch, proving CI on GitHub, standing up staging and running the pen-test chain (SEC-21 to 25). The branch is not merge-ready: 1 failing test and 2 ruff errors.</div>
+
+
+  <h2>Progress report <span class="tag t-part" id="asof">13 Oct 2026</span></h2>
+  <div class="grid" id="prk"></div>
+  <div class="filters" style="margin-top:12px"><button id="copyrep">Copy report as text</button><button id="resetall">Reset my ticks and gates</button><span id="repmsg" role="status" style="font-size:13px;color:var(--done)"></span></div>
+  <textarea id="reptxt" hidden readonly aria-label="Progress report text" style="width:100%;min-height:180px;font:12px ui-monospace,Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)"></textarea>
+  <h3 style="margin-top:20px">What changed since 26 Sep</h3>
+  <div class="grid" id="chg" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))"></div>
+  <h3 style="margin-top:20px">Quality gates (checked 13 Oct)</h3>
+  <div class="card" id="gates"></div>
+  <h3 style="margin-top:20px">Workload by owner</h3>
+  <div class="tbl"><table id="owners"></table></div>
+  <h3 style="margin-top:20px">Next up (open tickets, not-started first)</h3>
+  <div class="card" id="nextup"></div>
 
   <h2>Timeline: plan vs actual</h2>
   <div class="card">
@@ -75,11 +92,10 @@
   <h2>Missing files and gaps <span class="tag t-todo">not in the todo list</span></h2>
   <div class="card"><h3>Files and folders that should exist but do not (on this branch)</h3>
     <ul class="miss">
-      <li><code>.github/workflows/ci.yml</code>: CI ticket and SEC-02 (bandit, trivy, safety, pytest gate). Only <code>Makefile</code> targets exist. AGENTS.md says no PR can merge without CI.</li>
+      <li><code>.github/workflows/ci.yml</code> and <code>deploy.yml</code> now exist on this branch but not on <code>origin/main</code>. No GitHub run has been seen. Staging needs a <code>DEPLOY_HOOK_URL</code> secret per environment and a production reviewer rule.</li>
       <li><code>tests/integration/*</code> and <code>tests/load/*</code>: both folders contain only <code>__init__.py</code>. No full-flow HTTP tests and no Locust load test (Phase 10).</li>
       <li><code>tests/security/</code> only has SEC-18, 19 and 20. AGENTS.md requires one test file per SEC ticket (SEC-03 to 16 have none).</li>
-      <li><code>app/templates/dashboard/billing.html</code> and its <code>/dashboard/billing</code> route: only on unmerged branches. <code>static/js/billing.js</code> is here with no page to load it.</li>
-      <li>Customer pages: no dedicated review-composer, stamp-celebration or loyalty-card templates (behaviour lives in <code>scan.js</code> and <code>profile.html</code>). No page serves the staff invite link (<code>TODO(STITCH-13)</code> in <code>team.py</code>).</li>
+            <li>Customer pages: no dedicated review-composer, stamp-celebration or loyalty-card templates (behaviour lives in <code>scan.js</code> and <code>profile.html</code>). No page serves the staff invite link (<code>TODO(STITCH-13)</code> in <code>team.py</code>).</li>
       <li>Routes noted as TODO: <code>/loyalty/card/{id}</code> and <code>/loyalty/menu/{branch_id}</code> (<code>TODO(LOYALTY-01/02)</code>), LoyaltyCard schema.</li>
       <li>Security deliverables: SEC-14 QR entropy audit, SEC-15 Celery idempotency audit, SEC-16 WebSocket auth audit, SEC-21 ZAP scan, SEC-22 Burp report, SEC-23 staging RLS check, SEC-24 findings report, SEC-25 remediation, SEC-30 incident drill. None exist.</li>
       <li>Deploy config: no staging or production deployment files. <code>firebase.json</code> and Docker are the only infra. Pilot restaurant onboarding has no artefacts.</li>
@@ -91,8 +107,8 @@
       <li><code>feature/marketing-01-whatsapp-direct</code> (30 ahead): <code>whatsapp_service.py</code>, <code>campaign_service.py</code>, <code>meta_signature.py</code>, <code>models/whatsapp.py</code>, <code>schemas/marketing.py</code>, <code>billing.html</code>. Covers NICE-02 and NICE-03. It is missing the export, metrics and admin work that this branch has.</li>
       <li><code>sdd/billing-cancel-reactivate</code> (62 ahead): owner billing page with cancel/reactivate. Completes SUB-03.</li>
       <li><code>feature/auth-04-rbac-roles</code> (20 ahead) and <code>sdd/super-admin-manager-dashboards</code> (52 ahead): older; already contained in this branch's history.</li>
-      <li><b>Migration clash:</b> the WhatsApp branch adds <code>0016_whatsapp_marketing.py</code>, but this branch already has <code>0016_admin_bypass_payment_grant.py</code>. Renumber before merging or Alembic gets two heads.</li>
-      <li><code>main</code> holds only the initial commit. No feature has been merged through a PR yet.</li>
+      <li><b>Migration clash fixed:</b> the WhatsApp migration is now <code>0020_whatsapp_marketing.py</code> and revisions 0015 to 0021 form one chain. Not yet run against a database.</li>
+      <li><code>origin/main</code> is <code>54a098a</code>. The CI workflows, TENANT-01 middleware, review composer page and PKCE work are on this branch only.</li>
     </ul>
   </div>
   <div class="card" style="margin-top:12px"><h3>Deviations from the rules in AGENTS.md</h3>
@@ -105,7 +121,7 @@
     </ul>
   </div>
 
-  <p class="foot">Sources: Doc/md/05_Feature_Tickets.md, 06_SysArch_TeamPlan.md, git history of all 8 branches on origin, and the files under app/, tests/, docs/, static/. About 531 test functions exist (not run here). Statuses are judgement calls; re-check before sign-off.</p>
+  <p class="foot">Sources: Doc/md/05_Feature_Tickets.md, 06_SysArch_TeamPlan.md, git history of all 8 branches on origin, and the files under app/, tests/, docs/, static/. Re-run 13 Oct: 705 tests, 704 pass, 85% coverage. Statuses are judgement calls; re-check before sign-off.</p>
 </div>
 
 <script>
@@ -123,91 +139,739 @@ const PH = [
  {n:11,w:[11,12],name:"Production launch + SEC-29/30",gate:"Deployed. Monitoring active."},
  {n:12,w:[13,13],name:"NICE-01..05 (v1.1)",gate:"Post-launch sprint."}
 ];
-// [id, title, phase, status(d/p/t), evidence]
-const T = [
- ["INFRA-01","Project skeleton & config",1,"d","config.py, main.py, pyproject, .env.example"],
- ["INFRA-02","PostgreSQL + PostGIS + Alembic",1,"d","19 migrations, RLS-aware session"],
- ["INFRA-03","Redis + cache service",1,"d","cache_service.py, celery_app.py"],
- ["DOCKER","Docker + docker-compose stack",1,"d","Dockerfile, docker-compose.yml, Makefile"],
- ["CI","GitHub Actions CI/CD",1,"t","No .github/ folder"],
- ["SEC-01","Threat model document",1,"p","docs/THREAT_MODEL.md is Draft, pending review"],
- ["SEC-02","CI security toolchain",1,"t","Only Makefile bandit target; no CI"],
- ["AUTH-01","Registration + email verification",2,"d","auth_service.py register 147-207 (Redis pending reg, 24h TTL, zxcvbn); verify_email 224-299 creates tenant-less user (tenant made later in become_restaurant); audit register_requested + email_verified tested in test_auth_register.py. 30s email latency not measured"],
- ["AUTH-02","Login + TOTP MFA",2,"d","/auth/login, /mfa/*"],
- ["AUTH-03","JWT refresh rotation",2,"d","/auth/token/refresh + tests"],
- ["AUTH-04","RBAC dependency guards",2,"d","rbac.py, team router, tests"],
- ["TENANT-01","Subdomain routing middleware",2,"p","Implemented on feature/tenant-01-subdomain-middleware: ASGI SubdomainTenantMiddleware (404/403/WS close, 1h Redis cache, invalidation on tenant create/suspend) + tests/unit/test_subdomain_middleware.py. NOT yet run (no Python env on authoring machine) — run pytest before marking done"],
- ["TENANT-02","Row-level security policies",2,"d","Migrations 0006-0009, rls.py"],
- ["SEC-03","Owner/staff auth security audit",2,"p","SEC-18 tests exist; no audit report"],
- ["SEC-04","RLS cross-tenant audit",2,"p","RLS forced; outbox still open (TODO SEC-04)"],
- ["NEW-OTP-01","Customer OTP request",3,"d","customer_otp_service + tests"],
- ["NEW-OTP-02","OTP verify + customer JWT",3,"d","customer_security.py, test_customer_session"],
- ["NEW-OTP-03","Seamless registration",3,"d","test_customer_register"],
- ["SUB-01","Plans + payment integration",3,"d","Built on Razorpay, not Stripe"],
- ["SUB-02","Usage tracking + plan gating",3,"d","usage_service, dependencies/subscription"],
- ["SUB-03","Upgrade flow + billing portal",3,"p","billing.js and API here; billing.html only on unmerged branches"],
- ["SEC-05","OTP crypto audit",3,"p","Tests exist; no audit report"],
- ["SEC-06","OTP enumeration prevention",3,"p","Covered by SEC-19 tests"],
- ["SEC-07","OTP rate limiting",3,"p","rate_limiter + tests"],
- ["SEC-08","Customer JWT key isolation",3,"p","Implemented; no dedicated test file"],
- ["SEC-09","PII encryption audit",3,"p","encryption.py + tests; no report"],
- ["SEC-10","Payment webhook signature",3,"p","razorpay_signature + tests (Razorpay)"],
- ["REVIEW-01","Smart review composer",4,"d","reputation /generate, Gemini fallback"],
- ["LOYALTY-01","Branch management + GPS",4,"d","branch_service, branches router"],
- ["LOYALTY-02","QR generation + R2 storage",4,"d","qr_service, storage_service"],
- ["STITCH-01","Customer OTP login screen",4,"d","customer/login.html"],
- ["STITCH-02","OTP verification screen",4,"d","login/verify flow"],
- ["STITCH-03","Customer registration screen",4,"d","register.html, onboarding.html"],
- ["SEC-11","GMB OAuth PKCE audit",4,"p","test_gmb_oauth; no report"],
- ["REVIEW-02","AI response drafting + approval",5,"d","response_service, approve/reject PATCH"],
- ["REVIEW-03","GMB OAuth + incremental sync",5,"d","gmb_service, sync tasks"],
- ["LOYALTY-03","Geofence validation + stamp log",5,"d","geofence_service, anti_fraud, /loyalty/scan"],
- ["STITCH-04","Review composer screen",5,"p","Logic in scan.js; no dedicated template"],
- ["STITCH-05","Loyalty card screen",5,"d","profile.html + customer-rewards.js"],
- ["STITCH-06","Stamp celebration screen",5,"p","Scratch step exists; no confetti"],
- ["SEC-12","Prompt injection prevention test",5,"p","prompt_guard + tests"],
- ["SEC-13","Geofence fraud bypass audit",5,"p","test_loyalty_scan; no report"],
- ["SEC-14","QR token entropy audit",5,"t","Nothing found"],
- ["LOYALTY-04","Rewards + redemption codes",6,"d","/loyalty/redeem, migration 0011"],
- ["DASH-01","Dashboard + WebSocket",6,"d","dashboard.py WS, broadcast.py"],
- ["DASH-02","Loyalty analytics + fraud log",6,"d","loyalty_analytics.html, /loyalty/analytics"],
- ["STITCH-07","Owner dashboard screen",6,"d","dashboard/index.html"],
- ["STITCH-08","Branch setup + QR download",6,"d","qr_codes.html, loyalty_programs.html"],
- ["STITCH-09","Loyalty analytics screen",6,"d","loyalty_analytics.html"],
- ["SEC-15","Celery idempotency audit",6,"t","Nothing found"],
- ["SEC-16","WebSocket auth + tenant isolation",6,"t","WS exists; no audit or tests"],
- ["ANIM-01","OTP screen animations",7,"p","Animate.css only on verify_email"],
- ["ANIM-02","Review composer animations",7,"p","Partial in scan.js"],
- ["ANIM-03","Loyalty card + stamp animations",7,"p","anime.js loaded; no confetti"],
- ["ANIM-04","Dashboard animations",7,"t","Not evident"],
- ["ANIM-05","Landing: Three.js + GSAP",7,"d","landing-motion.js, constellation-grid.js"],
- ["ANIM-06","Animate.css global setup + modals",7,"d","Libraries wired in base.html"],
- ["ADMIN-01","Super Admin panel API",8,"d","admin router + tenant mgmt UI"],
- ["STITCH-10","Billing + pricing page",8,"p","Only on unmerged branches"],
- ["STITCH-11","Super Admin panel screen",8,"d","admin/index, audit_logs, monitors"],
- ["STITCH-12","Landing page hero + nav",8,"d","landing/index.html"],
- ["SEC-17","Pen test plan document",8,"d","docs/PENTEST_PLAN.md (draft)"],
- ["SEC-18","Auth bypass pen tests",8,"d","tests/security/test_sec18"],
- ["SEC-19","OTP attack pen tests",8,"d","tests/security/test_sec19"],
- ["SEC-20","Injection pen tests",8,"d","tests/security/test_sec20"],
- ["SEC-21","OWASP ZAP dynamic scan",9,"t","No report"],
- ["SEC-22","Burp Suite manual testing",9,"t","No report"],
- ["SEC-23","RLS final check (staging)",9,"t","No staging"],
- ["SEC-24","Security findings report",9,"t","Not written"],
- ["SEC-25","Remediation verification",10,"t","Depends on SEC-24"],
- ["SEC-26","SECURITY.md disclosure policy",10,"d","SECURITY.md"],
- ["SEC-27","RUNBOOK.md incident guide",10,"d","docs/RUNBOOK.md"],
- ["SEC-28","Pre-launch checklist sign-off",10,"p","Scaffold exists, marked NOT SIGNED"],
- ["SEC-29","Production monitoring",11,"d","metrics.py, Sentry, Grafana, alerts"],
- ["SEC-30","Incident response drills",11,"t","Not started"],
- ["NICE-01","Scratch card gamification",12,"d","migration 0019, test_scratch_cards"],
- ["NICE-02","WhatsApp reward notifications",12,"p","On unmerged marketing-01 branch"],
- ["NICE-03","CRM campaign manager",12,"p","On unmerged marketing-01 branch"],
- ["NICE-04","Analytics export CSV/PDF",12,"d","export router + service"],
- ["NICE-05","White-label review page",12,"t","Not started"]
+// [id, title, phase, status(d/p/t), evidence, owner, est_hours]
+const T0 = [
+ [
+  "INFRA-01",
+  "Project Skeleton & Config",
+  1,
+  "p",
+  "app/main.py, app/core/config.py (320 lines), structlog JSON, PostGIS startup check main.py:67-76",
+  "All devs",
+  4.0
+ ],
+ [
+  "INFRA-02",
+  "PostgreSQL + PostGIS + Alembic Setup",
+  1,
+  "d",
+  "app/db/base.py:23-30 Base w/ UUID pk+created_at/updated_at; 5 migrations 0001-0005; PostGIS verified at startup",
+  "Backend Dev 2",
+  6.0
+ ],
+ [
+  "INFRA-03",
+  "Redis Setup + Cache Service",
+  1,
+  "d",
+  "app/core/cache_service.py:15-48 get/set/set_if_absent/delete/incr/exists; pool capped 50; Celery broker app/workers/celery_app.py:11-22",
+  "Backend Dev 2",
+  4.0
+ ],
+ [
+  "DOCKER",
+  "Docker + docker-compose Local Stack",
+  1,
+  "d",
+  "Dockerfile (non-root, gunicorn+uvicorn), docker-compose.yml (db/redis/web/worker/beat + healthchecks), Makefile",
+  "DevOps",
+  5.0
+ ],
+ [
+  "CI",
+  "GitHub Actions CI/CD Pipeline",
+  1,
+  "p",
+  ".github/workflows/ci.yml (jobs: ruff, alembic single head + upgrade, pytest with --cov-fail-under=80, bandit -ll, safety, git-secrets, trivy CRITICAL/",
+  "DevOps",
+  4.0
+ ],
+ [
+  "SEC-01",
+  "Threat Model Document",
+  1,
+  "p",
+  "docs/THREAT_MODEL.md, 188 lines: 8 numbered threat categories (OTP delivery, JWT, RLS, PII, GMB OAuth, payment webhook replay, LLM prompt injection, Q",
+  "Security Dev",
+  6.0
+ ],
+ [
+  "SEC-02",
+  "CI Security Toolchain Setup",
+  1,
+  "p",
+  "CI workflow on the feature branch runs bandit -r app/ -ll, safety check on requirements/prod.txt, git-secrets --scan and two trivy steps (CRITICAL,HIG",
+  "Security Dev",
+  4.0
+ ],
+ [
+  "SEC-03",
+  "Owner/Staff Auth Security Audit",
+  2,
+  "d",
+  "app/core/security.py:23-24 CryptContext bcrypt w/ settings.BCRYPT_ROUNDS (config.py:43 default 12, validator config.py:210-215 enforces >=10); JWT alg",
+  "Security Dev",
+  4.0
+ ],
+ [
+  "SEC-04",
+  "RLS Cross-Tenant Policy Audit",
+  2,
+  "d",
+  "app/db/rls.py sets app.tenant_id GUC per-transaction (40-57); migration 0006_force_row_level_security.py applies FORCE ROW LEVEL SECURITY to all 16 ta",
+  "Security Dev",
+  3.0
+ ],
+ [
+  "SEC-05",
+  "OTP Cryptographic Implementation Audit",
+  3,
+  "d",
+  "customer_otp_service.py:42 secrets.choice(string.digits); zero repo-wide hits for random.randint in app/; OTP stored as sha256_hex(otp) (line 116)",
+  "Security Dev",
+  2.0
+ ],
+ [
+  "SEC-06",
+  "OTP Phone Enumeration Prevention Audit",
+  3,
+  "d",
+  "customer_auth.py:27 returns 200 for both known/unknown identifiers; test_customer_otp.py:82 test_request_otp_unregistered_identifier_returns_new_user_",
+  "Security Dev",
+  2.0
+ ],
+ [
+  "SEC-07",
+  "OTP Rate Limiting Verification",
+  3,
+  "d",
+  "customer_auth.py:28,38 @limiter.limit(20/minute) SlowAPI; cooldown+daily cap w/ 429s in customer_otp_service.py:65-90",
+  "Security Dev",
+  3.0
+ ],
+ [
+  "SEC-08",
+  "Customer JWT Signing Key Isolation",
+  3,
+  "d",
+  "config.py:29-30 separate SECRET_KEY/CUSTOMER_SECRET_KEY; model_validator config.py:310-316 raises if equal",
+  "Security Dev",
+  2.0
+ ],
+ [
+  "SEC-09",
+  "PII Encryption Audit",
+  3,
+  "d",
+  "app/core/encryption.py AESGCM (line14), encrypt_pii/decrypt_pii (30,37), 32-byte key validation (25); customer.py:29-36 encrypted_phone/email/username",
+  "Security Dev",
+  3.0
+ ],
+ [
+  "SEC-10",
+  "Stripe/Razorpay Webhook Signature Verification",
+  3,
+  "d",
+  "app/core/razorpay_signature.py: HMAC-SHA256 over raw bytes (39-41), hmac.compare_digest constant-time (55), empty-secret fails closed (50-51)",
+  "Security Dev",
+  2.0
+ ],
+ [
+  "SEC-11",
+  "GMB OAuth PKCE Implementation Audit",
+  4,
+  "p",
+  "gmb_service.py: code_verifier = secrets.token_urlsafe(64), S256 code_challenge, code_challenge_method=S256, verifier kept server-side; tests in tests/",
+  "Security Dev",
+  2.0
+ ],
+ [
+  "SEC-12",
+  "LLM Prompt Injection Prevention Test",
+  5,
+  "d",
+  "app/core/prompt_guard.py is now a real injection-pattern module; app/services/review_service.py:29,95,101 calls prompt_guard.contains_injection_attemp",
+  "Security Dev",
+  2.0
+ ],
+ [
+  "SEC-13",
+  "Geofence Fraud Bypass Audit",
+  5,
+  "d",
+  "geofence_service.py + is_fraudulent flag wired through loyalty.py router, loyalty_service.py, branch.py, loyalty.py model; tests/unit/test_loyalty_sca",
+  "Security Dev",
+  2.0
+ ],
+ [
+  "SEC-14",
+  "QR Code Token Entropy Audit",
+  5,
+  "p",
+  "qr_code_token generation now exists and is concretely auditable: app/core/security.py:99-106, secrets.token_urlsafe(16)",
+  "Security Dev",
+  2.0
+ ],
+ [
+  "SEC-15",
+  "Celery Task Idempotency Audit",
+  6,
+  "p",
+  "app/services/response_service.py:post_approved_response_to_gmb demonstrates real Celery idempotency: a Redis flag (gmb_reply_posted:{id}) set only aft",
+  "Security Dev",
+  2.0
+ ],
+ [
+  "SEC-16",
+  "WebSocket Auth + Tenant Isolation",
+  6,
+  "d",
+  "app/core/broadcast.py: per-tenant Redis pub/sub channel (dashboard:events:{tenant_id}), built specifically so one tenant's channel can never receive a",
+  "Security Dev",
+  2.0
+ ],
+ [
+  "SEC-17",
+  "Penetration Test Plan Document",
+  8,
+  "p",
+  "docs/PENTEST_PLAN.md, 178 lines: 8 categories (auth bypass, OTP, injection, SSRF, replay, privilege escalation, JWT, loyalty fraud), each a table of t",
+  "Security Dev",
+  4.0
+ ],
+ [
+  "SEC-18",
+  "Authentication Bypass Penetration Tests",
+  8,
+  "p",
+  "tests/security/test_sec18_auth_bypass.py, 9 tests: alg:none, HS256 token claiming a Supabase issuer (algorithm confusion), expired token, Staff JWT on",
+  "Security Dev",
+  6.0
+ ],
+ [
+  "SEC-19",
+  "OTP Attack Penetration Tests",
+  8,
+  "p",
+  "tests/security/test_sec19_otp_attacks.py, 7 tests: 3 wrong codes lock and purge the OTP, replay after TTL expiry -> 400, unregistered identifier never",
+  "Security Dev",
+  4.0
+ ],
+ [
+  "SEC-20",
+  "Injection Attack Penetration Tests",
+  8,
+  "p",
+  "tests/security/test_sec20_injection_attacks.py, 11 tests: SQLi payloads as OTP identifier and redemption code, no raw SQL interpolation in app code, J",
+  "Security Dev",
+  4.0
+ ],
+ [
+  "SEC-21",
+  "OWASP ZAP Automated Dynamic Scan",
+  9,
+  "t",
+  "No staging deploy exists yet; no ZAP report found.",
+  "Security Dev",
+  6.0
+ ],
+ [
+  "SEC-22",
+  "Burp Suite Manual Penetration Testing",
+  9,
+  "t",
+  "No evidence found.",
+  "Security Dev",
+  8.0
+ ],
+ [
+  "SEC-23",
+  "RLS Cross-Tenant Final Verification (Staging)",
+  9,
+  "p",
+  "scripts/verify_rls_isolation.py and tests/security/test_sec23_rls_isolation.py (uncommitted)",
+  "Security Dev",
+  4.0
+ ],
+ [
+  "SEC-24",
+  "Security Findings Report",
+  9,
+  "p",
+  "docs/security/SECURITY_FINDINGS_REPORT.md (Draft rev 1, 13 Oct, uncommitted) with 12 findings (1 Critical, 5 Medium, 6 Low) and docs/security/SECURITY",
+  "Security Dev",
+  5.0
+ ],
+ [
+  "SEC-25",
+  "Remediation Verification",
+  10,
+  "t",
+  "N/A -- no findings report exists yet to remediate.",
+  "Security Dev",
+  6.0
+ ],
+ [
+  "SEC-26",
+  "SECURITY.md - Responsible Disclosure Policy",
+  10,
+  "p",
+  "SECURITY.md, 122 lines: reporting via GitHub Security Advisories or security@quickbite.ai, in and out of scope lists, 3-business-day acknowledgement, ",
+  "Security Dev",
+  2.0
+ ],
+ [
+  "SEC-27",
+  "RUNBOOK.md - Incident Response Guide",
+  10,
+  "p",
+  "docs/RUNBOOK.md, 498 lines: all 6 required scenarios (compromised JWT, SECRET_KEY rotation, RLS bypass, Razorpay replay, OTP abuse, database restore),",
+  "Security Dev",
+  3.0
+ ],
+ [
+  "SEC-28",
+  "Pre-Launch Security Checklist Sign-Off",
+  10,
+  "p",
+  "docs/security/LAUNCH_SIGNOFF.md exists but its own header says \"NOT SIGNED, do not deploy to production\"",
+  "Security Dev",
+  4.0
+ ],
+ [
+  "SEC-29",
+  "Production Security Monitoring Setup",
+  11,
+  "p",
+  "app/core/metrics.py: Prometheus counters for failed logins, JWT revocations, fraud scans, OTP delivery failures and OTP verify failures, exposed at GE",
+  "Security Dev",
+  4.0
+ ],
+ [
+  "SEC-30",
+  "Incident Response Drills",
+  11,
+  "t",
+  "N/A -- no production environment.",
+  "Security Dev",
+  4.0
+ ],
+ [
+  "AUTH-01",
+  "User Registration + Email Verification",
+  2,
+  "d",
+  "app/services/auth_service.py:115-259 Redis-pending registration (24h TTL), tenant+user created atomically on verify, zxcvbn strength check (87-108)",
+  "Backend Dev 1",
+  8.0
+ ],
+ [
+  "AUTH-02",
+  "Owner/Staff Login + TOTP MFA",
+  2,
+  "d",
+  "auth_service.py:298-386 login w/ lockout (10 fails/60min, 721-736); TOTP enroll/confirm 440-550; forced MFA for Super Admin/Owner/Manager (360)",
+  "Backend Dev 1",
+  8.0
+ ],
+ [
+  "AUTH-03",
+  "JWT Refresh Token Rotation",
+  2,
+  "d",
+  "auth_service.py:571-628 rotation w/ replay detection (598, revokes all sessions on reuse 578-593), logout/logout-all, tokens_valid_from watermark",
+  "Backend Dev 1",
+  5.0
+ ],
+ [
+  "AUTH-04",
+  "RBAC FastAPI Dependency Guards",
+  2,
+  "d",
+  "app/core/rbac.py RoleLevel; api/v1/dependencies/auth.py get_current_user(275-289)/require_role(292-323); tri-provider resolve_principal (local/Supabas",
+  "Backend Dev 2",
+  5.0
+ ],
+ [
+  "TENANT-01",
+  "Subdomain Routing Middleware",
+  2,
+  "d",
+  "app/middleware/subdomain.py (209 lines): pure ASGI middleware, resolves <slug>.<BASE_DOMAIN> to a tenant, sets request.state.tenant_id; 404 for unknow",
+  "Backend Dev 2",
+  4.0
+ ],
+ [
+  "TENANT-02",
+  "PostgreSQL Row-Level Security Policies",
+  2,
+  "d",
+  "app/db/rls.py full impl incl",
+  "Backend Dev 2",
+  6.0
+ ],
+ [
+  "NEW-OTP-01",
+  "Customer OTP Request (Phone + Email)",
+  3,
+  "d",
+  "customer_otp_service.py:59-128 full request_otp: cooldown+daily limits via Redis, SHA-256 lookup, new-vs-existing branching; router customer_auth.py:2",
+  "Backend Dev 1",
+  6.0
+ ],
+ [
+  "NEW-OTP-02",
+  "Customer OTP Verify + Customer JWT",
+  3,
+  "d",
+  "customer_otp_service.py:131-183 verify w/ attempt lockout, expiry; customer_security.py:18-44 separate CUSTOMER_SECRET_KEY; security.py:29-30,312-314 ",
+  "Backend Dev 1",
+  5.0
+ ],
+ [
+  "NEW-OTP-03",
+  "Seamless Customer Registration",
+  3,
+  "d",
+  "customer_service.py:23-100 registration-token flow; core/encryption.py:30-45 AES-256-GCM versioned ciphertext for phone/email/username/name; phone_has",
+  "Backend Dev 2",
+  6.0
+ ],
+ [
+  "SUB-01",
+  "Subscription Plans + Stripe Integration",
+  3,
+  "d",
+  "billing_service.py:170-215 checkout, 219-288 webhook handling w/ signature verify, idempotent via unique provider_event_id (264-273), stale-event guar",
+  "Backend Dev 1",
+  8.0
+ ],
+ [
+  "SUB-02",
+  "Usage Tracking + Plan Gating",
+  3,
+  "p",
+  "Gating implemented: check_subscription_tier() dependencies/subscription.py:25-62 checks feature_limits JSONB",
+  "Backend Dev 2",
+  5.0
+ ],
+ [
+  "SUB-03",
+  "Upgrade Flow + Billing Portal",
+  3,
+  "p",
+  "On main: POST /billing/cancel and POST /billing/reactivate (deferred cancel through a Celery task, since Razorpay has no un-cancel call), the billing.",
+  "Backend Dev 1",
+  5.0
+ ],
+ [
+  "REVIEW-01",
+  "Smart Review Composer API",
+  4,
+  "d",
+  "app/schemas/reputation.py:17-52 real ReviewGenerateRequest/ReviewDraftResponse w/ empty-tag validator; ai_engine.py real _call_openai + _call_gemini, ",
+  "Backend Dev 1",
+  8.0
+ ],
+ [
+  "REVIEW-02",
+  "AI Response Drafting + Approval Workflow",
+  5,
+  "d",
+  "app/services/response_service.py: approve_response (Manager+) sets approval_state=approved and queues post_approved_response.delay() (async, not synch",
+  "Backend Dev 1",
+  7.0
+ ],
+ [
+  "REVIEW-03",
+  "Google My Business OAuth + Incremental Sync",
+  5,
+  "d",
+  "app/services/gmb_service.py now implements the full OAuth lifecycle (its own comment: 'REVIEW-03 fills the gap it left behind'): build_authorize_url/e",
+  "Backend Dev 1",
+  8.0
+ ],
+ [
+  "LOYALTY-01",
+  "Branch Management + GPS Coordinates",
+  4,
+  "p",
+  "On main: GET /branches (Manager), POST /branches (Owner, 201), GET /branches/{id}/qr-code.png, POST /branches/{id}/qr-code/regenerate, PATCH /branches",
+  "Backend Dev 2",
+  5.0
+ ],
+ [
+  "LOYALTY-02",
+  "QR Code Generation + R2 Storage",
+  4,
+  "p",
+  "app/services/qr_service.py is no longer a stub -- generates real QR PNGs via the qrcode library (ERROR_CORRECT_M)",
+  "Backend Dev 2",
+  4.0
+ ],
+ [
+  "LOYALTY-03",
+  "GPS Geofence Validation + Stamp Logging",
+  5,
+  "d",
+  "geofence_service.py:13-28 real ST_Distance/Geography cast; loyalty.py model:37-53 StampLog (GPS+distance+is_fraudulent); loyalty_service.py:33-163 ful",
+  "Backend Dev 2",
+  7.0
+ ],
+ [
+  "LOYALTY-04",
+  "Reward Programs + Redemption Codes",
+  6,
+  "d",
+  "migration 0011_reward_redemptions.py creates restaurant.reward_redemptions (code String(6), expires_at, redeemed_at nullable, redeemed_by_user_id, uni",
+  "Backend Dev 2",
+  6.0
+ ],
+ [
+  "DASH-01",
+  "Combined Dashboard + WebSocket",
+  6,
+  "d",
+  "app/api/v1/routers/dashboard.py: GET /dashboard/stats (require_role STAFF+) and WS /dashboard/stream with hand-rolled JWT auth (_authenticate_websocke",
+  "Backend Dev 1+2",
+  7.0
+ ],
+ [
+  "DASH-02",
+  "Loyalty Analytics + Fraud Log",
+  6,
+  "d",
+  "app/services/dashboard_service.py: heatmap (daily scan counts by hour/branch), top 10 customers with _mask_phone -> '*** **** {last4}' format, branch ",
+  "Backend Dev 2",
+  5.0
+ ],
+ [
+  "ADMIN-01",
+  "Super Admin Panel API",
+  8,
+  "d",
+  "app/api/v1/routers/admin.py now has 10 routes, all require_role(SUPER_ADMIN): GET /admin/tenants, /health-metrics, /audit-logs, /sessions, /api-usage,",
+  "Backend Dev 1",
+  6.0
+ ],
+ [
+  "STITCH-01",
+  "Customer OTP Login Screen",
+  4,
+  "d",
+  "app/templates/customer/login.html (identify-first unified login) + register.html + onboarding.html backed by static/js/auth-{core,login,onboarding,reg",
+  "Frontend Dev",
+  3.0
+ ],
+ [
+  "STITCH-02",
+  "Customer OTP Verification Screen",
+  4,
+  "d",
+  "OTP verification is folded into the same register/onboarding flow (static/js/auth-onboarding.js, auth-register.js) rather than a standalone screen, ca",
+  "Frontend Dev",
+  3.0
+ ],
+ [
+  "STITCH-03",
+  "Customer Seamless Registration Screen",
+  4,
+  "d",
+  "app/templates/customer/register.html + static/js/auth-register.js: real registration form wired to POST /customers/register, including a WhatsApp opt-",
+  "Frontend Dev",
+  3.0
+ ],
+ [
+  "STITCH-04",
+  "Customer Review Composer Screen",
+  5,
+  "p",
+  "app/templates/customer/review_composer.html (91 lines, extends base.html), static/js/review-composer.js (93 lines), static/css/review-composer.css, te",
+  "Frontend Dev",
+  4.0
+ ],
+ [
+  "STITCH-05",
+  "Customer Loyalty Card Screen",
+  5,
+  "d",
+  "app/templates/customer/profile.html + static/js/customer-rewards.js render a real stamp/loyalty-card history pulled from the live API via the customer",
+  "Frontend Dev",
+  3.0
+ ],
+ [
+  "STITCH-06",
+  "Stamp Collected Celebration Screen",
+  5,
+  "d",
+  "static/js/scan.js drives a real camera-based QR scan (BarcodeDetector API) posting to the live POST /loyalty/scan endpoint and reflecting the real sta",
+  "Frontend Dev",
+  2.0
+ ],
+ [
+  "STITCH-07",
+  "Owner Dashboard Main Screen",
+  6,
+  "d",
+  "app/templates/dashboard/index.html + static/js/{dashboard,dashboard-shell}.js: real KPI cards from GET /dashboard/stats, a real sentiment chart built ",
+  "Frontend Dev",
+  4.0
+ ],
+ [
+  "STITCH-08",
+  "Branch Setup + QR Download Screen",
+  6,
+  "p",
+  "app/templates/dashboard/qr_codes.html + static/js/qr-codes.js: real QR grid pulling branches from GET /branches, images fetched authenticated as blobs",
+  "Frontend Dev",
+  3.0
+ ],
+ [
+  "STITCH-09",
+  "Loyalty Analytics Dashboard Screen",
+  6,
+  "d",
+  "app/templates/dashboard/loyalty_analytics.html + static/js/loyalty-analytics.js: 3 metric cards, a real 24-cell hourly heatmap, a top-10 customer tabl",
+  "Frontend Dev",
+  3.0
+ ],
+ [
+  "STITCH-10",
+  "Billing + Pricing Page",
+  8,
+  "d",
+  "app/templates/dashboard/billing.html and static/js/billing.js on main, with the /dashboard/billing route in pages.py",
+  "Frontend Dev",
+  3.0
+ ],
+ [
+  "STITCH-11",
+  "Super Admin Panel Screen",
+  8,
+  "d",
+  "app/templates/admin/{index,audit_logs,monitors}.html (675 lines together) with static/js/admin-{shell,tenants,audit-logs,monitors}.js",
+  "Frontend Dev",
+  3.0
+ ],
+ [
+  "STITCH-12",
+  "Landing Page Hero + Navigation",
+  8,
+  "d",
+  "app/templates/landing/index.html wired via routers/pages.py:17-18; real nav/hero markup, Jinja loops at lines 236,282,545, CTAs pointing to real /api/",
+  "Frontend Dev",
+  4.0
+ ],
+ [
+  "ANIM-01",
+  "OTP Screen Animations",
+  7,
+  "p",
+  "login.html/login.js use animate__fadeInUp, animate__fadeIn, and app.js's triggerShake (Animate.css shakeX) for the generic login flow.",
+  "Frontend Dev",
+  3.0
+ ],
+ [
+  "ANIM-02",
+  "Review Composer Animations",
+  7,
+  "p",
+  "Anime.js star-fill + typing effect implemented in landing.js (triggerAIReviewComposer, 325-360) and the static prototype only.",
+  "Frontend Dev",
+  3.0
+ ],
+ [
+  "ANIM-03",
+  "Loyalty Card + Stamp Celebration Animations",
+  7,
+  "p",
+  "canvas-confetti + Anime.js stamp bounce implemented (landing.js triggerStampCollected/triggerConfettiOnPhone, 362-437), landing-page mockup only.",
+  "Frontend Dev",
+  4.0
+ ],
+ [
+  "ANIM-04",
+  "Dashboard Animations",
+  7,
+  "p",
+  "Dashboard templates are real now (STITCH-07/08/09/10) and use Animate.css generically: dashboard.js drives a live-update indicator with animate__pulse",
+  "Frontend Dev",
+  3.0
+ ],
+ [
+  "ANIM-05",
+  "Landing Page - Three.js + GSAP",
+  7,
+  "d",
+  "CDN loaded landing/index.html:672-674; landing.js initHeroWebGL (25-161) cel-shaded THREE.MeshToonMaterial, initScrollAnimations (163-265) ScrollTrigg",
+  "Frontend Dev",
+  4.0
+ ],
+ [
+  "ANIM-06",
+  "Animate.css Global Setup",
+  7,
+  "d",
+  "Animate.css loaded in <head> of base.html:9-13 (before first render); app.js:1-52 implements shared triggerShake/showToast helpers used globally.",
+  "Frontend Dev",
+  2.0
+ ],
+ [
+  "NICE-01",
+  "Scratch Card Gamification",
+  12,
+  "d",
+  "migration 0019_scratch_cards.py; ScratchCard and prize-pool models; POST /loyalty/scratch-cards/{id}/reveal (30/hour, customer session), POST and GET ",
+  "Backend Dev 2",
+  8.0
+ ],
+ [
+  "NICE-02",
+  "WhatsApp Reward Notifications",
+  12,
+  "p",
+  "app/services/whatsapp_service.py (Meta Graph API client), app/core/meta_signature.py (HMAC verification), app/db/models/whatsapp.py, marketing router ",
+  "Backend Dev 1",
+  6.0
+ ],
+ [
+  "NICE-03",
+  "CRM Campaign Manager",
+  12,
+  "p",
+  "app/services/campaign_service.py (512 lines) and app/api/v1/routers/marketing.py (290 lines): POST /marketing/campaigns, GET /campaigns, GET /campaign",
+  "Backend Dev 1",
+  10.0
+ ],
+ [
+  "NICE-04",
+  "Analytics Export (CSV + PDF)",
+  12,
+  "d",
+  "app/api/v1/routers/export.py: POST /export/csv and /export/pdf (202, Manager+, 5/hour)",
+  "Backend Dev 2",
+  8.0
+ ],
+ [
+  "NICE-05",
+  "White-Label Review Page",
+  12,
+  "t",
+  "No brand_color/logo-upload logic found.",
+  "Backend Dev 1 + Frontend Dev",
+  8.0
+ ]
 ];
+const KEY="qb_tracker_v2", GKEY="qb_tracker_gates_v2";
+let ov={}, gs={};
+try{ov=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
+try{gs=JSON.parse(localStorage.getItem(GKEY)||"{}")||{}}catch(e){}
+const sv=()=>{try{localStorage.setItem(KEY,JSON.stringify(ov));localStorage.setItem(GKEY,JSON.stringify(gs))}catch(e){}};
+const T = T0.map(r=>r.slice());
+function applyOv(){T.forEach((t,i)=>{const b=T0[i][3]; t[3]= t[0] in ov ? (ov[t[0]] ? "d" : (b==="d"?"p":b)) : b;});}
 const L = {d:"Done",p:"Partial",t:"Not started"}, C = {d:"t-done",p:"t-part",t:"t-todo"};
 const cnt = s => T.filter(t=>t[3]===s).length, N = T.length;
+function drawKpis(){
 const pct = Math.round((cnt("d")+cnt("p")*.5)/N*100);
 document.getElementById("kpis").innerHTML =
  [[N,"Tickets in Doc 5"],[cnt("d"),"Done"],[cnt("p"),"Partial"],[cnt("t"),"Not started"],[pct+"%","Weighted progress"]]
@@ -215,25 +879,28 @@ document.getElementById("kpis").innerHTML =
 document.getElementById("pct").textContent = pct+"%";
 document.getElementById("bdone").style.width = cnt("d")/N*100+"%";
 document.getElementById("bpart").style.width = cnt("p")/N*100+"%";
+}
 
 // timeline
-const start = new Date("2026-07-16"), today = new Date("2026-09-26");
-const wk = (today-start)/864e5/7;
+const start = new Date("2026-07-16"), today = new Date("2026-10-13");
+const wk = Math.min((today-start)/864e5/7, 11.95);
 document.getElementById("weeks").innerHTML = Array.from({length:12},(_,i)=>`<span>W${i+1}</span>`).join("");
 const col = ["#5b8def","#7a6df0","#a45fd4","#d1568f","#e0684e","#e08b3a","#c9a227","#6aa84f","#2fa38a","#2d8fb5","#4a6fd0","#888"];
 const pos = (a,b)=>`left:${a/12*100}%;width:${(b-a)/12*100}%`;
 document.getElementById("tlplan").innerHTML = PH.filter(p=>p.n<12).map(p=>`<div class="seg" style="${pos(p.w[0]-1,Math.min(p.w[1],12))};background:${col[p.n-1]};opacity:${p.n%2?1:.78}" title="Phase ${p.n}: ${p.name}">P${p.n}</div>`).join("")+`<div class="today" style="left:${wk/12*100}%"></div>`;
 // actual: week of evidence
-const act = [[0,1,"Landing UI (Jul 16-18)"],[1,2.9,"Email, REVIEW-01"],[2.9,4,"Auth, Supabase/Firebase"],[4,5.4,"Core services (Aug 15)"],[5.4,6.6,"Admin, billing (Aug 22-25)"],[6.6,9.3,"No commits"],[9.3,10.2,"NICE + SEC"]];
+const act = [[0,1,"Landing UI (Jul 16-18)"],[1,2.9,"Email, REVIEW-01"],[2.9,4,"Auth, Supabase/Firebase"],[4,5.4,"Core services (Aug 15)"],[5.4,6.6,"Admin, billing (Aug 22-25)"],[6.6,9.3,"No commits"],[9.3,10.2,"NICE + SEC"],[10.2,11.1,"CI, TENANT-01, composer"],[11.1,12,"PKCE, SEC-24 draft"]];
 document.getElementById("tlact").innerHTML = act.map((a,i)=>`<div class="seg" style="${pos(a[0],a[1])};background:${a[2]==="No commits"?"#999":"#2b6cb0"};opacity:${i%2?.8:1}" title="${a[2]}">${a[2]}</div>`).join("")+`<div class="today" style="left:${wk/12*100}%"></div>`;
 
 // phase table
 const stat = p => { const r=T.filter(t=>t[2]===p.n); const d=r.filter(t=>t[3]==="d").length, pa=r.filter(t=>t[3]==="p").length; return {n:r.length,d,pa,pc:Math.round((d+pa*.5)/r.length*100)}; };
 const wd = w => { const a=new Date(start.getTime()+(w-1)*7*864e5), b=new Date(a.getTime()+6*864e5); const f=x=>x.toLocaleDateString("en-GB",{day:"numeric",month:"short"}); return f(a)+" to "+f(b); };
+function drawPhases(){
 document.getElementById("phasetbl").innerHTML = `<tr><th>Phase</th><th>Plan window</th><th>Tickets</th><th>Done</th><th>Progress</th><th>Schedule</th></tr>` + PH.map(p=>{
-  const s=stat(p), due = p.w[1] <= Math.floor(wk);
+  const s=stat(p), due = p.w[1] <= 12 && p.w[1] <= Math.floor((today-start)/864e5/7);
   const tag = s.pc===100?["t-done","Complete"]:(due?["t-todo","Overdue"]:(p.w[0]<=wk+1?["t-part","Due now / next"]:["t-part","Upcoming"]));
   return `<tr><td><b>${p.n}</b> ${p.name}<br><span style="color:var(--mute);font-size:12px">Gate: ${p.gate}</span></td><td>${p.n===12?"Ongoing":`W${p.w[0]}${p.w[1]>p.w[0]?"-"+p.w[1]:""}<br><span style="color:var(--mute);font-size:12px">${wd(p.w[0])}${p.w[1]>p.w[0]?" ... "+wd(p.w[1]).split(" to ")[1]:""}</span>`}</td><td>${s.n}</td><td>${s.d} done, ${s.pa} partial</td><td><div class="bar" style="width:110px"><i class="b-done" style="width:${s.d/s.n*100}%"></i><i class="b-part" style="width:${s.pa/s.n*100}%"></i></div>${s.pc}%</td><td><span class="tag ${tag[0]}">${tag[1]}</span></td></tr>`;}).join("");
+}
 
 // todo list
 let flt="all";
@@ -243,10 +910,48 @@ F.onclick=e=>{const b=e.target.closest("button"); if(!b)return; flt=b.dataset.f;
 function drawG(){
   document.getElementById("groups").innerHTML = PH.map(p=>{
     const r=T.filter(t=>t[2]===p.n && (flt==="all"||t[3]===flt)); if(!r.length) return "";
-    return `<details class="grp card" open><summary>Phase ${p.n}: ${p.name}</summary>`+r.map(t=>`<div class="tk"><input type="checkbox" ${t[3]==="d"?"checked":""} aria-label="${t[0]}"><span class="id">${t[0]}</span><span>${t[1]}<span class="note">${t[4]}</span></span><span class="tag ${C[t[3]]}">${L[t[3]]}</span></div>`).join("")+`</details>`;
+    return `<details class="grp card" open><summary>Phase ${p.n}: ${p.name}</summary>`+r.map(t=>`<div class="tk"><input type="checkbox" data-id="${t[0]}" ${t[3]==="d"?"checked":""} aria-label="${t[0]}"><span class="id">${t[0]}</span><span>${t[1]}<span class="note">${t[4]}</span></span><span class="tag ${C[t[3]]}">${L[t[3]]}</span></div>`).join("")+`</details>`;
   }).join("");
 }
-drawF(); drawG();
+document.getElementById("groups").addEventListener("change",e=>{const c=e.target.closest("input[data-id]");if(!c)return;ov[c.dataset.id]=c.checked;sv();refresh();});
+
+// progress report
+const GATES=[
+ ["pytest","fail","Unit and security tests pass","704 passed, 1 failed with CI-style keys: test_register_links_pending_anonymous_stamps_to_new_customer."],
+ ["ruff","fail","ruff check app/ tests/ is clean","2 errors: F811 billing_page redefined (pages.py) and I001 import order (auth_service.py)."],
+ ["cov","pass","Coverage at least 80%","85% (6,575 statements)."],
+ ["alembic","pass","Alembic has one head","Revisions 0015 to 0021 chain correctly. Read from the files, not run against a database."],
+ ["env","fail","Local test environment works","With the default local settings 136 tests failed on a base64 padding error (likely ENCRYPTION_KEY_V1). CI makes its own keys."],
+ ["scans","open","bandit, safety, git-secrets, trivy clean","Configured in ci.yml; not run here."],
+ ["merge","open","CI branch merged and checks required on main","origin/main is still 54a098a."],
+ ["staging","open","Staging deploy works","Needs DEPLOY_HOOK_URL secrets and a production reviewer rule. Unblocks SEC-21 to 25."]];
+const GL={pass:["t-done","Pass"],fail:["t-todo","Fails"],open:["t-part","Not checked"]};
+const CH=[["26 Sep","c88318b","CI/CD pipeline","ci.yml with seven checks and an 80% coverage gate, deploy.yml with staging and production jobs; WhatsApp migration renumbered to 0020."],
+ ["27 Sep","808c915","Tenant routing + review composer","Subdomain middleware (TENANT-01), review composer page (STITCH-04), migration 0021, anonymous-stamp linking."],
+ ["12 Oct","df7a7b2","PKCE, customer verification, admin views","GMB OAuth now uses a PKCE S256 challenge (SEC-11). 35 files, 1,048 lines added."],
+ ["13 Oct","uncommitted","Security work in progress","SEC-24 draft findings report (12 findings) and follow-up tickets, SEC-23 RLS check script and tests, loyalty_service edits."]];
+function drawReport(){
+ const pct=Math.round((cnt("d")+cnt("p")*.5)/N*100);
+ const hrs=Math.round(T.reduce((s,t,i)=>s+(t[3]==="d"?0:T0[i][6]*(t[3]==="t"?1:.5)),0));
+ document.getElementById("prk").innerHTML=[[pct+"%","Weighted complete"],[cnt("d")+" / "+N,"Tickets done"],["~"+hrs,"Est. hours left"],["13 of 12","Plan week"]].map(k=>`<div class="card kpi"><b>${k[0]}</b><span>${k[1]}</span></div>`).join("");
+ document.getElementById("chg").innerHTML=CH.map(c=>`<div class="card"><h3>${c[2]}</h3><span class="tag t-part">${c[0]} · ${c[1]}</span><p style="margin:8px 0 0;font-size:13.5px;color:var(--mute)">${c[3]}</p></div>`).join("");
+ document.getElementById("gates").innerHTML=GATES.map(g=>{const on=g[0] in gs?gs[g[0]]:g[1]==="pass";return `<div class="gate ${on?"on":""}"><input type="checkbox" data-g="${g[0]}" ${on?"checked":""} aria-label="${g[2]}"><span><b>${g[2]}</b><span class="note" style="display:block;color:var(--mute);font-size:12.5px">${g[3]}</span></span><span class="tag ${GL[g[1]][0]}">${GL[g[1]][1]}</span></div>`}).join("");
+ const o={};T.forEach((t,i)=>{const w=o[T0[i][5]]=o[T0[i][5]]||{d:0,p:0,t:0,h:0};w[t[3]]++;if(t[3]!=="d")w.h+=T0[i][6]*(t[3]==="t"?1:.5)});
+ document.getElementById("owners").innerHTML="<tr><th>Owner</th><th>Done</th><th>Partial</th><th>Not started</th><th>Hours left</th></tr>"+Object.keys(o).sort((a,b)=>o[b].h-o[a].h).map(k=>`<tr><td>${k}</td><td>${o[k].d}</td><td>${o[k].p}</td><td>${o[k].t}</td><td>${Math.round(o[k].h)}h</td></tr>`).join("");
+ const nx=T.filter(t=>t[3]!=="d").sort((a,b)=>(a[3]==="t"?0:1)-(b[3]==="t"?0:1)).slice(0,10);
+ document.getElementById("nextup").innerHTML=nx.length?nx.map(t=>`<div class="nx"><span class="id" style="font-family:ui-monospace,Consolas,monospace;font-size:13px;color:var(--mute)">${t[0]}</span><span>${t[1]} <span class="tag ${C[t[3]]}">${L[t[3]]}</span></span><span class="o">${T0[T.indexOf(t)][5]}</span></div>`).join(""):"Every ticket is done.";
+}
+document.getElementById("gates").addEventListener("change",e=>{const c=e.target.closest("input[data-g]");if(!c)return;gs[c.dataset.g]=c.checked;sv();drawReport();});
+function reportText(){
+ const pct=Math.round((cnt("d")+cnt("p")*.5)/N*100);
+ return ["QuickBite progress report, 13 Oct 2026","Tickets: "+cnt("d")+" done, "+cnt("p")+" partial, "+cnt("t")+" not started of "+N+" ("+pct+"% weighted). Plan week 13 of 12.","","Phases:"].concat(PH.map(p=>{const s=stat(p);return "- P"+p.n+" "+p.name+": "+s.d+" done, "+s.pa+" partial of "+s.n}),["","Quality gates:"],GATES.map(g=>"- ["+((g[0] in gs?gs[g[0]]:g[1]==="pass")?"x":" ")+"] "+g[2]+" ("+GL[g[1]][1]+"): "+g[3]),["","Changes:"],CH.map(c=>"- "+c[0]+" "+c[1]+": "+c[2]+". "+c[3])).join("\\n");
+}
+document.getElementById("copyrep").onclick=()=>{const t=reportText(),a=document.getElementById("reptxt"),m=document.getElementById("repmsg");a.value=t;
+ const man=()=>{a.hidden=false;a.focus();a.select();m.textContent="Select and copy the text below."};
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>{a.hidden=true;m.textContent="Copied.";setTimeout(()=>m.textContent="",2000)},man);else man();};
+document.getElementById("resetall").onclick=()=>{ov={};gs={};sv();refresh();};
+function refresh(){applyOv();drawKpis();drawPhases();drawG();drawReport();}
+drawF(); refresh();
 </script>
 </body>
 </html>

@@ -120,7 +120,7 @@ async def test_scan_inside_geofence_first_scan_returns_stamp(mocker):
     branch = make_branch()
     session = make_session(branch)
     mocker.patch("app.services.loyalty_service.distance_to_branch_m", AsyncMock(return_value=10.0))
-    mocker.patch("app.core.cache_service.exists", AsyncMock(return_value=False))
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(return_value=True))
     mocker.patch("app.core.cache_service.set", AsyncMock())
 
     service = LoyaltyService(session=session)
@@ -162,7 +162,7 @@ async def test_scan_within_rate_limit_window_returns_429(mocker):
     branch = make_branch()
     session = make_session(branch)
     mocker.patch("app.services.loyalty_service.distance_to_branch_m", AsyncMock(return_value=10.0))
-    mocker.patch("app.core.cache_service.exists", AsyncMock(return_value=True))
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(return_value=False))
 
     service = LoyaltyService(session=session)
     with pytest.raises(HTTPException) as exc_info:
@@ -200,7 +200,7 @@ async def test_scan_links_customer_id_when_session_active(mocker):
     branch = make_branch()
     session = make_session(branch)  # no active reward program
     mocker.patch("app.services.loyalty_service.distance_to_branch_m", AsyncMock(return_value=10.0))
-    mocker.patch("app.core.cache_service.exists", AsyncMock(return_value=False))
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(return_value=True))
     mocker.patch("app.core.cache_service.set", AsyncMock())
 
     customer = make_customer(total_stamps_alltime=2, current_reward_count=2)
@@ -230,7 +230,7 @@ async def test_scan_below_threshold_returns_progress_no_unlock(mocker):
     program = make_reward_program(stamps_required=5)
     session = make_session(branch, reward_program=program)
     mocker.patch("app.services.loyalty_service.distance_to_branch_m", AsyncMock(return_value=10.0))
-    mocker.patch("app.core.cache_service.exists", AsyncMock(return_value=False))
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(return_value=True))
     mocker.patch("app.core.cache_service.set", AsyncMock())
 
     customer = make_customer(current_reward_count=2)  # becomes 3 after this scan
@@ -257,7 +257,7 @@ async def test_scan_reaching_threshold_generates_redemption_code(mocker):
     program = make_reward_program(stamps_required=5, validity_days=7)
     session = make_session(branch, reward_program=program)
     mocker.patch("app.services.loyalty_service.distance_to_branch_m", AsyncMock(return_value=10.0))
-    mocker.patch("app.core.cache_service.exists", AsyncMock(return_value=False))
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(return_value=True))
     mocker.patch("app.core.cache_service.set", AsyncMock())
 
     customer = make_customer(current_reward_count=4)  # becomes 5 == stamps_required
@@ -291,7 +291,7 @@ async def test_scan_unlock_sends_whatsapp_when_opted_in_and_plan_allows(mocker):
     program = make_reward_program(stamps_required=1, validity_days=7)
     session = make_session(branch, reward_program=program)
     mocker.patch("app.services.loyalty_service.distance_to_branch_m", AsyncMock(return_value=10.0))
-    mocker.patch("app.core.cache_service.exists", AsyncMock(return_value=False))
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(return_value=True))
     mocker.patch("app.core.cache_service.set", AsyncMock())
     mocker.patch("app.services.loyalty_service.tenant_has_feature", AsyncMock(return_value=True))
     mocker.patch("app.services.loyalty_service.decrypt_pii", MagicMock(return_value="+919876543210"))
@@ -323,7 +323,7 @@ async def test_scan_unlock_skips_whatsapp_when_plan_lacks_feature(mocker):
     program = make_reward_program(stamps_required=1)
     session = make_session(branch, reward_program=program)
     mocker.patch("app.services.loyalty_service.distance_to_branch_m", AsyncMock(return_value=10.0))
-    mocker.patch("app.core.cache_service.exists", AsyncMock(return_value=False))
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(return_value=True))
     mocker.patch("app.core.cache_service.set", AsyncMock())
     mocker.patch("app.services.loyalty_service.tenant_has_feature", AsyncMock(return_value=False))
     send_whatsapp = mocker.patch(
@@ -350,7 +350,7 @@ async def test_scan_unlock_skips_whatsapp_when_not_opted_in(mocker):
     program = make_reward_program(stamps_required=1)
     session = make_session(branch, reward_program=program)
     mocker.patch("app.services.loyalty_service.distance_to_branch_m", AsyncMock(return_value=10.0))
-    mocker.patch("app.core.cache_service.exists", AsyncMock(return_value=False))
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(return_value=True))
     mocker.patch("app.core.cache_service.set", AsyncMock())
     send_whatsapp = mocker.patch(
         "app.services.loyalty_service.messaging_service.send_reward_unlocked_whatsapp",
@@ -703,3 +703,68 @@ async def test_reward_whatsapp_alert_releases_the_claim_when_the_send_raises(moc
         await service._send_reward_whatsapp_alert(make_branch(), make_customer(), _redemption())
 
     assert store == {}
+
+
+# --- SEC-15 / pentest 8.4: concurrent double-tap ---------------------------
+
+
+@pytest.mark.asyncio
+async def test_concurrent_scans_for_one_customer_award_exactly_one_stamp(mocker):
+    """Ten simultaneous scans must yield one 200 and nine 429s. The old
+    check-then-set-after-commit let several slip through."""
+    import asyncio  # noqa: PLC0415
+
+    store: dict[str, str] = {}
+
+    async def set_if_absent(key, value, ttl):  # noqa: ARG001
+        await asyncio.sleep(0)  # yield, so the tasks genuinely interleave
+        if key in store:
+            return False
+        store[key] = value
+        return True
+
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(side_effect=set_if_absent))
+    mocker.patch("app.core.cache_service.delete", AsyncMock(side_effect=lambda k: store.pop(k, None)))
+    mocker.patch("app.services.loyalty_service.distance_to_branch_m", AsyncMock(return_value=10.0))
+    branch = make_branch()
+    customer = make_customer(current_reward_count=0)
+    sessions = [make_session(branch) for _ in range(10)]
+
+    async def scan(session):
+        return await LoyaltyService(session=session).process_scan(
+            qr_token="valid-token-1234567890", gps_lat=12.9716, gps_lng=77.5946,
+            client_ip="1.2.3.4", customer=customer,
+        )
+
+    results = await asyncio.gather(*(scan(s) for s in sessions), return_exceptions=True)
+
+    ok = [r for r in results if not isinstance(r, Exception)]
+    limited = [r for r in results if isinstance(r, HTTPException) and r.status_code == 429]
+    assert len(ok) == 1
+    assert len(limited) == 9
+    assert sum(s.commit.await_count for s in sessions) == 1
+
+
+@pytest.mark.asyncio
+async def test_failed_scan_releases_the_rate_limit_slot(mocker):
+    store: dict[str, str] = {}
+
+    async def set_if_absent(key, value, ttl):  # noqa: ARG001
+        if key in store:
+            return False
+        store[key] = value
+        return True
+
+    mocker.patch("app.core.cache_service.set_if_absent", AsyncMock(side_effect=set_if_absent))
+    mocker.patch("app.core.cache_service.delete", AsyncMock(side_effect=lambda k: store.pop(k, None)))
+    mocker.patch("app.services.loyalty_service.distance_to_branch_m", AsyncMock(return_value=10.0))
+    session = make_session(make_branch())
+    session.commit = AsyncMock(side_effect=RuntimeError("db down"))
+
+    with pytest.raises(RuntimeError):
+        await LoyaltyService(session=session).process_scan(
+            qr_token="valid-token-1234567890", gps_lat=12.9716, gps_lng=77.5946,
+            client_ip="1.2.3.4", customer=make_customer(current_reward_count=0),
+        )
+
+    assert store == {}  # the customer can retry; a failed request didn't burn their slot
